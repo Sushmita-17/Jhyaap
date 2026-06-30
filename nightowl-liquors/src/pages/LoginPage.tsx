@@ -1,6 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, LockKeyhole, Phone, UserPlus } from 'lucide-react';
+import {
+  ChevronLeft,
+  LockKeyhole,
+  Phone,
+  UserPlus,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
 import { Page } from '@/types';
@@ -23,50 +31,364 @@ const pagePaths: Record<Page, string> = {
   reviews: '/reviews',
 };
 
+type View =
+  | 'signin'
+  | 'signup-phone'
+  | 'signup-otp'
+  | 'signup-profile'
+  | 'forgot-phone'
+  | 'forgot-otp'
+  | 'forgot-reset'
+  | 'phone-verify-otp' // Google account with no verified phone on file yet
+  | 'google-dob' // Google never gives us a birthdate; collect it for the age gate
+  | 'success';
+
+const OTP_LENGTH = 6;
+const RESEND_SECONDS = 120;
+
+function passwordScore(pw: string) {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  return score; // 0-4
+}
+
+function isAdult(dob: string) {
+  if (!dob) return false;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return false;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const m = now.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
+  return age >= 18;
+}
+
 export default function LoginPage() {
-  const { login } = useAuthStore();
+  const { login, signup, resetPassword, findUserByPhone, loginWithGoogle, attachPhoneToGoogleAccount, updateProfile } =
+    useAuthStore();
   const { setPage, postLoginPage, setPostLoginPage } = useAppStore();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<'phone' | 'otp' | 'name'>('phone');
-  const [phone, setPhone] = useState('');
-  const [name, setName] = useState('');
-  const [otp, setOtp] = useState('');
+  const [view, setView] = useState<View>('signin');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (phone.length < 10) return;
+  // Sign-in fields
+  const [signinPhone, setSigninPhone] = useState('');
+  const [signinPassword, setSigninPassword] = useState('');
+  const [showSigninPassword, setShowSigninPassword] = useState(false);
 
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    setStep('otp');
+  // Shared phone/OTP fields (used by signup, forgot-password, and Google phone-verify)
+  const [phone, setPhone] = useState('');
+  const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [resendIn, setResendIn] = useState(RESEND_SECONDS);
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [otpExpiresAt, setOtpExpiresAt] = useState(0);
+
+  // Signup profile fields
+  const [fullName, setFullName] = useState('');
+  const [dob, setDob] = useState('');
+  const [email, setEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+
+  // Forgot-password reset fields
+  const [resetPasswordValue, setResetPasswordValue] = useState('');
+  const [resetConfirm, setResetConfirm] = useState('');
+
+  // Google pending-signup token, returned by loginWithGoogle when phone verification is needed
+  const [googlePendingToken, setGooglePendingToken] = useState<string | null>(null);
+
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    if (view !== 'signup-otp' && view !== 'forgot-otp' && view !== 'phone-verify-otp') return;
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [view, resendIn]);
+
+  const resetOtpState = () => {
+    setOtpDigits(Array(OTP_LENGTH).fill(''));
+    setResendIn(RESEND_SECONDS);
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp.length < 4) return;
-
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    setStep('name');
+  const goTo = (next: View) => {
+    setError(null);
+    setView(next);
   };
 
-  const handleCompleteSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (name.length < 2) return;
-
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    login(phone, name);
-    setIsLoading(false);
+  const finishAuth = () => {
     const next = postLoginPage || 'home';
     setPostLoginPage(null);
     setPage(next);
     navigate(pagePaths[next]);
   };
+
+  // ---------- Mock OTP sender (swap for your real SMS gateway, e.g. Sparrow SMS) ----------
+  const sendOtp = async () => {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // eslint-disable-next-line no-console
+    console.log('[Jhyaap Station mock OTP]', code); // dev-only stand-in for SMS delivery
+    setGeneratedOtp(code);
+    setOtpExpiresAt(Date.now() + RESEND_SECONDS * 1000);
+    resetOtpState();
+  };
+
+  // ---------- Sign in ----------
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (signinPhone.length < 10 || signinPassword.length < 1) return;
+    setIsLoading(true);
+    setError(null);
+    await new Promise((r) => setTimeout(r, 400));
+    const err = login(signinPhone, signinPassword);
+    setIsLoading(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    finishAuth();
+  };
+
+  // ---------- Google ----------
+  const handleGoogleAuth = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // TODO: replace with a real Google OAuth call. The profile shape below
+      // (googleId, email, name, optional phone) should come from that response.
+      await new Promise((r) => setTimeout(r, 600));
+      const googleProfile = {
+        googleId: 'mock-google-id',
+        email: 'mockuser@gmail.com',
+        name: 'Mock User',
+        phone: undefined as string | undefined,
+      };
+      const result = loginWithGoogle(googleProfile);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      if (result.status === 'logged_in') {
+        finishAuth();
+        return;
+      }
+      // needs_phone
+      setGooglePendingToken(result.pendingToken ?? null);
+      await sendOtp();
+      goTo('phone-verify-otp');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ---------- Signup: phone ----------
+  const handleSignupSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (phone.length < 10) return;
+    if (findUserByPhone(phone)) {
+      setError('An account with this phone number already exists. Try signing in instead.');
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    await sendOtp();
+    setIsLoading(false);
+    goTo('signup-otp');
+  };
+
+  // ---------- Forgot password: phone ----------
+  const handleForgotSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (phone.length < 10) return;
+    if (!findUserByPhone(phone)) {
+      setError('No account found for this phone number.');
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    await sendOtp();
+    setIsLoading(false);
+    goTo('forgot-otp');
+  };
+
+  // ---------- OTP box handling (shared) ----------
+  const handleOtpChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, '').slice(-1);
+    const next = [...otpDigits];
+    next[index] = digit;
+    setOtpDigits(next);
+    if (digit && index < OTP_LENGTH - 1) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const otpCode = otpDigits.join('');
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpCode.length < OTP_LENGTH) return;
+    setIsLoading(true);
+    setError(null);
+    await new Promise((r) => setTimeout(r, 500));
+    setIsLoading(false);
+
+    if (Date.now() > otpExpiresAt) {
+      setError('This code has expired. Tap resend to get a new one.');
+      return;
+    }
+    if (otpCode !== generatedOtp) {
+      setError('Incorrect code. Please try again.');
+      return;
+    }
+
+    if (view === 'signup-otp') {
+      goTo('signup-profile');
+    } else if (view === 'forgot-otp') {
+      goTo('forgot-reset');
+    } else if (view === 'phone-verify-otp') {
+      if (!googlePendingToken) {
+        setError('This sign-in session expired. Please try Google sign-in again.');
+        goTo('signin');
+        return;
+      }
+      const err = attachPhoneToGoogleAccount(googlePendingToken, phone);
+      if (err) {
+        setError(err);
+        return;
+      }
+      goTo('google-dob');
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendIn > 0) return;
+    setIsLoading(true);
+    await sendOtp();
+    setIsLoading(false);
+  };
+
+  // ---------- Signup: profile + password ----------
+  const signupPwScore = passwordScore(signupPassword);
+  const canCreateAccount =
+    fullName.trim().length >= 2 &&
+    dob.length > 0 &&
+    isAdult(dob) &&
+    signupPassword.length >= 8 &&
+    signupPassword === confirmPassword;
+
+  const handleCreateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isAdult(dob)) {
+      setError('You must be 18 or older to create a Jhyaap Station account.');
+      return;
+    }
+    if (signupPassword !== confirmPassword) {
+      setError('Passwords don\u2019t match.');
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    await new Promise((r) => setTimeout(r, 500));
+    const err = signup({
+      phone,
+      password: signupPassword,
+      name: fullName.trim(),
+      dob,
+      email,
+      authMethod: 'phone',
+    });
+    setIsLoading(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    goTo('success');
+  };
+
+  // ---------- Google: DOB collection (age gate) ----------
+  const handleGoogleDobSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isAdult(dob)) {
+      setError('You must be 18 or older to create a Jhyaap Station account.');
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    await new Promise((r) => setTimeout(r, 400));
+    updateProfile({ dob });
+    setIsLoading(false);
+    goTo('success');
+  };
+
+  // ---------- Forgot password: reset ----------
+  const canResetPassword = resetPasswordValue.length >= 8 && resetPasswordValue === resetConfirm;
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canResetPassword) return;
+    setIsLoading(true);
+    setError(null);
+    await new Promise((r) => setTimeout(r, 500));
+    const err = resetPassword(phone, resetPasswordValue);
+    setIsLoading(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    goTo('signin');
+    setSigninPhone(phone);
+    setSigninPassword('');
+    setError('Password updated. Please sign in with your new password.');
+  };
+
+  const handleContinueToStore = () => {
+    finishAuth();
+  };
+
+  // ---------- Back button behavior ----------
+  const handleBack = () => {
+    setError(null);
+    switch (view) {
+      case 'signin':
+        setPage('profile');
+        break;
+      case 'signup-phone':
+      case 'forgot-phone':
+        setView('signin');
+        break;
+      case 'signup-otp':
+        setView('signup-phone');
+        break;
+      case 'forgot-otp':
+        setView('forgot-phone');
+        break;
+      case 'signup-profile':
+        setView('signup-otp');
+        break;
+      case 'forgot-reset':
+        setView('forgot-otp');
+        break;
+      case 'phone-verify-otp':
+        setView('signin');
+        break;
+      default:
+        setView('signin');
+    }
+  };
+
+  const backLabel = view === 'signin' ? 'Back to profile' : 'Back';
 
   return (
     <div className="min-h-screen bg-night-950 text-night-100">
@@ -79,7 +401,7 @@ export default function LoginPage() {
           </p>
           <div className="mt-8 space-y-3">
             {[
-              'Phone-based sign in and sign up',
+              'Phone number + password sign in',
               'Saved profile for faster checkout',
               'Order history and delivery tracking',
             ].map((item) => (
@@ -91,20 +413,126 @@ export default function LoginPage() {
         </section>
 
         <section className="rounded-2xl border border-night-600/40 bg-night-900/70 p-5 sm:p-8">
-          <button onClick={() => (step === 'phone' ? setPage('profile') : setStep(step === 'otp' ? 'phone' : 'otp'))} className="mb-6 inline-flex items-center gap-2 text-sm text-night-300 hover:text-neon-amber">
-            <ChevronLeft className="h-4 w-4" />
-            {step === 'phone' ? 'Back to profile' : 'Back'}
-          </button>
+          {view !== 'success' && (
+            <button onClick={handleBack} className="mb-6 inline-flex items-center gap-2 text-sm text-night-300 hover:text-neon-amber">
+              <ChevronLeft className="h-4 w-4" />
+              {backLabel}
+            </button>
+          )}
 
-          {step === 'phone' && (
-            <form onSubmit={handleSendOTP} className="space-y-5">
+          {error && (
+            <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {error}
+            </div>
+          )}
+
+          {/* ---------------- SIGN IN ---------------- */}
+          {view === 'signin' && (
+            <form onSubmit={handleSignIn} className="space-y-5">
               <div>
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neon-amber/10 text-neon-amber">
                   <Phone className="h-6 w-6" />
                 </div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-neon-amber">Sign in / Sign up</p>
-                <h2 className="mt-2 text-3xl font-bold text-white">Continue with your phone</h2>
-                <p className="mt-2 text-sm text-night-300">Enter your Nepal mobile number to receive a one-time code.</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-neon-amber">Sign in</p>
+                <h2 className="mt-2 text-3xl font-bold text-white">Welcome back</h2>
+                <p className="mt-2 text-sm text-night-300">Sign in with your phone number and password.</p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-night-200">Phone Number</label>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-xl border border-night-600/50 bg-night-950 px-4 py-3 text-night-300">+977</span>
+                  <input
+                    type="tel"
+                    value={signinPhone}
+                    onChange={(e) => setSigninPhone(e.target.value.replace(/\D/g, ''))}
+                    placeholder="9800000000"
+                    maxLength={10}
+                    className="input-field flex-1"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-sm font-semibold text-night-200">Password</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhone(signinPhone);
+                      goTo('forgot-phone');
+                    }}
+                    className="text-xs font-semibold text-neon-amber hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showSigninPassword ? 'text' : 'password'}
+                    value={signinPassword}
+                    onChange={(e) => setSigninPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="input-field w-full pr-11"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSigninPassword((s) => !s)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-night-400 hover:text-night-200"
+                    aria-label={showSigninPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showSigninPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={signinPhone.length < 10 || signinPassword.length < 1 || isLoading}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </button>
+
+              <div className="flex items-center gap-3 text-xs text-night-500">
+                <div className="h-px flex-1 bg-night-600/40" />
+                or
+                <div className="h-px flex-1 bg-night-600/40" />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGoogleAuth}
+                disabled={isLoading}
+                className="btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Continue with Google
+              </button>
+
+              <p className="text-center text-sm text-night-300">
+                New here?{' '}
+                <button
+                  type="button"
+                  onClick={() => goTo('signup-phone')}
+                  className="font-semibold text-neon-amber hover:underline"
+                >
+                  Create an account
+                </button>
+              </p>
+            </form>
+          )}
+
+          {/* ---------------- SIGNUP STEP 1: PHONE ---------------- */}
+          {view === 'signup-phone' && (
+            <form onSubmit={handleSignupSendOtp} className="space-y-5">
+              <div>
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neon-amber/10 text-neon-amber">
+                  <Phone className="h-6 w-6" />
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-neon-amber">Create account</p>
+                <h2 className="mt-2 text-3xl font-bold text-white">What\u2019s your number?</h2>
+                <p className="mt-2 text-sm text-night-300">We\u2019ll text you a one-time code to verify it.</p>
               </div>
 
               <div>
@@ -123,70 +551,342 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <button type="submit" disabled={phone.length < 10 || isLoading} className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50">
+              <button
+                type="submit"
+                disabled={phone.length < 10 || isLoading}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 {isLoading ? 'Sending code...' : 'Send OTP'}
               </button>
+
+              <div className="flex items-center gap-3 text-xs text-night-500">
+                <div className="h-px flex-1 bg-night-600/40" />
+                or
+                <div className="h-px flex-1 bg-night-600/40" />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGoogleAuth}
+                disabled={isLoading}
+                className="btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Sign up with Google
+              </button>
+
               <p className="text-center text-xs leading-5 text-night-500">
-                By continuing, you confirm you are eligible to use Jhyaap Station and agree to account verification.
+                By continuing, you confirm you are of legal drinking age and agree to our Terms of Service and
+                Privacy Policy.
               </p>
             </form>
           )}
 
-          {step === 'otp' && (
-            <form onSubmit={handleVerifyOTP} className="space-y-5">
+          {/* ---------------- FORGOT PASSWORD STEP 1: PHONE ---------------- */}
+          {view === 'forgot-phone' && (
+            <form onSubmit={handleForgotSendOtp} className="space-y-5">
               <div>
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neon-amber/10 text-neon-amber">
                   <LockKeyhole className="h-6 w-6" />
                 </div>
-                <h2 className="text-3xl font-bold text-white">Enter OTP</h2>
-                <p className="mt-2 text-sm text-night-300">We sent a 4-digit code to +977 {phone}.</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-neon-amber">Reset password</p>
+                <h2 className="mt-2 text-3xl font-bold text-white">Confirm your number</h2>
+                <p className="mt-2 text-sm text-night-300">We\u2019ll send a code to verify it\u2019s you.</p>
               </div>
 
-              <input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                placeholder="0000"
-                maxLength={4}
-                className="input-field w-full text-center text-2xl tracking-widest"
-                autoFocus
-              />
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-night-200">Phone Number</label>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-xl border border-night-600/50 bg-night-950 px-4 py-3 text-night-300">+977</span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                    placeholder="9800000000"
+                    maxLength={10}
+                    className="input-field flex-1"
+                    autoFocus
+                  />
+                </div>
+              </div>
 
-              <button type="submit" disabled={otp.length < 4 || isLoading} className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50">
-                {isLoading ? 'Verifying...' : 'Verify OTP'}
-              </button>
-              <button type="button" onClick={() => setStep('phone')} className="btn-secondary w-full">
-                Use Different Number
+              <button
+                type="submit"
+                disabled={phone.length < 10 || isLoading}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isLoading ? 'Sending code...' : 'Send OTP'}
               </button>
             </form>
           )}
 
-          {step === 'name' && (
-            <form onSubmit={handleCompleteSignup} className="space-y-5">
+          {/* ---------------- OTP (shared: signup / forgot / google phone-verify) ---------------- */}
+          {(view === 'signup-otp' || view === 'forgot-otp' || view === 'phone-verify-otp') && (
+            <form onSubmit={handleVerifyOtp} className="space-y-5">
               <div>
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neon-amber/10 text-neon-amber">
+                  <LockKeyhole className="h-6 w-6" />
+                </div>
+                <h2 className="text-3xl font-bold text-white">Enter the code</h2>
+                <p className="mt-2 text-sm text-night-300">We sent a {OTP_LENGTH}-digit code to +977 {phone}.</p>
+              </div>
+
+              <div className="flex justify-between gap-2">
+                {otpDigits.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => (otpRefs.current[i] = el)}
+                    type="text"
+                    inputMode="numeric"
+                    value={digit}
+                    onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    maxLength={1}
+                    autoFocus={i === 0}
+                    className="input-field h-14 w-12 text-center text-xl tracking-widest"
+                  />
+                ))}
+              </div>
+
+              <div className="text-center text-sm text-night-400">
+                {resendIn > 0 ? (
+                  <span>
+                    Resend code in {Math.floor(resendIn / 60)}:{String(resendIn % 60).padStart(2, '0')}
+                  </span>
+                ) : (
+                  <button type="button" onClick={handleResend} className="font-semibold text-neon-amber hover:underline">
+                    Resend code
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={otpCode.length < OTP_LENGTH || isLoading}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isLoading ? 'Verifying...' : 'Verify & continue'}
+              </button>
+            </form>
+          )}
+
+          {/* ---------------- SIGNUP STEP 3: PROFILE + PASSWORD ---------------- */}
+          {view === 'signup-profile' && (
+            <form onSubmit={handleCreateAccount} className="space-y-5">
+              <div>
+                <div className="mb-4 flex items-center gap-2 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm font-semibold text-green-300 w-fit">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Phone verified
+                </div>
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neon-amber/10 text-neon-amber">
                   <UserPlus className="h-6 w-6" />
                 </div>
-                <h2 className="text-3xl font-bold text-white">Complete your profile</h2>
-                <p className="mt-2 text-sm text-night-300">Add your name so your account and checkout feel personal.</p>
+                <h2 className="text-3xl font-bold text-white">Finish your profile</h2>
+                <p className="mt-2 text-sm text-night-300">A few more details and you\u2019re set.</p>
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-night-200">Full Name</label>
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   placeholder="Enter your name"
                   className="input-field w-full"
                   autoFocus
                 />
               </div>
 
-              <button type="submit" disabled={name.length < 2 || isLoading} className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50">
-                {isLoading ? 'Creating account...' : 'Complete Sign Up'}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-night-200">Date of Birth</label>
+                <input
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="input-field w-full"
+                />
+                {dob && !isAdult(dob) && (
+                  <p className="mt-1 text-xs text-red-400">You must be 18 or older to use Jhyaap Station.</p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-night-200">
+                  Email <span className="text-night-500 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="input-field w-full"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-night-200">Password</label>
+                <div className="relative">
+                  <input
+                    type={showSignupPassword ? 'text' : 'password'}
+                    value={signupPassword}
+                    onChange={(e) => setSignupPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                    className="input-field w-full pr-11"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignupPassword((s) => !s)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-night-400 hover:text-night-200"
+                    aria-label={showSignupPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {signupPassword.length > 0 && (
+                  <div className="mt-2 flex gap-1">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className={`h-1.5 flex-1 rounded-full ${
+                          i < signupPwScore
+                            ? signupPwScore <= 1
+                              ? 'bg-red-500'
+                              : signupPwScore === 2
+                              ? 'bg-amber-500'
+                              : 'bg-green-500'
+                            : 'bg-night-700'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-night-200">Confirm Password</label>
+                <input
+                  type={showSignupPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your password"
+                  className="input-field w-full"
+                />
+                {confirmPassword.length > 0 && confirmPassword !== signupPassword && (
+                  <p className="mt-1 text-xs text-red-400">Passwords don\u2019t match.</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={!canCreateAccount || isLoading}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isLoading ? 'Creating account...' : 'Create account'}
               </button>
             </form>
+          )}
+
+          {/* ---------------- GOOGLE: DOB COLLECTION (age gate) ---------------- */}
+          {view === 'google-dob' && (
+            <form onSubmit={handleGoogleDobSubmit} className="space-y-5">
+              <div>
+                <div className="mb-4 flex items-center gap-2 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm font-semibold text-green-300 w-fit">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Phone verified
+                </div>
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neon-amber/10 text-neon-amber">
+                  <UserPlus className="h-6 w-6" />
+                </div>
+                <h2 className="text-3xl font-bold text-white">One last thing</h2>
+                <p className="mt-2 text-sm text-night-300">We need your date of birth to confirm you\u2019re eligible to order.</p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-night-200">Date of Birth</label>
+                <input
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="input-field w-full"
+                  autoFocus
+                />
+                {dob && !isAdult(dob) && (
+                  <p className="mt-1 text-xs text-red-400">You must be 18 or older to use Jhyaap Station.</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={!isAdult(dob) || isLoading}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isLoading ? 'Saving...' : 'Continue'}
+              </button>
+            </form>
+          )}
+
+          {/* ---------------- FORGOT PASSWORD STEP 3: RESET ---------------- */}
+          {view === 'forgot-reset' && (
+            <form onSubmit={handleResetPassword} className="space-y-5">
+              <div>
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neon-amber/10 text-neon-amber">
+                  <LockKeyhole className="h-6 w-6" />
+                </div>
+                <h2 className="text-3xl font-bold text-white">Set a new password</h2>
+                <p className="mt-2 text-sm text-night-300">Choose something you haven\u2019t used before.</p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-night-200">New Password</label>
+                <input
+                  type="password"
+                  value={resetPasswordValue}
+                  onChange={(e) => setResetPasswordValue(e.target.value)}
+                  placeholder="At least 8 characters"
+                  className="input-field w-full"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-night-200">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={resetConfirm}
+                  onChange={(e) => setResetConfirm(e.target.value)}
+                  placeholder="Re-enter new password"
+                  className="input-field w-full"
+                />
+                {resetConfirm.length > 0 && resetConfirm !== resetPasswordValue && (
+                  <p className="mt-1 text-xs text-red-400">Passwords don\u2019t match.</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={!canResetPassword || isLoading}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isLoading ? 'Updating...' : 'Update password'}
+              </button>
+            </form>
+          )}
+
+          {/* ---------------- SUCCESS ---------------- */}
+          {view === 'success' && (
+            <div className="space-y-6 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500/10 text-green-400">
+                <CheckCircle2 className="h-7 w-7" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-white">You\u2019re in</h2>
+                <p className="mt-2 text-sm leading-6 text-night-300">
+                  Your saved addresses, order tracking, and faster checkout are now active on this account.
+                </p>
+              </div>
+              <button onClick={handleContinueToStore} className="btn-primary w-full">
+                Back to store
+              </button>
+            </div>
           )}
         </section>
       </div>

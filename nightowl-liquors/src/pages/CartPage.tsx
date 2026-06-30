@@ -5,7 +5,12 @@ import { useCartStore } from '@/store/cartStore';
 import { useAppStore } from '@/store/appStore';
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, clearCart, total, subtotal, discount } = useCartStore();
+  const { items, updateQuantity, removeItem, clearCart, getFinalTotal, getTotalPrice, getDiscount } = useCartStore();
+
+  // Ensure numeric values even if store doesn't expose derived fields
+  const subtotal = getTotalPrice();
+  const discount = getDiscount();
+  const total = getFinalTotal();
   const { setPage } = useAppStore();
   const [couponInput, setCouponInput] = useState('');
   const [couponCode, setCouponCode] = useState<string | null>(null);

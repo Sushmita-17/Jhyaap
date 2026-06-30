@@ -60,6 +60,10 @@ export interface User {
   phone: string;
   email: string;
   name: string;
+  dob?: string;
+  /** NOTE: plaintext for local-only prototyping. Replace with backend auth + hashing before production. */
+  password?: string;
+  authMethod?: 'phone' | 'google';
   profilePhoto?: string;
   walletBalance: number;
   loyaltyPoints?: number;
