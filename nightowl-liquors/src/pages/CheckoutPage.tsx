@@ -131,7 +131,7 @@ export default function CheckoutPage() {
   const estimatedEarn = Math.floor(total / 100) * POINTS_PER_100_RS;
 
   return (
-    <div className="bg-[#0D0908] min-h-screen pb-20 selection:bg-[#C9A84C]/30">
+    <div className="bg-[#0D0908] min-h-screen pb-32 lg:pb-20 selection:bg-[#C9A84C]/30">
       {/* Page Header */}
       <div className="max-w-[1248px] mx-auto px-4 py-8">
         <button
@@ -204,7 +204,7 @@ export default function CheckoutPage() {
               <div className="mt-6 bg-black/20 border border-white/5 rounded-2xl p-6">
                 <h3 className="text-[12px] font-black text-[#F5ECD7] uppercase tracking-widest mb-4">New Address</h3>
                 <form onSubmit={handleAddAddress} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <input
                       type="text"
                       placeholder="Label (e.g. Home)"
@@ -458,6 +458,30 @@ export default function CheckoutPage() {
             </div>
           </div>
         </aside>
+      </div>
+
+      {/* MOBILE STICKY CTA — keeps the total & place-order action reachable
+          without scrolling past address/payment/notes on small screens.
+          Desktop already has this covered via the sticky right sidebar. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#16110F]/95 backdrop-blur-md px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.4)] lg:hidden">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[9px] uppercase tracking-widest text-[#888888]">Total Payable</p>
+            <p className="truncate text-[18px] font-mono font-bold text-[#C9A84C]">Rs {total.toLocaleString()}</p>
+          </div>
+          <button
+            onClick={handlePlaceOrder}
+            disabled={!selectedAddress || isProcessing}
+            className="flex h-12 shrink-0 items-center justify-center rounded-xl bg-[#C9A84C] px-6 text-[12px] font-black uppercase tracking-widest text-black transition-all active:scale-95 disabled:grayscale disabled:opacity-50"
+          >
+            {isProcessing ? 'Processing...' : 'Place Order'}
+          </button>
+        </div>
+        {!selectedAddress && (
+          <p className="mt-1.5 text-center text-[10px] font-bold uppercase tracking-widest text-amber-500">
+            Select a delivery address
+          </p>
+        )}
       </div>
     </div>
   );

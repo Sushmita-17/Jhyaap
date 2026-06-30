@@ -104,7 +104,7 @@ export default function CartPage() {
 
           {/* INNER CARD (Grid) */}
           <div className="m-4 lg:m-8 bg-[#1A1410] border-[0.5px] border-[#2E2318] rounded-[12px] overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_290px] h-[520px]">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_290px] lg:h-[560px]">
               
               {/* LEFT COLUMN: REVIEW SELECTION */}
               <div className="flex flex-col relative border-r border-[#2E2318] min-h-0">
@@ -162,16 +162,16 @@ export default function CartPage() {
                           <div className="flex items-center bg-[#0F0B08] border border-[#2E2318] rounded-[4px] overflow-hidden p-[1px]">
                             <button
                               onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                              className="w-5 h-5 flex items-center justify-center text-[#A89070] hover:text-[#C9A84C] transition-colors"
+                              className="w-9 h-9 flex items-center justify-center text-[#A89070] hover:text-[#C9A84C] transition-colors active:scale-95"
                             >
-                              <Minus size={10} />
+                              <Minus size={14} />
                             </button>
-                            <span className="w-6 text-center text-[#F5ECD7] font-mono text-[12px]">{item.quantity}</span>
+                            <span className="w-8 text-center text-[#F5ECD7] font-mono text-[13px]">{item.quantity}</span>
                             <button
                               onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                              className="w-5 h-5 flex items-center justify-center text-[#A89070] hover:text-[#C9A84C] transition-colors"
+                              className="w-9 h-9 flex items-center justify-center text-[#A89070] hover:text-[#C9A84C] transition-colors active:scale-95"
                             >
-                              <Plus size={10} />
+                              <Plus size={14} />
                             </button>
                           </div>
 

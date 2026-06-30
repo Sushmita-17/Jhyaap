@@ -55,6 +55,19 @@ export default function CustomerDashboardPage() {
     }
   }, [user, setPage]);
 
+  // Close whichever modal is open on Escape.
+  useEffect(() => {
+    if (!passwordModalOpen && !confirmDeleteOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setPasswordModalOpen(false);
+        setConfirmDeleteOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [passwordModalOpen, confirmDeleteOpen]);
+
   const handleSaveEmail = () => {
     if (newEmail.trim()) {
       updateProfile({ email: newEmail.trim() });
@@ -208,8 +221,14 @@ export default function CustomerDashboardPage() {
 
         <div className="mt-6">
           {passwordModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-              <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6">
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+              onClick={handleClosePasswordModal}
+            >
+              <div
+                className="w-full max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-neon-amber">Change password</p>
@@ -283,8 +302,14 @@ export default function CustomerDashboardPage() {
           )}
 
           {confirmDeleteOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-              <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6">
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+              onClick={() => setConfirmDeleteOpen(false)}
+            >
+              <div
+                className="w-full max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-[#E54545]">Delete account</p>
@@ -494,10 +519,25 @@ export default function CustomerDashboardPage() {
                         { key: 'whatsapp', label: 'WhatsApp', value: notifWhatsapp, set: setNotifWhatsapp },
                         { key: 'email', label: 'Email', value: notifEmail, set: setNotifEmail },
                       ].map((t) => (
-                        <label key={t.key} className="flex cursor-pointer items-center justify-between rounded-lg bg-night-950/30 px-3 py-2">
+                        <div key={t.key} className="flex items-center justify-between rounded-lg bg-night-950/30 px-3 py-2">
                           <span className="text-sm text-white">{t.label}</span>
-                          <input type="checkbox" checked={t.value} onChange={(e) => t.set(e.target.checked)} />
-                        </label>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={t.value}
+                            aria-label={`Toggle ${t.label} notifications`}
+                            onClick={() => t.set(!t.value)}
+                            className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+                              t.value ? 'bg-[#F5A623]' : 'bg-night-700'
+                            }`}
+                          >
+                            <span
+                              className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+                                t.value ? 'translate-x-[22px]' : 'translate-x-0.5'
+                              }`}
+                            />
+                          </button>
+                        </div>
                       ))}
                     </div>
                   </div>

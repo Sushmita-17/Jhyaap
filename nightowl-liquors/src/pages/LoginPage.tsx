@@ -295,7 +295,7 @@ export default function LoginPage() {
       return;
     }
     if (signupPassword !== confirmPassword) {
-      setError('Passwords don\u2019t match.');
+      setError('Passwords don\'t match.');
       return;
     }
     setIsLoading(true);
@@ -362,7 +362,7 @@ export default function LoginPage() {
     setError(null);
     switch (view) {
       case 'signin':
-        setPage('profile');
+        setPage('home');
         break;
       case 'signup-phone':
       case 'forgot-phone':
@@ -388,7 +388,7 @@ export default function LoginPage() {
     }
   };
 
-  const backLabel = view === 'signin' ? 'Back to profile' : 'Back';
+  const backLabel = view === 'signin' ? 'Back to home' : 'Back';
 
   return (
     <div className="min-h-screen bg-night-950 text-night-100">
@@ -531,8 +531,8 @@ export default function LoginPage() {
                   <Phone className="h-6 w-6" />
                 </div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-neon-amber">Create account</p>
-                <h2 className="mt-2 text-3xl font-bold text-white">What\u2019s your number?</h2>
-                <p className="mt-2 text-sm text-night-300">We\u2019ll text you a one-time code to verify it.</p>
+                <h2 className="mt-2 text-3xl font-bold text-white">What's your number?</h2>
+                <p className="mt-2 text-sm text-night-300">We'll text you a one-time code to verify it.</p>
               </div>
 
               <div>
@@ -590,7 +590,7 @@ export default function LoginPage() {
                 </div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-neon-amber">Reset password</p>
                 <h2 className="mt-2 text-3xl font-bold text-white">Confirm your number</h2>
-                <p className="mt-2 text-sm text-night-300">We\u2019ll send a code to verify it\u2019s you.</p>
+                <p className="mt-2 text-sm text-night-300">We'll send a code to verify it's you.</p>
               </div>
 
               <div>
@@ -628,6 +628,26 @@ export default function LoginPage() {
                 </div>
                 <h2 className="text-3xl font-bold text-white">Enter the code</h2>
                 <p className="mt-2 text-sm text-night-300">We sent a {OTP_LENGTH}-digit code to +977 {phone}.</p>
+                {/* DEV-ONLY: no real SMS gateway is wired up yet, so the mock code is
+                    shown here instead of being texted. Remove this block once a real
+                    OTP/SMS provider is connected. */}
+                {generatedOtp && (
+                  <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-neon-amber/30 bg-neon-amber/10 px-3 py-2 text-sm">
+                    <span className="text-night-300">Dev mode — your code is</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const digits = generatedOtp.split('');
+                        setOtpDigits(digits);
+                        otpRefs.current[digits.length - 1]?.focus();
+                      }}
+                      className="font-mono font-bold tracking-widest text-neon-amber hover:underline"
+                      title="Click to auto-fill"
+                    >
+                      {generatedOtp}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between gap-2">
@@ -681,7 +701,7 @@ export default function LoginPage() {
                   <UserPlus className="h-6 w-6" />
                 </div>
                 <h2 className="text-3xl font-bold text-white">Finish your profile</h2>
-                <p className="mt-2 text-sm text-night-300">A few more details and you\u2019re set.</p>
+                <p className="mt-2 text-sm text-night-300">A few more details and you're set.</p>
               </div>
 
               <div>
@@ -771,7 +791,7 @@ export default function LoginPage() {
                   className="input-field w-full"
                 />
                 {confirmPassword.length > 0 && confirmPassword !== signupPassword && (
-                  <p className="mt-1 text-xs text-red-400">Passwords don\u2019t match.</p>
+                  <p className="mt-1 text-xs text-red-400">Passwords don't match.</p>
                 )}
               </div>
 
@@ -797,7 +817,7 @@ export default function LoginPage() {
                   <UserPlus className="h-6 w-6" />
                 </div>
                 <h2 className="text-3xl font-bold text-white">One last thing</h2>
-                <p className="mt-2 text-sm text-night-300">We need your date of birth to confirm you\u2019re eligible to order.</p>
+                <p className="mt-2 text-sm text-night-300">We need your date of birth to confirm you're eligible to order.</p>
               </div>
 
               <div>
@@ -832,7 +852,7 @@ export default function LoginPage() {
                   <LockKeyhole className="h-6 w-6" />
                 </div>
                 <h2 className="text-3xl font-bold text-white">Set a new password</h2>
-                <p className="mt-2 text-sm text-night-300">Choose something you haven\u2019t used before.</p>
+                <p className="mt-2 text-sm text-night-300">Choose something you haven't used before.</p>
               </div>
 
               <div>
@@ -857,7 +877,7 @@ export default function LoginPage() {
                   className="input-field w-full"
                 />
                 {resetConfirm.length > 0 && resetConfirm !== resetPasswordValue && (
-                  <p className="mt-1 text-xs text-red-400">Passwords don\u2019t match.</p>
+                  <p className="mt-1 text-xs text-red-400">Passwords don't match.</p>
                 )}
               </div>
 
@@ -878,7 +898,7 @@ export default function LoginPage() {
                 <CheckCircle2 className="h-7 w-7" />
               </div>
               <div>
-                <h2 className="text-3xl font-bold text-white">You\u2019re in</h2>
+                <h2 className="text-3xl font-bold text-white">You're in</h2>
                 <p className="mt-2 text-sm leading-6 text-night-300">
                   Your saved addresses, order tracking, and faster checkout are now active on this account.
                 </p>
