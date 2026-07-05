@@ -322,7 +322,7 @@ export default function HomePage() {
     }`}>
       {/* 1. FLASH DEALS UNIFIED SECTION */}
       <section id="deals" className={`scroll-mt-[150px] w-full pt-2 pb-6 md:pt-4 md:pb-12 ${
-        isLight ? 'bg-gray-100' : 'bg-[#0D0908]'
+        isLight ? 'bg-white' : 'bg-[#0D0908]'
       }`}>
         
         {/* DESKTOP FLASH DEALS */}

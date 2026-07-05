@@ -38,6 +38,7 @@ import { isAdminPath, ADMIN_LOGIN_PATH, ADMIN_BASE_PATH } from './lib/adminRoute
 import AiChatbot from './components/AiChatbot';
 import BottomNav from './components/BottomNav';
 import { useGlobalRiderTracking } from './hooks/useGlobalRiderTracking';
+import { useThemeStore } from './store/themeStore';
 
 function GlobalRiderTrackingBridge() {
   useGlobalRiderTracking();
@@ -94,9 +95,11 @@ function StoreShell({ children }: { children: React.ReactNode }) {
 function App() {
   const location = useLocation();
   const isAdminRoute = isAdminPath(location.pathname);
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
 
   return (
-    <div className="min-h-screen bg-night-950">
+    <div className={`min-h-screen ${isLight ? 'bg-gray-50' : 'bg-night-950'}`}>
       <GlobalRiderTrackingBridge />
       {!isAdminRoute && <AgeConsentGate />}
       <StoreNavigationBridge />

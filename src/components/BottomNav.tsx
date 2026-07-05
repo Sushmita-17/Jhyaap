@@ -2,6 +2,7 @@ import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 import { useCategories } from '@/store/catalogStore';
+import { useThemeStore } from '@/store/themeStore';
 import { Grid, Home, ShoppingBag, ShoppingCart, User, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -22,6 +23,8 @@ export default function BottomNav() {
   const totalItems = useCartStore((s) => s.getTotalItems());
   const user = useAuthStore((s) => s.user);
   const categories = useCategories();
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
 
   const [openCategories, setOpenCategories] = useState(false);
 
@@ -50,16 +53,24 @@ export default function BottomNav() {
   return (
     <>
       {openCategories && (
-        <div className="fixed inset-x-0 bottom-14 z-[1006] mx-auto max-w-[640px] rounded-t-2xl border border-white/10 bg-[#0B0B0B]/95 p-1.5 shadow-[0_-16px_32px_rgba(0,0,0,0.65)] backdrop-blur-lg md:hidden">
+        <div className={`fixed inset-x-0 bottom-14 z-[1006] mx-auto max-w-[640px] rounded-t-2xl border p-1.5 shadow-[0_-16px_32px_rgba(0,0,0,0.65)] backdrop-blur-lg md:hidden ${
+          isLight 
+            ? 'bg-white/95 border-gray-200 shadow-[0_-16px_32px_rgba(0,0,0,0.1)]' 
+            : 'bg-[#0B0B0B]/95 border-white/10'
+        }`}>
           <div className="flex items-center justify-between pb-1.5">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-neon-amber">Categories</p>
-              <p className="text-[11px] text-white">Tap a category to browse bottles.</p>
+              <p className={`text-[11px] ${isLight ? 'text-gray-700' : 'text-white'}`}>Tap a category to browse bottles.</p>
             </div>
             <button
               type="button"
               onClick={() => setOpenCategories(false)}
-              className="rounded-full border border-white/10 bg-white/5 p-1.5 text-[#CCCCCC] hover:text-white"
+              className={`rounded-full border p-1.5 transition-colors ${
+                isLight 
+                  ? 'border-gray-300 bg-gray-100 text-gray-600 hover:text-gray-900' 
+                  : 'border-white/10 bg-white/5 text-[#CCCCCC] hover:text-white'
+              }`}
             >
               <X size={14} />
             </button>
@@ -70,18 +81,30 @@ export default function BottomNav() {
                 key={category.id}
                 type="button"
                 onClick={() => selectCategory(category.id)}
-                className="rounded-xl border border-white/10 bg-[#111111] px-1.5 py-1.5 text-left transition hover:border-neon-amber/40 hover:bg-[#181818]"
+                className={`rounded-xl border px-1.5 py-1.5 text-left transition ${
+                  isLight 
+                    ? 'border-gray-200 bg-gray-50 hover:border-[#C9A84C]/40 hover:bg-gray-100' 
+                    : 'border-white/10 bg-[#111111] hover:border-neon-amber/40 hover:bg-[#181818]'
+                }`}
               >
-                <p className="text-[11px] font-semibold text-white">{category.name}</p>
-                <p className="mt-0.5 text-[8px] text-night-400">{category.count} items</p>
+                <p className={`text-[11px] font-semibold ${isLight ? 'text-gray-900' : 'text-white'}`}>{category.name}</p>
+                <p className={`mt-0.5 text-[8px] ${isLight ? 'text-gray-500' : 'text-night-400'}`}>{category.count} items</p>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-[1005] border-t border-white/10 bg-[#080808]/95 px-0.5 pb-1 pt-1 shadow-[0_-12px_32px_rgba(0,0,0,0.6)] backdrop-blur-md md:hidden">
-        <div className="mx-auto flex max-w-[640px] items-end justify-between gap-0.5 rounded-[14px] border border-white/5 bg-[#0D0D0D]/95 px-1 py-0.5">
+      <div className={`fixed inset-x-0 bottom-0 z-[1005] border-t px-0.5 pb-1 pt-1 shadow-[0_-12px_32px_rgba(0,0,0,0.6)] backdrop-blur-md md:hidden ${
+        isLight 
+          ? 'bg-white/95 border-gray-200 shadow-[0_-12px_32px_rgba(0,0,0,0.1)]' 
+          : 'bg-[#080808]/95 border-white/10'
+      }`}>
+        <div className={`mx-auto flex max-w-[640px] items-end justify-between gap-0.5 rounded-[14px] border px-1 py-0.5 ${
+          isLight 
+            ? 'bg-gray-50 border-gray-200' 
+            : 'bg-[#0D0D0D]/95 border-white/5'
+        }`}>
           {navItems.map((item) => {
             const isActive =
               item.page === 'home'
@@ -109,7 +132,7 @@ export default function BottomNav() {
                   }
                 }}
                 className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[8px] transition-all rounded-xl px-1 py-0.5 ${
-                  isActive ? 'text-gold-primary' : 'text-[#B7B7B7] hover:text-white'
+                  isActive ? 'text-gold-primary' : isLight ? 'text-gray-500 hover:text-gray-900' : 'text-[#B7B7B7] hover:text-white'
                 }`}
               >
                 <span className="flex items-center justify-center h-4 w-4">

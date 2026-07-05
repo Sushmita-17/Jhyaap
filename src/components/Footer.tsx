@@ -194,7 +194,7 @@ export default function Footer() {
           MIDDLE SECTION — brand
           ━━━━━━━━━━━━━━━━━━━━━ */}
       <div className={`p-[10px_10px] md:p-[24px_30px] text-center border-b ${
-        isLight ? 'border-gray-200' : 'border-[#1A1A1A]'
+        isLight ? 'bg-white border-gray-200' : 'border-[#1A1A1A]'
       }`}>
         <div className="inline-flex items-center justify-center p-1 md:p-1.5 rounded-full border border-[#C9A84C] mb-1.5 md:mb-2">
           <BrandLogo size="sm" />
@@ -207,7 +207,7 @@ export default function Footer() {
           18+ DISCLAIMER BAR
           ━━━━━━━━━━━━━━━━━━━━━ */}
       <div className={`p-[6px_10px] md:p-[16px_34px] text-center border-b ${
-        isLight ? 'border-gray-200' : 'border-[#1A1A1A]'
+        isLight ? 'bg-gray-50 border-gray-200' : 'border-[#1A1A1A]'
       }`}>
         <h4 className="text-[#C9A84C] text-[8px] md:text-[9px] font-bold uppercase tracking-[1.2px] mb-0.5 md:mb-1">18+ ONLY · DRINK RESPONSIBLY</h4>
         <p className={`text-[8px] md:text-[9px] leading-[1.3] md:leading-[1.4] max-w-[480px] mx-auto ${
