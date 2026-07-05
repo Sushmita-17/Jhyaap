@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Strongbow Apple Ciders Dark Fruit 320ML",
+    "imageUrl": "https://cheers.com.np/uploads/products/6473841790135790462396786070699731001020.png/200/250",
+    "price": "685",
+    "category": "liquor",
+    "volume": "320ML"
+  },
+  {
+    "name": "BroCode Strong RTD Fortified Carbonated Wine 250ML",
+    "imageUrl": "https://cheers.com.np/uploads/products/992650967697634459269140237321478131645.png/200/250",
+    "price": "560",
+    "category": "liquor",
+    "volume": "250ML"
+  },
+  {
+    "name": "Fratelli Shotgun Strong RTD Sparkling Wine 330ML",
+    "imageUrl": "https://cheers.com.np/uploads/products/8825974465230648942912116896473006434818965.png/200/250",
+    "price": "700",
+    "category": "liquor",
+    "volume": "330ML"
+  }
+]
