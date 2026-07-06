@@ -1,19 +1,44 @@
-# Root-level ignores
+# ========================
+# EDITOR — never commit
+# ========================
+.vscode/
+.idea/
+*.suo
+*.sw?
+
+# ========================
+# DEPENDENCIES
+# ========================
 node_modules/
+
+# ========================
+# BUILD OUTPUT
+# ========================
 dist/
+dist-ssr/
+build/
 
-# Temp/scraping files
-tmp_*.html
-tmp_cookies.txt
-
-# Environment
+# ========================
+# ENVIRONMENT — secrets
+# ========================
 .env
 .env.local
+.env.*.local
+.env.example
 
-# OS
+# ========================
+# OS FILES
+# ========================
 .DS_Store
 Thumbs.db
 
-# Editor
-.vscode/
+# ========================
+# TEMP / SCRAPING FILES
+# ========================
+tmp_*.html
+tmp_cookies.txt
+
+# ========================
+# QODO AI (local only)
+# ========================
 .qodo/
