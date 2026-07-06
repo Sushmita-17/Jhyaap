@@ -1,5 +1,4 @@
 [build]
-  base = "nightowl-liquors"
   publish = "dist"
   command = "npm run build"
 
