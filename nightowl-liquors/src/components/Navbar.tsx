@@ -4,8 +4,10 @@ import { useAppStore } from '@/store/appStore';
 import { useCartStore } from '@/store/cartStore';
 import { useCatalogStore, useCategories } from '@/store/catalogStore';
 import { useThemeStore } from '@/store/themeStore';
-import { Clock, CreditCard, Menu, Phone, Search, ShoppingCart, User, X, Minus, Plus, Sun, Moon } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { Clock, CreditCard, Menu, Phone, Search, ShoppingCart, User, X, Minus, Plus, Sun, Moon, Grid3X3, SlidersHorizontal, Bell } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import React from 'react';
 
 export default function Navbar() {
   const { currentPage, setPage, setSelectedCategory, setSearchQuery, setOnlyDeals } = useAppStore();
@@ -13,6 +15,7 @@ export default function Navbar() {
   const categories = useCategories();
   const cartQty = useCartStore((s) => s.getTotalItems());
   const { theme, toggleTheme } = useThemeStore();
+  const { user, isAuthenticated } = useAuthStore();
   const isLight = theme === 'light';
   
   const [searchValue, setSearchValue] = useState('');
@@ -23,6 +26,27 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showMobileSecondary, setShowMobileSecondary] = useState(true);
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
+  const [shopAllDropdownOpen, setShopAllDropdownOpen] = useState(false);
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
+
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          new Notification('Jhyaap Station', {
+            body: 'Notifications enabled! You will receive updates about your orders.',
+            icon: '/favicon.ico'
+          });
+        }
+      }
+    }
+  };
+
+  const handleNotificationClick = () => {
+    requestNotificationPermission();
+    setNotificationDropdownOpen(!notificationDropdownOpen);
+  };
   
   const headerRef = useRef<HTMLDivElement>(null);
   const announcementRef = useRef<HTMLDivElement>(null);
@@ -79,6 +103,7 @@ export default function Navbar() {
       if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
         setMegaMenuOpen(false);
         setBrandsOpen(false);
+        setShopAllDropdownOpen(false);
       }
     };
 
@@ -132,7 +157,7 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { label: 'Shop All', action: () => { setPage('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
+    { label: 'Shop All', action: () => { setPage('products'); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
     { label: 'All Categories ›', type: 'categories' },
     { label: 'Brands', type: 'brands' },
     { label: 'Deals', action: () => scrollToSection('deals') },
@@ -204,21 +229,21 @@ export default function Navbar() {
             <BrandLogo size="md" className="h-[42px] w-[42px] md:h-[72px] md:w-[72px] shadow-[0_0_14px_rgba(245,166,35,0.24)]" />
           </button>
 
-          {/* SEARCH BAR (iPhone XR Fix) */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-[520px] relative h-[30px] md:h-[34px] box-border">
-            <Search className={`absolute left-[9px] top-1/2 -translate-y-1/2 w-[11px] h-[11px] ${isLight ? 'text-gray-400' : 'text-[#888888]'}`} />
-            <input
-              type="text"
-              placeholder="Search whisky, beer, vodka, rum..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className={`w-full h-full border rounded-[8px] pl-[30px] pr-2 text-[10px] md:text-[11px] focus:outline-none focus:border-gold-primary transition-all font-sans box-border ${
-                isLight 
-                  ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:bg-white' 
-                  : 'bg-[#1A1A1A] border-[#2A2A2A] text-white placeholder:text-[#777777] focus:bg-[#1E1E1E]'
-              }`}
-            />
-          </form>
+          {/* Search Input - Center */}
+          <div className="flex flex-1 justify-center px-2">
+            <div className="relative w-full max-w-md">
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isLight ? 'text-gray-400' : 'text-[#888888]'}`} />
+              <input
+                type="text"
+                placeholder="Search products..."
+                className={`w-full pl-10 pr-4 py-2 rounded-full border text-sm transition-all ${
+                  isLight 
+                    ? 'bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/50 focus:border-[#C9A84C]' 
+                    : 'bg-white/5 border-white/10 text-white placeholder:text-[#888888] focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/50 focus:border-[#C9A84C]'
+                }`}
+              />
+            </div>
+          </div>
 
           <div className="flex items-center gap-2">
             {/* Desktop icons (no hamburger) */}
@@ -241,6 +266,54 @@ export default function Navbar() {
                 <Sun className={`absolute left-1.5 top-1 w-3 h-3 transition-opacity duration-300 ${isLight ? 'opacity-100 text-gray-600' : 'opacity-0'}`} />
                 <Moon className={`absolute right-1.5 top-1 w-3 h-3 transition-opacity duration-300 ${!isLight ? 'opacity-100 text-white' : 'opacity-0'}`} />
               </button>
+              {/* Notification Bell - for logged-in users */}
+              {isAuthenticated && (
+                <div className="relative">
+                  <button
+                    onClick={handleNotificationClick}
+                    className={`shrink-0 rounded-2xl p-2.5 transition-colors ${
+                      isLight 
+                        ? 'bg-gray-100 text-gray-600 hover:text-gray-900' 
+                        : 'bg-white/5 text-[#AAAAAA] hover:text-white'
+                    }`}
+                    aria-label="Notifications"
+                  >
+                    <Bell size={20} />
+                  </button>
+                  {/* Notification Dropdown */}
+                  {notificationDropdownOpen && (
+                    <div className={`absolute top-full right-0 mt-2 w-56 rounded-lg border shadow-xl z-50 p-2 ${
+                      isLight ? 'bg-white border-gray-200 shadow-[0_8px_24px_rgba(0,0,0,0.1)]' : 'bg-[#141414] border-[#222222]'
+                    }`}>
+                      <h3 className={`text-[10px] font-semibold mb-1.5 ${isLight ? 'text-gray-900' : 'text-white'}`}>Notifications</h3>
+                      <div className="space-y-1">
+                        <div className={`p-1 rounded-md ${isLight ? 'bg-gray-50' : 'bg-white/5'}`}>
+                          <p className={`text-[10px] ${isLight ? 'text-gray-700' : 'text-[#CCCCCC]'}`}>Order #1234 shipped</p>
+                          <p className={`text-[8px] mt-0.5 ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>2h ago</p>
+                        </div>
+                        <div className={`p-1 rounded-md ${isLight ? 'bg-gray-50' : 'bg-white/5'}`}>
+                          <p className={`text-[10px] ${isLight ? 'text-gray-700' : 'text-[#CCCCCC]'}`}>Order delivered</p>
+                          <p className={`text-[8px] mt-0.5 ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>1d ago</p>
+                        </div>
+                        <div className={`p-1 rounded-md ${isLight ? 'bg-gray-50' : 'bg-white/5'}`}>
+                          <p className={`text-[10px] ${isLight ? 'text-gray-700' : 'text-[#CCCCCC]'}`}>Flash deal: 20% off</p>
+                          <p className={`text-[8px] mt-0.5 ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>2d ago</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => { setPage('profile'); setNotificationDropdownOpen(false); }}
+                        className={`w-full mt-1.5 text-[9px] font-medium py-1 rounded-md transition-colors ${
+                          isLight 
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                            : 'bg-white/5 text-[#CCCCCC] hover:bg-white/10'
+                        }`}
+                      >
+                        View All
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <button
                 onClick={() => setPage('login')}
                 className={`shrink-0 rounded-2xl p-2.5 transition-colors ${
@@ -270,14 +343,82 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden shrink-0 rounded-2xl bg-white/5 p-2.5 text-[#AAAAAA] hover:text-white transition-colors"
-              aria-label="Open menu"
-            >
-              <Menu size={18} />
-            </button>
+            {/* Mobile hamburger and theme toggle */}
+            <div className="flex md:hidden items-center gap-2">
+              {/* Notification Bell - for logged-in users */}
+              {isAuthenticated && (
+                <div className="relative">
+                  <button
+                    onClick={handleNotificationClick}
+                    className={`shrink-0 rounded-2xl p-2.5 transition-colors ${
+                      isLight 
+                        ? 'bg-gray-100 text-gray-600 hover:text-gray-900' 
+                        : 'bg-white/5 text-[#AAAAAA] hover:text-white'
+                    }`}
+                    aria-label="Notifications"
+                  >
+                    <Bell size={18} />
+                  </button>
+                  {/* Notification Dropdown */}
+                  {notificationDropdownOpen && (
+                    <div className={`absolute top-full right-0 mt-2 w-56 rounded-lg border shadow-xl z-50 p-2 ${
+                      isLight ? 'bg-white border-gray-200 shadow-[0_8px_24px_rgba(0,0,0,0.1)]' : 'bg-[#141414] border-[#222222]'
+                    }`}>
+                      <h3 className={`text-[10px] font-semibold mb-1.5 ${isLight ? 'text-gray-900' : 'text-white'}`}>Notifications</h3>
+                      <div className="space-y-1">
+                        <div className={`p-1 rounded-md ${isLight ? 'bg-gray-50' : 'bg-white/5'}`}>
+                          <p className={`text-[10px] ${isLight ? 'text-gray-700' : 'text-[#CCCCCC]'}`}>Order #1234 shipped</p>
+                          <p className={`text-[8px] mt-0.5 ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>2h ago</p>
+                        </div>
+                        <div className={`p-1 rounded-md ${isLight ? 'bg-gray-50' : 'bg-white/5'}`}>
+                          <p className={`text-[10px] ${isLight ? 'text-gray-700' : 'text-[#CCCCCC]'}`}>Order delivered</p>
+                          <p className={`text-[8px] mt-0.5 ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>1d ago</p>
+                        </div>
+                        <div className={`p-1 rounded-md ${isLight ? 'bg-gray-50' : 'bg-white/5'}`}>
+                          <p className={`text-[10px] ${isLight ? 'text-gray-700' : 'text-[#CCCCCC]'}`}>Flash deal: 20% off</p>
+                          <p className={`text-[8px] mt-0.5 ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>2d ago</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => { setPage('profile'); setNotificationDropdownOpen(false); }}
+                        className={`w-full mt-1.5 text-[9px] font-medium py-1 rounded-md transition-colors ${
+                          isLight 
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                            : 'bg-white/5 text-[#CCCCCC] hover:bg-white/10'
+                        }`}
+                      >
+                        View All
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Theme Toggle Switch - Mobile */}
+              <button
+                onClick={toggleTheme}
+                className={`shrink-0 relative w-9 h-5 rounded-full p-0.5 transition-all duration-300 ${
+                  isLight 
+                    ? 'bg-gray-200' 
+                    : 'bg-[#C9A84C]'
+                }`}
+                aria-label="Toggle theme"
+              >
+                <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full transition-all duration-300 ${
+                  isLight 
+                    ? 'left-0.5 bg-white shadow-md' 
+                    : 'left-5 bg-black shadow-md'
+                }`} />
+                <Sun className={`absolute left-1 top-0.5 w-2 h-2 transition-opacity duration-300 ${isLight ? 'opacity-100 text-gray-600' : 'opacity-0'}`} />
+                <Moon className={`absolute right-1 top-0.5 w-2 h-2 transition-opacity duration-300 ${!isLight ? 'opacity-100 text-white' : 'opacity-0'}`} />
+              </button>
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="shrink-0 rounded-2xl bg-white/5 p-2.5 text-[#AAAAAA] hover:text-white transition-colors"
+                aria-label="Open menu"
+              >
+                <Menu size={18} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -328,57 +469,64 @@ export default function Navbar() {
           <div className="md:hidden h-full flex items-center">
             <div className="w-full px-2 py-1">
               <div className="flex w-full gap-2.5 overflow-x-auto hide-scrollbar pb-1">
-                {/* All pill */}
-                <button
-                  onClick={() => { setSelectedCategory(null); setPage('products'); }}
-                  className="flex-shrink-0 flex flex-col items-center gap-1 transition opacity-90 hover:opacity-100"
-                >
-                  <div className={`h-[44px] w-[44px] flex items-center justify-center rounded-full border text-gold-primary text-[9px] font-black ${
-                    isLight 
-                      ? 'bg-gray-200 border-gray-300' 
-                      : 'bg-[#222] border-gold-primary/40'
-                  }`}>
-                    ALL
-                  </div>
-                  <span className={`block text-[8px] font-bold uppercase tracking-[0.1em] leading-[1.1] ${isLight ? 'text-gray-900' : 'text-white'}`}>All</span>
-                </button>
-                {filteredCategories.slice(0, 6).map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => {
-                      setSelectedCategory(cat.id);
-                      setPage('products');
-                    }}
-                    className="flex-shrink-0 flex flex-col items-center gap-1 transition opacity-80 hover:opacity-100"
-                  >
-                    <div className={`h-[44px] w-[44px] overflow-hidden rounded-full border p-[3px] flex items-center justify-center ${
-                      isLight 
-                        ? 'bg-gray-100 border-gray-300' 
-                        : 'bg-[#1A1A1A] border-white/10'
-                    }`}>
-                      <img
-                        src={cat.image}
-                        alt={cat.name}
-                        className="h-full w-full object-contain"
-                      />
-                    </div>
-                    <span className={`block text-[8px] font-bold uppercase tracking-[0.1em] leading-[1.1] max-w-[44px] text-center truncate ${isLight ? 'text-gray-900' : 'text-white'}`}>
-                      {cat.name}
-                    </span>
-                  </button>
+                {filteredCategories.slice(0, 6).map((cat, index) => (
+                  <React.Fragment key={cat.id}>
+                    {/* ALL button after Wine */}
+                    {cat.name.toLowerCase() === 'wine' && (
+                      <button
+                        type="button"
+                        onClick={() => { setMegaMenuOpen(true); setBrandsOpen(false); }}
+                        className="flex-shrink-0 flex flex-col items-center gap-1.5 transition opacity-80 hover:opacity-100"
+                      >
+                        <div className={`h-[44px] w-[44px] flex items-center justify-center rounded-full border text-gold-primary text-[9px] font-black ${
+                          isLight 
+                            ? 'bg-gray-200 border-gray-300' 
+                            : 'bg-[#222] border-gold-primary/40'
+                        }`}>
+                          ALL
+                        </div>
+                        <span className={`block text-[9px] font-bold uppercase tracking-[0.1em] leading-[1.1] ${isLight ? 'text-gray-900' : 'text-white'}`}>All</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        setPage('products');
+                      }}
+                      className="flex-shrink-0 flex flex-col items-center gap-1 transition opacity-80 hover:opacity-100"
+                    >
+                      <div className={`h-[44px] w-[44px] overflow-hidden rounded-full border p-[3px] flex items-center justify-center ${
+                        isLight 
+                          ? 'bg-gray-100 border-gray-300' 
+                          : 'bg-[#1A1A1A] border-white/10'
+                      }`}>
+                        <img
+                          src={cat.image}
+                          alt={cat.name}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                      <span className={`block text-[8px] font-bold uppercase tracking-[0.1em] leading-[1.1] max-w-[44px] text-center truncate ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                        {cat.name}
+                      </span>
+                    </button>
+                  </React.Fragment>
                 ))}
+                {/* More button with three dots at the end */}
                 {filteredCategories.length > 6 && (
                   <button
                     type="button"
-                    onClick={() => { setMegaMenuOpen(true); setBrandsOpen(false); }}
-                    className="flex-shrink-0 flex flex-col items-center gap-1.5 transition opacity-80 hover:opacity-100"
+                    onClick={() => { setMegaMenuOpen(!megaMenuOpen); setBrandsOpen(false); }}
+                    className={`flex-shrink-0 flex flex-col items-center gap-1.5 transition opacity-80 hover:opacity-100 ${
+                      megaMenuOpen ? 'opacity-100' : ''
+                    }`}
                   >
-                    <div className={`h-[56px] w-[56px] flex items-center justify-center rounded-full border text-[16px] ${
+                    <div className={`h-[44px] w-[44px] flex items-center justify-center rounded-full border text-gold-primary text-[16px] font-black ${
                       isLight 
-                        ? 'bg-gray-100 border-gray-300 text-gray-900' 
-                        : 'bg-[#1A1A1A] border-white/10 text-white'
+                        ? 'bg-gray-200 border-gray-300' 
+                        : 'bg-[#222] border-gold-primary/40'
                     }`}>
-                      •••
+                      ...
                     </div>
                     <span className={`block text-[9px] font-bold uppercase tracking-[0.1em] leading-[1.1] ${isLight ? 'text-gray-900' : 'text-white'}`}>More</span>
                   </button>
@@ -478,26 +626,6 @@ export default function Navbar() {
                   {link.label}
                 </button>
               ))}
-              <div className="flex items-center gap-2 mt-2">
-                {/* Theme Toggle Switch */}
-                <button
-                  onClick={toggleTheme}
-                  className={`flex-1 relative h-6 rounded-full p-1 transition-all duration-300 ${
-                    isLight 
-                      ? 'bg-gray-200' 
-                      : 'bg-[#C9A84C]'
-                  }`}
-                  aria-label="Toggle theme"
-                >
-                  <div className={`absolute top-1 w-4 h-4 rounded-full transition-all duration-300 ${
-                    isLight 
-                      ? 'left-1 bg-white shadow-md' 
-                      : 'left-[calc(50%-8px)] bg-black shadow-md'
-                  }`} />
-                  <Sun className={`absolute left-1.5 top-1 w-3 h-3 transition-opacity duration-300 ${isLight ? 'opacity-100 text-gray-600' : 'opacity-0'}`} />
-                  <Moon className={`absolute right-1.5 top-1 w-3 h-3 transition-opacity duration-300 ${!isLight ? 'opacity-100 text-white' : 'opacity-0'}`} />
-                </button>
-              </div>
             </div>
 
             {/* Categories */}

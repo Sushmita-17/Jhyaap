@@ -5,6 +5,7 @@ import { useCustomerStore } from '@/store/customerStore';
 import { useOrdersStore } from '@/store/ordersStore';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
+import { useThemeStore } from '@/store/themeStore';
 import { DELIVERY_AREAS } from '@/data/deliveryAreas';
 import {
   useLoyaltyStore,
@@ -50,6 +51,8 @@ export default function CheckoutPage() {
   const { createOrder } = useOrdersStore();
   const { user } = useAuthStore();
   const { setPage } = useAppStore();
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
   const { getPoints, maxRedeemablePoints, pointsToRupees } = useLoyaltyStore();
 
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(addresses[0]?.id || null);
@@ -131,18 +134,26 @@ export default function CheckoutPage() {
   const estimatedEarn = Math.floor(total / 100) * POINTS_PER_100_RS;
 
   return (
-    <div className="bg-[#0D0908] min-h-screen pb-32 lg:pb-20 selection:bg-[#C9A84C]/30">
+    <div className={`min-h-screen pb-32 lg:pb-20 selection:bg-[#C9A84C]/30 ${
+      isLight ? 'bg-gray-50' : 'bg-[#0D0908]'
+    }`}>
       {/* Page Header */}
       <div className="max-w-[1248px] mx-auto px-3 md:px-4 py-4 md:py-8">
         <button
           onClick={() => setPage('cart')}
-          className="group inline-flex items-center gap-2 text-[#888888] hover:text-[#C9A84C] transition-colors text-xs font-bold uppercase tracking-wider mb-3"
+          className={`group inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider mb-3 transition-colors ${
+            isLight ? 'text-gray-500 hover:text-gray-900' : 'text-[#888888] hover:text-[#C9A84C]'
+          }`}
         >
           <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Back to Cart
         </button>
-        <h1 className="text-[24px] md:text-[32px] font-serif font-bold text-[#F5ECD7]">Checkout</h1>
-        <p className="text-[#888888] text-xs md:text-sm mt-0.5 md:mt-1">Confirm your details to finalize the night's supply.</p>
+        <h1 className={`text-[24px] md:text-[32px] font-serif font-bold ${
+          isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+        }`}>Checkout</h1>
+        <p className={`text-xs md:text-sm mt-0.5 md:mt-1 ${
+          isLight ? 'text-gray-600' : 'text-[#888888]'
+        }`}>Confirm your details to finalize the night's supply.</p>
       </div>
 
       <div className="max-w-[1248px] mx-auto px-3 md:px-4 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-4 md:gap-8">
@@ -151,10 +162,14 @@ export default function CheckoutPage() {
         <div className="space-y-4 md:space-y-6">
           
           {/* Delivery Address Section */}
-          <section className="bg-[#16110F] border border-white/5 rounded-[16px] md:rounded-[24px] p-4 md:p-6 shadow-xl">
+          <section className={`border rounded-[16px] md:rounded-[24px] p-4 md:p-6 shadow-xl ${
+            isLight ? 'bg-white border-gray-200' : 'bg-[#16110F] border-white/5'
+          }`}>
             <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-              <MapPin className="h-4 w-4 md:h-5 md:w-5 text-[#C9A84C]" />
-              <h2 className="text-[12px] md:text-[14px] font-black uppercase tracking-widest text-[#F5ECD7]">Delivery address</h2>
+              <MapPin className={`h-4 w-4 md:h-5 md:w-5 ${isLight ? 'text-gray-600' : 'text-[#C9A84C]'}`} />
+              <h2 className={`text-[12px] md:text-[14px] font-black uppercase tracking-widest ${
+                isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+              }`}>Delivery address</h2>
             </div>
             
             <div className="grid grid-cols-1 gap-2 md:gap-3">
@@ -164,7 +179,9 @@ export default function CheckoutPage() {
                   className={`relative flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-2xl border transition-all cursor-pointer ${
                     selectedAddressId === addr.id 
                     ? 'bg-[#C9A84C]/10 border-[#C9A84C] shadow-[0_0_20px_rgba(201,168,76,0.1)]' 
-                    : 'bg-black/20 border-white/5 hover:border-white/10'
+                    : isLight 
+                      ? 'bg-gray-50 border-gray-200 hover:border-gray-300' 
+                      : 'bg-black/20 border-white/5 hover:border-white/10'
                   }`}
                 >
                   <input
@@ -177,13 +194,19 @@ export default function CheckoutPage() {
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-1.5 md:gap-2">
-                      <p className="font-bold text-[#F5ECD7] text-xs md:text-sm">{addr.label}</p>
+                      <p className={`font-bold text-xs md:text-sm ${
+                        isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+                      }`}>{addr.label}</p>
                       {addr.isDefault && <span className="bg-[#C9A84C]/20 text-[#C9A84C] text-[8px] md:text-[9px] font-black px-1.5 md:px-2 py-0.5 rounded-full uppercase">Default</span>}
                     </div>
-                    <p className="mt-0.5 md:mt-1 text-xs md:text-sm text-[#888888]">
+                    <p className={`mt-0.5 md:mt-1 text-xs md:text-sm ${
+                      isLight ? 'text-gray-600' : 'text-[#888888]'
+                    }`}>
                       {addr.street}, {addr.area}
                     </p>
-                    {addr.landmark && <p className="text-[10px] md:text-[11px] text-[#555555] mt-0.5 italic">{addr.landmark}</p>}
+                    {addr.landmark && <p className={`text-[10px] md:text-[11px] mt-0.5 italic ${
+                      isLight ? 'text-gray-500' : 'text-[#555555]'
+                    }`}>{addr.landmark}</p>}
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] md:text-[11px] font-mono font-bold text-[#C9A84C]">Rs {addr.deliveryFee}</span>
@@ -195,14 +218,22 @@ export default function CheckoutPage() {
             {!showAddForm ? (
               <button
                 onClick={() => setShowAddForm(true)}
-                className="mt-4 md:mt-6 w-full flex items-center justify-center gap-2 rounded-2xl border border-dashed border-white/10 py-3 md:py-4 text-[10px] md:text-[11px] font-black uppercase tracking-widest text-[#888888] hover:border-[#C9A84C]/40 hover:text-[#C9A84C] transition-all"
+                className={`mt-4 md:mt-6 w-full flex items-center justify-center gap-2 rounded-2xl border border-dashed py-3 md:py-4 text-[10px] md:text-[11px] font-black uppercase tracking-widest transition-all ${
+                  isLight 
+                    ? 'border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700' 
+                    : 'border-white/10 text-[#888888] hover:border-[#C9A84C]/40 hover:text-[#C9A84C]'
+                }`}
               >
                 <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 Add New Delivery Destination
               </button>
             ) : (
-              <div className="mt-4 md:mt-6 bg-black/20 border border-white/5 rounded-2xl p-4 md:p-6">
-                <h3 className="text-[11px] md:text-[12px] font-black text-[#F5ECD7] uppercase tracking-widest mb-3 md:mb-4">New Address</h3>
+              <div className={`mt-4 md:mt-6 border rounded-2xl p-4 md:p-6 ${
+                isLight ? 'bg-gray-50 border-gray-200' : 'bg-black/20 border-white/5'
+              }`}>
+                <h3 className={`text-[11px] md:text-[12px] font-black uppercase tracking-widest mb-3 md:mb-4 ${
+                  isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+                }`}>New Address</h3>
                 <form onSubmit={handleAddAddress} className="space-y-3 md:space-y-4">
                   <div className="grid grid-cols-1 gap-3 md:gap-4 sm:grid-cols-2">
                     <input
@@ -210,12 +241,20 @@ export default function CheckoutPage() {
                       placeholder="Label (e.g. Home)"
                       value={newAddress.label}
                       onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })}
-                      className="bg-black/30 border border-white/10 rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-white focus:outline-none focus:border-[#C9A84C] transition-colors"
+                      className={`border rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:outline-none focus:border-[#C9A84C] transition-colors ${
+                        isLight 
+                          ? 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400' 
+                          : 'bg-black/30 border-white/10 text-white placeholder:text-gray-500'
+                      }`}
                     />
                     <select
                       value={newAddress.area}
                       onChange={(e) => setNewAddress({ ...newAddress, area: e.target.value })}
-                      className="bg-black/30 border border-white/10 rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-white focus:outline-none focus:border-[#C9A84C] transition-colors appearance-none"
+                      className={`border rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:outline-none focus:border-[#C9A84C] transition-colors appearance-none ${
+                        isLight 
+                          ? 'bg-white border-gray-200 text-gray-900' 
+                          : 'bg-black/30 border-white/10 text-white'
+                      }`}
                     >
                       <option value="">Select Area</option>
                       {(['Kathmandu', 'Lalitpur', 'Bhaktapur'] as const).map((city) => (
@@ -234,20 +273,32 @@ export default function CheckoutPage() {
                     placeholder="Street Address / Room No"
                     value={newAddress.street}
                     onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
-                    className="w-full bg-black/30 border border-white/10 rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-white focus:outline-none focus:border-[#C9A84C] transition-colors"
+                    className={`w-full border rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:outline-none focus:border-[#C9A84C] transition-colors ${
+                      isLight 
+                        ? 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400' 
+                        : 'bg-black/30 border-white/10 text-white placeholder:text-gray-500'
+                    }`}
                   />
                   <input
                     type="text"
                     placeholder="Nearby Landmark (House color, shop name...)"
                     value={newAddress.landmark}
                     onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })}
-                    className="w-full bg-black/30 border border-white/10 rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-white focus:outline-none focus:border-[#C9A84C] transition-colors"
+                    className={`w-full border rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:outline-none focus:border-[#C9A84C] transition-colors ${
+                      isLight 
+                        ? 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400' 
+                        : 'bg-black/30 border-white/10 text-white placeholder:text-gray-500'
+                    }`}
                   />
                   <div className="flex gap-2 md:gap-3 pt-2">
                     <button type="submit" className="flex-1 bg-[#C9A84C] text-black py-2 md:py-3 rounded-xl font-black text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-white transition-all">
                       Save & Select
                     </button>
-                    <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 bg-white/5 text-[#888888] py-2 md:py-3 rounded-xl font-black text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-white/10 transition-all">
+                    <button type="button" onClick={() => setShowAddForm(false)} className={`flex-1 py-2 md:py-3 rounded-xl font-black text-[10px] md:text-[11px] uppercase tracking-widest transition-all ${
+                      isLight 
+                        ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' 
+                        : 'bg-white/5 text-[#888888] hover:bg-white/10'
+                    }`}>
                       Cancel
                     </button>
                   </div>
@@ -257,10 +308,14 @@ export default function CheckoutPage() {
           </section>
 
           {/* Payment Method Section */}
-          <section className="bg-[#16110F] border border-white/5 rounded-[16px] md:rounded-[24px] p-4 md:p-6 shadow-xl">
+          <section className={`border rounded-[16px] md:rounded-[24px] p-4 md:p-6 shadow-xl ${
+            isLight ? 'bg-white border-gray-200' : 'bg-[#16110F] border-white/5'
+          }`}>
             <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-              <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-[#C9A84C]" />
-              <h2 className="text-[12px] md:text-[14px] font-black uppercase tracking-widest text-[#F5ECD7]">Payment method</h2>
+              <CreditCard className={`h-4 w-4 md:h-5 md:w-5 ${isLight ? 'text-gray-600' : 'text-[#C9A84C]'}`} />
+              <h2 className={`text-[12px] md:text-[14px] font-black uppercase tracking-widest ${
+                isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+              }`}>Payment method</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-4">
               {paymentMethods.map((method) => (
@@ -269,7 +324,9 @@ export default function CheckoutPage() {
                   className={`relative flex flex-col items-center text-center p-3 md:p-5 rounded-2xl border transition-all cursor-pointer ${
                     paymentMethod === method.id 
                     ? 'bg-[#C9A84C]/10 border-[#C9A84C] shadow-[0_0_15px_rgba(201,168,76,0.1)]' 
-                    : 'bg-black/20 border-white/5 hover:border-white/10'
+                    : isLight 
+                      ? 'bg-gray-50 border-gray-200 hover:border-gray-300' 
+                      : 'bg-black/20 border-white/5 hover:border-white/10'
                   }`}
                 >
                   <input
@@ -280,24 +337,38 @@ export default function CheckoutPage() {
                     onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
                     className="absolute top-3 md:top-4 right-3 md:right-4 accent-[#C9A84C]"
                   />
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#16110F] flex items-center justify-center mb-2 md:mb-3 border border-white/5">
-                    <CreditCard className={`w-4 h-4 md:w-5 md:h-5 ${paymentMethod === method.id ? 'text-[#C9A84C]' : 'text-[#888888]'}`} />
+                  <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-2 md:mb-3 border ${
+                    isLight ? 'bg-gray-100 border-gray-200' : 'bg-[#16110F] border-white/5'
+                  }`}>
+                    <CreditCard className={`w-4 h-4 md:w-5 md:h-5 ${paymentMethod === method.id ? 'text-[#C9A84C]' : isLight ? 'text-gray-400' : 'text-[#888888]'}`} />
                   </div>
-                  <p className="font-bold text-[#F5ECD7] text-[11px] md:text-[13px]">{method.label}</p>
-                  <p className="text-[9px] md:text-[10px] text-[#555555] mt-0.5 md:mt-1">{method.detail}</p>
+                  <p className={`font-bold text-[11px] md:text-[13px] ${
+                    isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+                  }`}>{method.label}</p>
+                  <p className={`text-[9px] md:text-[10px] mt-0.5 md:mt-1 ${
+                    isLight ? 'text-gray-500' : 'text-[#555555]'
+                  }`}>{method.detail}</p>
                 </label>
               ))}
             </div>
           </section>
 
           {/* Notes Section */}
-          <section className="bg-[#16110F] border border-white/5 rounded-[16px] md:rounded-[24px] p-4 md:p-6 shadow-xl">
-            <h2 className="text-[12px] md:text-[14px] font-black uppercase tracking-widest text-[#F5ECD7] mb-3 md:mb-4">Special instructions</h2>
+          <section className={`border rounded-[16px] md:rounded-[24px] p-4 md:p-6 shadow-xl ${
+            isLight ? 'bg-white border-gray-200' : 'bg-[#16110F] border-white/5'
+          }`}>
+            <h2 className={`text-[12px] md:text-[14px] font-black uppercase tracking-widest mb-3 md:mb-4 ${
+              isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+            }`}>Special instructions</h2>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Ring the bell twice, leave with the guard, or call me upon arrival..."
-              className="w-full bg-black/20 border border-white/10 rounded-2xl p-3 md:p-4 text-xs md:text-sm text-white focus:outline-none focus:border-[#C9A84C] transition-colors h-24 md:h-28 resize-none shadow-inner"
+              className={`w-full border rounded-2xl p-3 md:p-4 text-xs md:text-sm focus:outline-none focus:border-[#C9A84C] transition-colors h-24 md:h-28 resize-none shadow-inner ${
+                isLight 
+                  ? 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400' 
+                  : 'bg-black/20 border-white/10 text-white placeholder:text-gray-500'
+              }`}
             />
           </section>
         </div>
@@ -306,16 +377,26 @@ export default function CheckoutPage() {
         <aside className="space-y-4 md:space-y-6 lg:sticky lg:top-[120px] lg:self-start">
           
           {/* LOYALTY CARD */}
-          <div className="bg-[#1C1513] border border-[#C9A84C]/20 rounded-[16px] md:rounded-[24px] p-4 md:p-6 shadow-2xl relative overflow-hidden group">
-            <div className="absolute -right-4 -top-4 w-20 h-20 md:w-24 md:h-24 bg-[#C9A84C]/5 rounded-full blur-3xl group-hover:bg-[#C9A84C]/10 transition-all duration-500" />
+          <div className={`border rounded-[16px] md:rounded-[24px] p-4 md:p-6 shadow-2xl relative overflow-hidden group ${
+            isLight ? 'bg-white border-gray-200' : 'bg-[#1C1513] border-[#C9A84C]/20'
+          }`}>
+            <div className={`absolute -right-4 -top-4 w-20 h-20 md:w-24 md:h-24 rounded-full blur-3xl group-hover:bg-[#C9A84C]/10 transition-all duration-500 ${
+              isLight ? 'bg-gray-200' : 'bg-[#C9A84C]/5'
+            }`} />
             <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
-              <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-[#C9A84C]" />
-              <h2 className="text-[11px] md:text-[12px] font-black uppercase tracking-widest text-[#F5ECD7]">Loyalty Rewards</h2>
+              <Sparkles className={`h-4 w-4 md:h-5 md:w-5 ${isLight ? 'text-gray-600' : 'text-[#C9A84C]'}`} />
+              <h2 className={`text-[11px] md:text-[12px] font-black uppercase tracking-widest ${
+                isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+              }`}>Loyalty Rewards</h2>
             </div>
             
-            <div className="bg-black/40 rounded-2xl p-3 md:p-4 border border-white/5">
+            <div className={`rounded-2xl p-3 md:p-4 border ${
+              isLight ? 'bg-gray-50 border-gray-200' : 'bg-black/40 border-white/5'
+            }`}>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-[10px] md:text-[11px] text-[#888888]">Available Balance</span>
+                <span className={`text-[10px] md:text-[11px] ${
+                  isLight ? 'text-gray-600' : 'text-[#888888]'
+                }`}>Available Balance</span>
                 <span className="text-[#C9A84C] font-mono font-bold text-xs md:text-sm">{loyaltyBalance} pts</span>
               </div>
               
@@ -331,35 +412,49 @@ export default function CheckoutPage() {
                     className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
                   />
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] md:text-[10px] text-[#F5ECD7] font-bold">Redeem {pointsToRedeem} pts</span>
+                    <span className={`text-[9px] md:text-[10px] font-bold ${
+                      isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+                    }`}>Redeem {pointsToRedeem} pts</span>
                     <span className="text-green-500 font-mono font-bold text-xs md:text-sm">-Rs {pointsDiscount}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setPointsToRedeem(maxPoints)}
-                    className="w-full py-1.5 md:py-2 border border-[#C9A84C]/20 rounded-lg text-[9px] md:text-[10px] font-black uppercase text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-all"
+                    className={`w-full py-1.5 md:py-2 border rounded-lg text-[9px] md:text-[10px] font-black uppercase transition-all ${
+                      isLight 
+                        ? 'border-[#C9A84C]/20 text-[#C9A84C] hover:bg-[#C9A84C]/10' 
+                        : 'border-[#C9A84C]/20 text-[#C9A84C] hover:bg-[#C9A84C]/10'
+                    }`}
                   >
                     Use Max Points
                   </button>
                 </div>
               ) : (
-                <p className="text-[9px] md:text-[10px] text-[#555555] italic leading-relaxed">
+                <p className={`text-[9px] md:text-[10px] italic leading-relaxed ${
+                  isLight ? 'text-gray-500' : 'text-[#555555]'
+                }`}>
                   Need {MIN_REDEEM_POINTS} pts to start redeeming. You earn points on every sip!
                 </p>
               )}
             </div>
             
             {estimatedEarn > 0 && (
-              <p className="mt-3 md:mt-4 text-center text-[9px] md:text-[10px] text-[#888888] font-bold uppercase tracking-wider">
+              <p className={`mt-3 md:mt-4 text-center text-[9px] md:text-[10px] font-bold uppercase tracking-wider ${
+                isLight ? 'text-gray-600' : 'text-[#888888]'
+              }`}>
                 You'll earn <span className="text-[#C9A84C]">~{estimatedEarn} pts</span> today
               </p>
             )}
           </div>
 
           {/* FINAL BILL / RECEIPT STYLE */}
-          <div className="bg-[#16110F] border border-white/5 rounded-[16px] md:rounded-[24px] overflow-hidden shadow-2xl">
-            <div className="bg-[#1E1614] px-4 md:px-6 py-3 md:py-5 border-b border-white/5">
-              <h2 className="text-[12px] md:text-[14px] font-black uppercase tracking-widest text-[#C9A84C]">Order Summary</h2>
+          <div className={`border rounded-[16px] md:rounded-[24px] overflow-hidden shadow-2xl ${
+            isLight ? 'bg-white border-gray-200' : 'bg-[#16110F] border-white/5'
+          }`}>
+            <div className={`px-4 md:px-6 py-3 md:py-5 border-b ${
+              isLight ? 'bg-gray-50 border-gray-200' : 'bg-[#1E1614] border-white/5'
+            }`}>
+              <h2 className={`text-[12px] md:text-[14px] font-black uppercase tracking-widest text-[#C9A84C]`}>Order Summary</h2>
             </div>
             
             {/* The Items List (Receipt Body) */}
@@ -368,19 +463,29 @@ export default function CheckoutPage() {
                 {items.map((item) => (
                   <div key={item.product.id} className="flex justify-between items-start gap-2 md:gap-3 group">
                     <div className="min-w-0">
-                      <p className="text-[#F5ECD7] text-[11px] md:text-[13px] font-bold truncate leading-tight">{item.product.name}</p>
-                      <p className="text-[#555555] text-[10px] md:text-[11px] mt-0.5">{item.quantity} × Rs {item.product.price.toLocaleString()}</p>
+                      <p className={`text-[11px] md:text-[13px] font-bold truncate leading-tight ${
+                        isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+                      }`}>{item.product.name}</p>
+                      <p className={`text-[10px] md:text-[11px] mt-0.5 ${
+                        isLight ? 'text-gray-500' : 'text-[#555555]'
+                      }`}>{item.quantity} × Rs {item.product.price.toLocaleString()}</p>
                     </div>
-                    <span className="shrink-0 text-[#F5ECD7] font-mono text-[11px] md:text-[13px] font-bold">Rs {(item.product.price * item.quantity).toLocaleString()}</span>
+                    <span className={`shrink-0 font-mono text-[11px] md:text-[13px] font-bold ${
+                      isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+                    }`}>Rs {(item.product.price * item.quantity).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
 
               {/* Totals Calculation */}
-              <div className="space-y-2 md:space-y-3 pt-4 md:pt-6 border-t border-dashed border-white/10">
+              <div className={`space-y-2 md:space-y-3 pt-4 md:pt-6 border-t border-dashed ${
+                isLight ? 'border-gray-200' : 'border-white/10'
+              }`}>
                 <div className="flex justify-between text-xs md:text-sm">
-                  <span className="text-[#888888]">Subtotal</span>
-                  <span className="text-[#F5ECD7] font-mono font-bold">Rs {subtotal.toLocaleString()}</span>
+                  <span className={isLight ? 'text-gray-600' : 'text-[#888888]'}>Subtotal</span>
+                  <span className={`font-mono font-bold ${
+                    isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+                  }`}>Rs {subtotal.toLocaleString()}</span>
                 </div>
                 
                 {(discount > 0 || couponDiscount > 0 || pointsDiscount > 0) && (
@@ -407,19 +512,27 @@ export default function CheckoutPage() {
                 )}
                 
                 <div className="flex justify-between text-xs md:text-sm">
-                  <span className="text-[#888888]">Delivery Fee</span>
-                  <span className="text-[#F5ECD7] font-mono font-bold">
+                  <span className={isLight ? 'text-gray-600' : 'text-[#888888]'}>Delivery Fee</span>
+                  <span className={`font-mono font-bold ${
+                    isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+                  }`}>
                     {deliveryFee === 0 ? <span className="text-green-500 uppercase tracking-tighter text-[10px] md:text-[11px]">Free</span> : `Rs ${deliveryFee.toLocaleString()}`}
                   </span>
                 </div>
 
                 {/* Grand Total */}
-                <div className="bg-black/30 rounded-2xl p-3 md:p-5 mt-4 md:mt-6 border border-white/5 relative overflow-hidden">
+                <div className={`rounded-2xl p-3 md:p-5 mt-4 md:mt-6 border relative overflow-hidden ${
+                  isLight ? 'bg-gray-50 border-gray-200' : 'bg-black/30 border-white/5'
+                }`}>
                   <div className="absolute left-0 top-0 w-1 h-full bg-[#C9A84C]" />
                   <div className="flex flex-col">
-                    <span className="text-[#888888] text-[9px] md:text-[10px] font-black tracking-[4px] uppercase mb-0.5 md:mb-1">Total Payable</span>
+                    <span className={`text-[9px] md:text-[10px] font-black tracking-[4px] uppercase mb-0.5 md:mb-1 ${
+                      isLight ? 'text-gray-600' : 'text-[#888888]'
+                    }`}>Total Payable</span>
                     <div className="flex items-baseline gap-1.5 md:gap-2">
-                      <span className="text-[11px] md:text-[12px] font-mono text-[#F5ECD7]">Rs.</span>
+                      <span className={`text-[11px] md:text-[12px] font-mono ${
+                        isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+                      }`}>Rs.</span>
                       <span className="text-[24px] md:text-[32px] font-mono font-bold text-[#C9A84C] tracking-tighter leading-none">
                         {total.toLocaleString()}
                       </span>
@@ -434,7 +547,7 @@ export default function CheckoutPage() {
               <button
                 onClick={handlePlaceOrder}
                 disabled={!selectedAddress || isProcessing}
-                className="w-full bg-[#C9A84C] text-black h-[52px] md:h-[64px] rounded-2xl flex items-center justify-center font-black uppercase tracking-[2px] text-[11px] md:text-[13px] hover:bg-white hover:scale-[1.02] active:scale-95 transition-all shadow-[0_20px_40px_rgba(201,168,76,0.3)] disabled:grayscale disabled:opacity-50"
+                className="w-full bg-[#C9A84C] text-black h-[52px] md:h-[64px] rounded-2xl flex items-center justify-center font-black uppercase tracking-[2px] text-[11px] md:text-[13px] hover:bg-[#E5B860] active:scale-95 transition-all disabled:opacity-50"
               >
                 {isProcessing ? 'Processing Supply...' : 'Securely Place Order'}
               </button>
@@ -446,7 +559,9 @@ export default function CheckoutPage() {
               )}
 
               <div className="mt-4 md:mt-6 flex flex-col items-center gap-2 md:gap-3">
-                <div className="flex items-center gap-1.5 md:gap-2 text-[#555555]">
+                <div className={`flex items-center gap-1.5 md:gap-2 ${
+                  isLight ? 'text-gray-500' : 'text-[#555555]'
+                }`}>
                   <ShieldCheck size={12} className="text-[#C9A84C]" />
                   <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest">ID Verified at Door</span>
                 </div>
@@ -463,16 +578,22 @@ export default function CheckoutPage() {
       {/* MOBILE STICKY CTA — keeps the total & place-order action reachable
           without scrolling past address/payment/notes on small screens.
           Desktop already has this covered via the sticky right sidebar. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#16110F]/95 backdrop-blur-md px-3 md:px-4 py-2.5 md:py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.4)] lg:hidden">
+      <div className={`fixed inset-x-0 bottom-0 z-40 border-t px-3 md:px-4 py-2.5 md:py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.4)] lg:hidden backdrop-blur-md ${
+        isLight 
+          ? 'bg-white/95 border-gray-200 shadow-[0_-8px_24px_rgba(0,0,0,0.1)]' 
+          : 'bg-[#16110F]/95 border-white/10'
+      }`}>
         <div className="flex items-center justify-between gap-3 md:gap-4">
           <div className="min-w-0">
-            <p className="text-[8px] md:text-[9px] uppercase tracking-widest text-[#888888]">Total Payable</p>
+            <p className={`text-[8px] md:text-[9px] uppercase tracking-widest ${
+              isLight ? 'text-gray-600' : 'text-[#888888]'
+            }`}>Total Payable</p>
             <p className="truncate text-[16px] md:text-[18px] font-mono font-bold text-[#C9A84C]">Rs {total.toLocaleString()}</p>
           </div>
           <button
             onClick={handlePlaceOrder}
             disabled={!selectedAddress || isProcessing}
-            className="flex h-10 md:h-12 shrink-0 items-center justify-center rounded-xl bg-[#C9A84C] px-4 md:px-6 text-[11px] md:text-[12px] font-black uppercase tracking-widest text-black transition-all active:scale-95 disabled:grayscale disabled:opacity-50"
+            className="flex h-10 md:h-12 shrink-0 items-center justify-center rounded-xl bg-[#C9A84C] text-black px-4 md:px-6 text-[11px] md:text-[12px] font-black uppercase tracking-widest hover:bg-[#E5B860] active:scale-95 transition-all disabled:opacity-50"
           >
             {isProcessing ? 'Processing...' : 'Place Order'}
           </button>

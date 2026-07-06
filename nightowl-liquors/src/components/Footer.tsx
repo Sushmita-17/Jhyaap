@@ -1,13 +1,16 @@
-import { MapPin, Mail, Phone, MessageSquare, Facebook, Instagram, Send } from 'lucide-react';
+import { MapPin, Mail, Phone, MessageSquare, Facebook, Instagram, Send, SlidersHorizontal, Grid3X3 } from 'lucide-react';
 import { STORE_INFO } from '@/lib/storeInfo';
 import { useAppStore } from '@/store/appStore';
 import { useThemeStore } from '@/store/themeStore';
 import BrandLogo from '@/components/BrandLogo';
+import { useState } from 'react';
 
 export default function Footer() {
   const { setPage } = useAppStore();
   const { theme } = useThemeStore();
   const isLight = theme === 'light';
+  const [shopAllDropdownOpen, setShopAllDropdownOpen] = useState(false);
+  const [filtersDropdownOpen, setFiltersDropdownOpen] = useState(false);
 
   const handleQuickLink = (name: string) => {
     const formatted = name.toLowerCase();
@@ -83,7 +86,7 @@ export default function Footer() {
         <div>
           <h4 className="text-[#C9A84C] text-[9px] font-bold uppercase tracking-[1.2px] mb-2 md:mb-3">QUICK LINKS</h4>
           <div className="grid grid-cols-2 md:grid-cols-1 gap-1.5 md:gap-0">
-            {['Home', 'Shop All', 'Deals', 'Trending', 'New Arrivals', 'All Products', 'Brands', 'Combo Offers', 'My Orders'].map((link) => (
+            {['Home', 'Deals', 'Trending', 'New Arrivals', 'All Products', 'Brands', 'Combo Offers', 'My Orders'].map((link) => (
               <button
                 key={link}
                 onClick={() => handleQuickLink(link)}
@@ -94,6 +97,65 @@ export default function Footer() {
                 {link}
               </button>
             ))}
+            {/* Shop All Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShopAllDropdownOpen(!shopAllDropdownOpen)}
+                className={`text-[9px] md:text-[10px] leading-[1.6] md:leading-[1.8] transition-colors text-left flex items-center gap-1 ${
+                  isLight ? 'text-gray-600 hover:text-gray-900' : 'text-[#888888] hover:text-white'
+                }`}
+              >
+                Shop All
+                <SlidersHorizontal size={12} />
+              </button>
+              {shopAllDropdownOpen && (
+                <div className={`absolute top-full left-0 mt-1 w-40 rounded-lg border shadow-xl z-50 ${isLight ? 'bg-white border-gray-200 shadow-[0_8px_24px_rgba(0,0,0,0.1)]' : 'bg-[#141414] border-[#222222]'}`}>
+                  <button
+                    onClick={() => { setPage('products'); setShopAllDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-[#CCCCCC] hover:bg-white/5'}`}
+                  >
+                    <Grid3X3 size={14} />
+                    <span className="text-[10px]">All Bottles</span>
+                  </button>
+                  {/* Filters with nested dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setFiltersDropdownOpen(!filtersDropdownOpen); }}
+                      className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-left transition-colors ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-[#CCCCCC] hover:bg-white/5'}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <SlidersHorizontal size={14} />
+                        <span className="text-[10px]">Filters</span>
+                      </div>
+                      <span className={`text-[8px] transition-transform ${filtersDropdownOpen ? 'rotate-90' : ''}`}>›</span>
+                    </button>
+                    {/* Nested vertical dropdown for filters */}
+                    {filtersDropdownOpen && (
+                      <div className={`absolute top-0 left-full ml-1 w-36 rounded-lg border shadow-xl z-[60] ${isLight ? 'bg-white border-gray-200 shadow-[0_8px_24px_rgba(0,0,0,0.1)]' : 'bg-[#141414] border-[#222222]'}`}>
+                        <button
+                          onClick={() => { setPage('products'); setShopAllDropdownOpen(false); setFiltersDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          className={`w-full text-left px-3 py-2 text-[10px] transition-colors ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-[#CCCCCC] hover:bg-white/5'}`}
+                        >
+                          Featured
+                        </button>
+                        <button
+                          onClick={() => { setPage('products'); setShopAllDropdownOpen(false); setFiltersDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          className={`w-full text-left px-3 py-2 text-[10px] transition-colors ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-[#CCCCCC] hover:bg-white/5'}`}
+                        >
+                          Price: Low to High
+                        </button>
+                        <button
+                          onClick={() => { setPage('products'); setShopAllDropdownOpen(false); setFiltersDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          className={`w-full text-left px-3 py-2 text-[10px] transition-colors ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-[#CCCCCC] hover:bg-white/5'}`}
+                        >
+                          Price: High to Low
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
