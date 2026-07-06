@@ -1,108 +1,145 @@
-import { Plus, Minus, ShoppingCart, ChevronRight } from 'lucide-react';
-import { Product } from '@/types';
-import { useCartStore } from '@/store/cartStore';
 import { useAppStore } from '@/store/appStore';
+import { useCartStore } from '@/store/cartStore';
+import { useThemeStore } from '@/store/themeStore';
+import { Product } from '@/types';
+import { ShoppingCart } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { items, addItem, removeItem } = useCartStore();
+  const quantity = useCartStore((s) => s.getItemQuantity(product.id));
+  const addItem = useCartStore((s) => s.addItem);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
   const { setPage, setSelectedProduct } = useAppStore();
-  const cartItem = items.find((i) => i.product.id === product.id);
-  const quantity = cartItem?.quantity || 0;
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
 
-  const discount = product.originalPrice 
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) 
+  const discount = product.originalPrice
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
-  return (
-    <div className="group bg-[#161616] border border-[#222222] rounded-[10px] overflow-hidden transition-all duration-200 hover:border-gold-primary/40 flex flex-col h-full w-full box-border">
-      {/* Image Area */}
-      <div className="relative h-[150px] md:h-[180px] bg-[#F5F0E8] overflow-hidden flex items-center justify-center p-3">
-        {/* VIEW DETAILS HORIZONTAL BAR TRIGGER */}
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-10 bg-[#C9A84C]/90 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-20 cursor-pointer backdrop-blur-sm"
-             onClick={(e) => {
-               e.stopPropagation();
-               setSelectedProduct(product.id);
-               setPage('product');
-             }}
-        >
-          <span className="text-black text-[10px] font-black uppercase tracking-[4px]">View Details</span>
-        </div>
+  // Entire card navigates to detail page
+  const handleCardClick = () => {
+    setSelectedProduct(product.id);
+    setPage('product');
+  };
 
+  // Cart controls stop propagation so they don't trigger navigation
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addItem(product);
+  };
+
+  const handleDecrease = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    updateQuantity(product.id, quantity - 1);
+  };
+
+  const handleIncrease = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    updateQuantity(product.id, quantity + 1);
+  };
+
+  const handleGoToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPage('cart');
+  };
+
+  return (
+    <div
+      onClick={handleCardClick}
+      className={`group relative border rounded-[14px] overflow-hidden cursor-pointer transition-all duration-300 active:scale-[0.98] hover:border-gold-primary/50 hover:shadow-[0_8px_24px_rgba(201,168,76,0.15)] flex flex-col h-full w-full box-border select-none ${
+        isLight 
+          ? 'bg-white border-gray-200' 
+          : 'bg-gradient-to-br from-[#111111] to-[#0A0A0A] border-white/[0.08]'
+      }`}
+    >
+      {/* Image */}
+      <div className="relative flex-shrink-0 h-[130px] sm:h-[110px] lg:h-[180px] flex items-center justify-center bg-gradient-to-b from-white/[0.05] to-white/[0.02] rounded-t-[14px] overflow-hidden">
         {discount > 0 && (
-          <div className="absolute top-2 left-2 bg-gold-primary text-black text-[9px] font-bold px-[7px] py-[2px] rounded-[4px] z-10 shadow-sm">
+          <span className="absolute top-2 left-2 z-10 bg-gradient-to-r from-[#F5A623] to-[#E8941F] text-black text-[8px] sm:text-[7px] font-bold px-1.5 py-0.5 rounded-[4px] shadow-lg shadow-orange-500/20 uppercase tracking-wide">
             {discount}% OFF
-          </div>
+          </span>
         )}
-        <img 
-          src={product.image} 
-          alt={product.name} 
-          className="max-h-full max-w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+        <img
+          src={product.image}
+          alt={product.name}
+          className="h-[85%] w-[85%] object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-md"
+          loading="lazy"
+          decoding="async"
         />
+        {/* Subtle shine effect on hover */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-gold-primary/20" />
+      {/* Info */}
+      <div className="flex flex-col flex-1 px-2.5 pt-2 pb-2.5 gap-1 sm:px-3 sm:pt-2.5 sm:pb-3 lg:px-4 lg:pt-3 lg:pb-4">
+        <p className={`text-[10px] sm:text-[8px] font-semibold uppercase tracking-[0.08em] truncate ${
+          isLight ? 'text-gray-500' : 'text-[#888]'
+        }`}>
+          {product.brand}
+        </p>
+        <h2 className={`text-[12px] sm:text-[11px] font-semibold leading-snug line-clamp-2 flex-1 lg:text-[14px] ${
+          isLight ? 'text-gray-900' : 'text-white'
+        }`}>
+          {product.name}
+        </h2>
 
-      {/* Info Section */}
-      <div className="p-3 bg-[#161616] flex flex-col flex-1 items-center text-center justify-between box-border">
-        <div className="w-full">
-          <span className="text-[#AAAAAA] text-[9px] font-bold uppercase tracking-[1px] mb-1 block">
-            {product.brand}
+        {/* Price row */}
+        <div className="flex items-baseline gap-1 mt-0.5">
+          <span className={`text-[15px] sm:text-[13px] font-black lg:text-[18px] ${
+            isLight ? 'text-gray-900' : 'text-white'
+          }`}>
+            Rs.{product.price.toLocaleString()}
           </span>
-          
-          <h1 className="text-white text-[13px] font-semibold mb-1 leading-tight line-clamp-2 min-h-[32px]">
-            {product.name}
-          </h1>
-          
-          <div className="flex flex-col items-center gap-1.5 mt-1">
-            <span className="text-white text-[14px] font-black">
-              Rs. {product.price.toLocaleString()}
+          {product.originalPrice && (
+            <span className={`text-[10px] sm:text-[9px] line-through ${
+              isLight ? 'text-gray-400' : 'text-[#555]'
+            }`}>
+              Rs.{product.originalPrice.toLocaleString()}
             </span>
-            {product.originalPrice && (
-              <span className="text-[#555555] text-[10px] line-through">
-                Rs.{product.originalPrice.toLocaleString()}
-              </span>
-            )}
-          </div>
+          )}
         </div>
 
-        <div className="mt-4 w-full flex flex-col items-center gap-3">
-          {quantity > 0 && (
-            <div className="flex items-center justify-center bg-white/5 border border-white/10 rounded-[6px] h-8 w-full max-w-[120px]">
-              <button
-                onClick={() => removeItem(product.id)}
-                className="w-8 h-full flex items-center justify-center text-gold-primary hover:text-white transition-all"
-              >
-                <Minus size={14} className="stroke-[3]" />
-              </button>
-              <span className="flex-1 text-white text-[13px] font-bold text-center border-x border-white/10 h-full flex items-center justify-center">
-                {quantity}
-              </span>
-              <button
-                onClick={() => addItem(product)}
-                className="w-8 h-full flex items-center justify-center text-gold-primary hover:text-white transition-all"
-              >
-                <Plus size={14} className="stroke-[3]" />
-              </button>
-            </div>
-          )}
-
+        {/* Cart button — stopPropagation prevents page navigation */}
+        {quantity <= 0 ? (
           <button
-            onClick={() => quantity > 0 ? setPage('cart') : addItem(product)}
-            className={`w-full py-2.5 rounded-[8px] font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-              quantity > 0 
-                ? 'bg-gold-primary text-black hover:bg-white shadow-[0_4px_15px_rgba(245,166,35,0.2)]' 
-                : 'bg-gold-primary text-black hover:bg-white'
+            onClick={handleAddToCart}
+            className="mt-1 w-full flex items-center justify-center gap-1 rounded-[8px] bg-gradient-to-r from-[#F5A623] to-[#E8941F] py-[6px] text-[10px] sm:text-[9px] font-bold uppercase tracking-[0.05em] text-black transition-all hover:from-[#FFB84D] hover:to-[#F5A623] active:scale-95 shadow-lg shadow-orange-500/20 sm:mt-2 sm:py-[7px] lg:mt-3 lg:py-2.5 lg:text-[12px]"
+          >
+            <ShoppingCart className="h-3.5 w-3.5 sm:h-3 sm:w-3 lg:h-4 lg:w-4 flex-shrink-0" />
+            Add to Cart
+          </button>
+        ) : (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`mt-1 flex items-center justify-between rounded-[8px] border border-[#F5A623]/40 px-2 py-[5px] sm:mt-2 sm:px-1.5 sm:py-[6px] lg:mt-3 lg:px-2.5 lg:py-[7px] shadow-inner ${
+              isLight ? 'bg-gray-100' : 'bg-[#0D0D0D]'
             }`}
           >
-            {quantity > 0 ? <ChevronRight size={13} /> : <ShoppingCart size={13} />}
-            {quantity > 0 ? "My cart" : "Add to Cart"}
-          </button>
-        </div>
+            <button
+              onClick={handleDecrease}
+              aria-label="Decrease"
+              className="flex h-[22px] w-[22px] sm:h-[20px] sm:w-[20px] lg:h-[26px] lg:w-[26px] items-center justify-center rounded-[6px] bg-white/5 hover:bg-white/10 active:bg-white/20 text-gold-primary transition-colors"
+            >
+              <span className="text-[14px] sm:text-[13px] lg:text-[16px] font-black leading-none">−</span>
+            </button>
+            <button onClick={handleGoToCart} className={`text-[12px] sm:text-[11px] lg:text-[14px] font-black min-w-[22px] sm:min-w-[20px] lg:min-w-[26px] text-center ${
+              isLight ? 'text-gray-900' : 'text-white'
+            }`}>
+              {quantity}
+            </button>
+            <button
+              onClick={handleIncrease}
+              aria-label="Increase"
+              className="flex h-[22px] w-[22px] sm:h-[20px] sm:w-[20px] lg:h-[26px] lg:w-[26px] items-center justify-center rounded-[6px] bg-white/5 hover:bg-white/10 active:bg-white/20 text-gold-primary transition-colors"
+            >
+              <span className="text-[14px] sm:text-[13px] lg:text-[16px] font-black leading-none">+</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

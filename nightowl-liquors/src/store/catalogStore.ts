@@ -12,6 +12,8 @@ import { create } from 'zustand';
 const PRODUCTS_KEY = 'nightowl_products';
 const CATEGORIES_KEY = 'nightowl_custom_categories';
 const BANNERS_KEY = 'nightowl_banners_v10';
+const TRENDING_KEY = 'nightowl_trending_products';
+const FLASH_SALE_KEY = 'nightowl_flash_sale_products';
 
 function loadJson<T>(key: string, fallback: T): T {
   try {
@@ -56,6 +58,9 @@ interface CatalogState {
   products: Product[];
   customCategories: CustomCategory[];
   banners: BannerSlide[];
+  isLoading: boolean;
+  trendingProductIds: string[];
+  flashSaleProductIds: string[];
   addProduct: (input: Omit<Product, 'id'> & { id?: string }) => Product;
   updateProduct: (id: string, updates: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
@@ -69,12 +74,19 @@ interface CatalogState {
   getCategories: () => ReturnType<typeof buildCategories>;
   getProductById: (id: string) => Product | undefined;
   searchProducts: (query: string) => Product[];
+  setTrendingProducts: (ids: string[]) => void;
+  setFlashSaleProducts: (ids: string[]) => void;
+  getTrendingProducts: () => Product[];
+  getFlashSaleProducts: () => Product[];
 }
 
 export const useCatalogStore = create<CatalogState>((set, get) => ({
   products: loadInitialProducts(),
   customCategories: loadJson<CustomCategory[]>(CATEGORIES_KEY, []),
   banners: loadInitialBanners(),
+  isLoading: false,
+  trendingProductIds: loadJson<string[]>(TRENDING_KEY, []),
+  flashSaleProductIds: loadJson<string[]>(FLASH_SALE_KEY, []),
 
   addProduct: (input) => {
     const id = input.id ?? `p_${slugify(input.name)}_${Date.now().toString(36)}`;
@@ -176,6 +188,32 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
         p.category.toLowerCase().includes(q) ||
         p.tags.some((t) => t.toLowerCase().includes(q)),
     );
+  },
+
+  setTrendingProducts: (ids) => {
+    saveJson(TRENDING_KEY, ids);
+    set({ trendingProductIds: ids });
+  },
+
+  setFlashSaleProducts: (ids) => {
+    saveJson(FLASH_SALE_KEY, ids);
+    set({ flashSaleProductIds: ids });
+  },
+
+  getTrendingProducts: () => {
+    const { products, trendingProductIds } = get();
+    if (trendingProductIds.length === 0) {
+      return [...products].sort((a, b) => b.reviews - a.reviews).slice(0, 6);
+    }
+    return products.filter(p => trendingProductIds.includes(p.id));
+  },
+
+  getFlashSaleProducts: () => {
+    const { products, flashSaleProductIds } = get();
+    if (flashSaleProductIds.length === 0) {
+      return products.filter(p => p.badge).slice(0, 6);
+    }
+    return products.filter(p => flashSaleProductIds.includes(p.id));
   },
 }));
 

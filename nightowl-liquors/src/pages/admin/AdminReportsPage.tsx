@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -19,6 +19,7 @@ import { useOrdersStore } from '@/store/ordersStore';
 import { useCatalogStore } from '@/store/catalogStore';
 import { AdminBillsModal } from '@/components/admin/AdminBillsModal';
 import { useAdminBills, useAdminBillDetail } from '@/hooks/useAdminData';
+import { useThemeStore } from '@/store/themeStore';
 
 type Period = 'daily' | 'monthly' | 'yearly';
 
@@ -92,22 +93,57 @@ function KpiCard({
   icon: React.ElementType;
   color: string;
 }) {
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+  
   const up = change >= 0;
+  const [animatedValue, setAnimatedValue] = useState(0);
+  const numericValue = parseInt(value.replace(/[^0-9]/g, '')) || 0;
+  
+  useEffect(() => {
+    let start = 0;
+    const duration = 1500;
+    const increment = numericValue / (duration / 16);
+    
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= numericValue) {
+        setAnimatedValue(numericValue);
+        clearInterval(timer);
+      } else {
+        setAnimatedValue(Math.floor(start));
+      }
+    }, 16);
+    
+    return () => clearInterval(timer);
+  }, [numericValue]);
+  
+  const displayValue = value.includes('Rs') ? `Rs ${animatedValue.toLocaleString()}` : animatedValue.toLocaleString();
+  
   return (
-    <div className="panel p-6 bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 hover:scale-[1.02]">
-      <div className="flex items-start justify-between">
+    <div className={`panel p-3 backdrop-blur-xl border hover:border-[#C9A84C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#C9A84C]/20 hover:scale-[1.02] group relative overflow-hidden ${
+      isLight 
+        ? 'bg-white border-gray-200 hover:shadow-gray-100' 
+        : 'bg-gradient-to-br from-[#1A1A1A]/80 to-[#0F0F0F]/80 border-white/10'
+    }`}>
+      <div className="absolute inset-0 bg-gradient-to-br from-[#C9A84C]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+      
+      <div className="relative flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-xs font-bold uppercase tracking-widest text-night-500 mb-2">{label}</p>
-          <p className="mt-1 text-3xl font-bold text-white lg:text-4xl tracking-tight">{value}</p>
-          <p className={`mt-3 flex items-center gap-2 text-xs font-bold ${
-            up ? 'text-green-400' : 'text-red-400'
+          <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 group-hover:text-[#C9A84C] transition-colors ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>{label}</p>
+          <p className={`mt-0.5 text-xl font-bold lg:text-2xl tracking-tight group-hover:text-[#C9A84C] transition-colors animate-fade-in ${isLight ? 'text-gray-900' : 'text-white'}`}>{displayValue}</p>
+          <p className={`mt-1.5 flex items-center gap-1.5 text-[10px] font-bold border rounded-full px-1.5 py-0.5 ${
+            up 
+              ? 'bg-green-500/15 text-green-400 border-green-500/20 shadow-lg shadow-green-500/10 animate-pulse-slow' 
+              : 'bg-red-500/15 text-red-400 border-red-500/20 shadow-lg shadow-red-500/10 animate-pulse-slow'
           }`}>
-            {up ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+            {up ? <ArrowUpRight className="h-2.5 w-2.5" /> : <ArrowDownRight className="h-2.5 w-2.5" />}
             {Math.abs(change)}% vs prev period
           </p>
         </div>
-        <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${color} shadow-lg`}>
-          <Icon className="h-6 w-6" />
+        <span className={`relative flex h-9 w-9 items-center justify-center rounded-xl ${color} shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 animate-float`}>
+          <Icon className="h-4 w-4" />
         </span>
       </div>
     </div>
@@ -127,15 +163,15 @@ function BarChartSVG({
 
   const max = Math.max(...values, 1);
   const chartW = 700;
-  const chartH = 280;
-  const padL = 70;
-  const padR = 20;
-  const padT = 20;
-  const padB = 50;
+  const chartH = 150;
+  const padL = 50;
+  const padR = 10;
+  const padT = 10;
+  const padB = 25;
   const innerW = chartW - padL - padR;
   const innerH = chartH - padT - padB;
-  const barGap = 8;
-  const barW = Math.max(12, (innerW - barGap * (labels.length + 1)) / labels.length);
+  const barGap = 4;
+  const barW = Math.max(8, (innerW - barGap * (labels.length + 1)) / labels.length);
 
   const gridLines = 5;
   const gridVals = Array.from({ length: gridLines + 1 }, (_, i) => Math.round((max / gridLines) * i));
@@ -150,15 +186,24 @@ function BarChartSVG({
     <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f59e0b" />
-          <stop offset="100%" stopColor="#d97706" />
+          <stop offset="0%" stopColor="#C9A84C" />
+          <stop offset="50%" stopColor="#D4B06C" />
+          <stop offset="100%" stopColor="#A68B3D" />
         </linearGradient>
         <linearGradient id="barGradHover" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#fbbf24" />
-          <stop offset="100%" stopColor="#f59e0b" />
+          <stop offset="0%" stopColor="#F5C46E" />
+          <stop offset="50%" stopColor="#E5B45E" />
+          <stop offset="100%" stopColor="#D4A44E" />
         </linearGradient>
         <filter id="glow">
-          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <filter id="strongGlow">
+          <feGaussianBlur stdDeviation="6" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -171,7 +216,7 @@ function BarChartSVG({
         const y = padT + innerH - (gv / max) * innerH;
         return (
           <g key={i}>
-            <line x1={padL} y1={y} x2={chartW - padR} y2={y} stroke="#1e293b" strokeWidth="1" />
+            <line x1={padL} y1={y} x2={chartW - padR} y2={y} stroke="#1e293b" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
             <text x={padL - 8} y={y + 4} textAnchor="end" fill="#64748b" fontSize="9" fontFamily="Inter, sans-serif">
               {formatVal(gv)}
             </text>
@@ -201,7 +246,7 @@ function BarChartSVG({
               rx={4}
               fill={isHovered ? 'url(#barGradHover)' : 'url(#barGrad)'}
               opacity={hoveredIdx !== null && !isHovered ? 0.4 : 1}
-              filter={isHovered ? 'url(#glow)' : undefined}
+              filter={isHovered ? 'url(#strongGlow)' : undefined}
               style={{ transition: 'opacity 0.2s, y 0.3s, height 0.3s' }}
             />
 
@@ -210,7 +255,7 @@ function BarChartSVG({
               x={x + barW / 2}
               y={chartH - padB + 16}
               textAnchor="middle"
-              fill={isHovered ? '#fbbf24' : '#94a3b8'}
+              fill={isHovered ? '#C9A84C' : '#94a3b8'}
               fontSize="9"
               fontFamily="Inter, sans-serif"
               fontWeight={isHovered ? 700 : 400}
@@ -227,15 +272,16 @@ function BarChartSVG({
                   width={80}
                   height={22}
                   rx={6}
-                  fill="#0f172a"
-                  stroke="#f59e0b"
+                  fill="#0A0A0A"
+                  stroke="#C9A84C"
                   strokeWidth="1"
+                  filter="url(#glow)"
                 />
                 <text
                   x={x + barW / 2}
                   y={y - 15}
                   textAnchor="middle"
-                  fill="#fbbf24"
+                  fill="#C9A84C"
                   fontSize="10"
                   fontWeight="700"
                   fontFamily="Inter, sans-serif"
@@ -261,10 +307,10 @@ function DonutChartSVG({
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const total = segments.reduce((s, seg) => s + seg.value, 0) || 1;
-  const cx = 120;
-  const cy = 120;
-  const r = 90;
-  const strokeW = 28;
+  const cx = 70;
+  const cy = 70;
+  const r = 55;
+  const strokeW = 18;
 
   let cumAngle = -90;
 
@@ -290,8 +336,8 @@ function DonutChartSVG({
   });
 
   return (
-    <div className="flex flex-col items-center gap-6 lg:flex-row lg:gap-8">
-      <svg width="240" height="240" viewBox="0 0 240 240" className="flex-shrink-0 w-full max-w-[240px] h-auto">
+    <div className="flex flex-col items-center gap-3 lg:flex-row lg:gap-4">
+      <svg width="140" height="140" viewBox="0 0 140 140" className="flex-shrink-0 w-full max-w-[140px] h-auto">
         {arcs.map((arc) => (
           <path
             key={arc.i}
@@ -338,6 +384,9 @@ function DonutChartSVG({
 /* ── Main Reports Page ───────────────────────────────── */
 
 export default function AdminReportsPage() {
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+  
   const [period, setPeriod] = useState<Period>('daily');
   const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
   const [billsModal, setBillsModal] = useState(false);
@@ -421,32 +470,39 @@ export default function AdminReportsPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
+    <div className="mx-auto max-w-7xl space-y-4">
       {/* Header */}
-      <div className="panel flex flex-wrap items-center justify-between gap-6 border-neon-amber/30 bg-gradient-to-r from-neon-amber/15 via-neon-amber/5 to-transparent p-6 shadow-xl shadow-neon-amber/10">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-white md:text-4xl tracking-tight">Reports & Analytics</h1>
-          <p className="mt-2 text-sm text-night-300">
+      <div className={`panel flex flex-wrap items-center justify-between gap-6 border-[#C9A84C]/30 bg-gradient-to-r from-[#C9A84C]/15 via-[#C9A84C]/5 to-transparent p-4 shadow-2xl shadow-[#C9A84C]/20 animate-gradient-x bg-[length:200%_200%] backdrop-blur-xl relative overflow-hidden ${
+        isLight ? 'border-gray-200' : ''
+      }`}>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#C9A84C]/10 to-transparent animate-shimmer bg-[length:200%_100%]" />
+        <div className="relative">
+          <h1 className={`font-display text-2xl font-bold md:text-3xl tracking-tight bg-gradient-to-r bg-clip-text text-transparent ${
+            isLight 
+              ? 'text-gray-900 from-gray-900 to-gray-700' 
+              : 'text-white from-white to-white/80'
+          }`}>Reports & Analytics</h1>
+          <p className={`mt-1 text-xs ${isLight ? 'text-gray-600' : 'text-[#888888]'}`}>
             Comprehensive sales insights and billing for Jhyaap Station
           </p>
         </div>
         <button
           onClick={handleExportCSV}
-          className="inline-flex items-center gap-2 rounded-xl border border-neon-amber/30 bg-neon-amber/15 px-6 py-3 text-sm font-bold text-neon-amber transition-all hover:bg-neon-amber/25 hover:shadow-lg hover:shadow-neon-amber/20"
+          className="relative inline-flex items-center gap-2 rounded-xl border border-[#C9A84C]/30 bg-[#C9A84C]/15 px-4 py-2 text-xs font-bold text-[#C9A84C] transition-all hover:bg-[#C9A84C]/25 hover:shadow-xl hover:shadow-[#C9A84C]/30 hover:scale-105"
         >
-          <Download className="h-4 w-4" />
+          <Download className="h-3 w-3" />
           Export CSV
         </button>
       </div>
 
       {/* KPI Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Net Revenue"
           value={`Rs ${totalRevenue > 0 ? totalRevenue.toLocaleString() : '1,248,500'}`}
           change={12.4}
           icon={DollarSign}
-          color="bg-neon-amber/20 text-neon-amber"
+          color="bg-[#C9A84C]/20 text-[#C9A84C]"
         />
         <KpiCard
           label="Total Orders"
@@ -472,15 +528,19 @@ export default function AdminReportsPage() {
       </div>
 
       {/* Period Selector */}
-      <div className="flex items-center gap-3 p-1 bg-night-800/50 rounded-xl border border-white/10 w-fit">
+      <div className={`flex items-center gap-3 p-1 backdrop-blur-sm rounded-xl border w-fit shadow-lg ${
+        isLight 
+          ? 'bg-gray-100 border-gray-200' 
+          : 'bg-[#1A1A1A]/80 border-white/10'
+      }`}>
         {periods.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setPeriod(key)}
-            className={`inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold transition-all ${
+            className={`inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold transition-all duration-300 ${
               period === key
-                ? 'bg-neon-amber/20 text-neon-amber shadow-lg'
-                : 'text-night-400 hover:bg-white/5 hover:text-white'
+                ? 'bg-[#C9A84C]/20 text-[#C9A84C] shadow-lg shadow-[#C9A84C]/20'
+                : `${isLight ? 'text-gray-500 hover:bg-gray-200 hover:text-gray-900' : 'text-[#888888] hover:bg-white/5 hover:text-white'} hover:shadow-md`
             }`}
           >
             <Icon className="h-4 w-4" />
@@ -490,15 +550,20 @@ export default function AdminReportsPage() {
       </div>
 
       {/* Revenue Bar Chart */}
-      <div className="panel p-6 bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10">
-        <div className="mb-6 flex items-center justify-between">
+      <div className={`panel p-3 backdrop-blur-xl border hover:border-[#C9A84C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#C9A84C]/20 relative overflow-hidden ${
+        isLight 
+          ? 'bg-white border-gray-200 hover:shadow-gray-100' 
+          : 'bg-gradient-to-br from-[#1A1A1A]/80 to-[#0F0F0F]/80 border-white/10'
+      }`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#C9A84C]/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative mb-3 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-white">Revenue Overview</h2>
-            <p className="text-sm text-night-400 mt-1">
+            <h2 className={`text-sm font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>Revenue Overview</h2>
+            <p className={`text-[10px] mt-0.5 ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>
               {period === 'daily' ? 'Last 7 days' : period === 'monthly' ? 'Last 6 months' : 'Last 5 years'}
             </p>
           </div>
-          <span className="rounded-full bg-neon-amber/15 px-4 py-2 text-xs font-bold uppercase tracking-wider text-neon-amber border border-neon-amber/30">
+          <span className="rounded-full bg-[#C9A84C]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 shadow-lg shadow-[#C9A84C]/20 animate-pulse-slow">
             {period}
           </span>
         </div>
@@ -506,50 +571,82 @@ export default function AdminReportsPage() {
       </div>
 
       {/* Donut Charts Row */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="panel p-6 bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10">
-          <h2 className="mb-6 text-xl font-bold text-white">Sales by Category</h2>
+      <div className="grid gap-3 lg:grid-cols-3">
+        <div className={`panel p-3 backdrop-blur-xl border hover:border-[#C9A84C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#C9A84C]/20 relative overflow-hidden ${
+          isLight 
+            ? 'bg-white border-gray-200 hover:shadow-gray-100' 
+            : 'bg-gradient-to-br from-[#1A1A1A]/80 to-[#0F0F0F]/80 border-white/10'
+        }`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#C9A84C]/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
+          <h2 className={`relative mb-3 text-xs font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>Sales by Category</h2>
           <DonutChartSVG segments={catSegments} />
         </div>
 
-        <div className="panel p-6 bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10">
-          <h2 className="mb-6 text-xl font-bold text-white">Payment Methods</h2>
+        <div className={`panel p-3 backdrop-blur-xl border hover:border-[#C9A84C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#C9A84C]/20 relative overflow-hidden ${
+          isLight 
+            ? 'bg-white border-gray-200 hover:shadow-gray-100' 
+            : 'bg-gradient-to-br from-[#1A1A1A]/80 to-[#0F0F0F]/80 border-white/10'
+        }`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#C9A84C]/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
+          <h2 className={`relative mb-3 text-xs font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>Payment Methods</h2>
           <DonutChartSVG segments={paymentSegments} />
         </div>
 
-        <div className="panel p-6 bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10">
-          <h2 className="mb-6 text-xl font-bold text-white">Order Status</h2>
+        <div className={`panel p-3 backdrop-blur-xl border hover:border-[#C9A84C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#C9A84C]/20 relative overflow-hidden ${
+          isLight 
+            ? 'bg-white border-gray-200 hover:shadow-gray-100' 
+            : 'bg-gradient-to-br from-[#1A1A1A]/80 to-[#0F0F0F]/80 border-white/10'
+        }`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#C9A84C]/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
+          <h2 className={`relative mb-3 text-xs font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>Order Status</h2>
           <DonutChartSVG segments={statusSegments} />
         </div>
       </div>
 
       {/* Best Sellers Table */}
-      <div className="panel overflow-hidden bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10">
-        <div className="border-b border-white/10 px-6 py-5 bg-night-950/30">
-          <h2 className="text-xl font-bold text-white">Best Selling Products</h2>
-          <p className="mt-1 text-sm text-night-400">Top performers by units sold</p>
+      <div className={`panel overflow-hidden backdrop-blur-xl border hover:border-[#C9A84C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#C9A84C]/20 relative overflow-hidden ${
+        isLight 
+          ? 'bg-white border-gray-200 hover:shadow-gray-100' 
+          : 'bg-gradient-to-br from-[#1A1A1A]/80 to-[#0F0F0F]/80 border-white/10'
+      }`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#C9A84C]/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
+        <div className={`relative border-b px-3 py-2 ${
+          isLight 
+            ? 'border-gray-200 bg-gray-50' 
+            : 'border-white/10 bg-[#0A0A0A]/30'
+        }`}>
+          <h2 className={`text-xs font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>Best Selling Products</h2>
+          <p className={`mt-0.5 text-[10px] ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>Top performers by units sold</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-night-950/60 text-xs uppercase tracking-wider text-night-500">
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-left text-[10px]">
+            <thead className={`text-[10px] uppercase tracking-wider ${
+              isLight 
+                ? 'bg-gray-50 text-gray-500' 
+                : 'bg-[#0A0A0A]/60 text-[#888888]'
+            }`}>
               <tr>
-                <th className="px-6 py-4 font-semibold">#</th>
-                <th className="px-6 py-4 font-semibold">Product</th>
-                <th className="px-6 py-4 font-semibold">Category</th>
-                <th className="px-6 py-4 font-semibold text-right">Units Sold</th>
-                <th className="px-6 py-4 font-semibold text-right">Revenue</th>
+                <th className="px-3 py-1.5 font-semibold">#</th>
+                <th className="px-3 py-1.5 font-semibold">Product</th>
+                <th className="px-3 py-1.5 font-semibold">Category</th>
+                <th className="px-3 py-1.5 font-semibold text-right">Units Sold</th>
+                <th className="px-3 py-1.5 font-semibold text-right">Revenue</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className={`divide-y ${
+              isLight ? 'divide-gray-200' : 'divide-white/5'
+            }`}>
               {bestSellers
                 .sort((a, b) => b.unitsSold - a.unitsSold)
                 .map((item, i) => (
-                  <tr key={i} className="transition-colors hover:bg-white/[0.03]">
-                    <td className="px-6 py-4 text-night-500 font-medium">{i + 1}</td>
-                    <td className="px-6 py-4 font-semibold text-white">{item.name}</td>
-                    <td className="px-6 py-4 capitalize text-neon-amber font-medium">{item.category}</td>
-                    <td className="px-6 py-4 text-right text-night-300">{item.unitsSold}</td>
-                    <td className="px-6 py-4 text-right font-bold text-white">
+                  <tr key={i} className={`hover:shadow-lg hover:shadow-[#C9A84C]/10 transition-all duration-300 group ${
+                    isLight ? 'hover:bg-gray-50' : 'hover:bg-white/[0.05]'
+                  }`}>
+                    <td className={`px-3 py-1.5 font-medium group-hover:text-[#C9A84C] transition-colors ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>{i + 1}</td>
+                    <td className={`px-3 py-1.5 font-semibold group-hover:text-[#C9A84C] transition-colors ${isLight ? 'text-gray-900' : 'text-white'}`}>{item.name}</td>
+                    <td className="px-3 py-1.5 capitalize text-[#C9A84C] font-medium">{item.category}</td>
+                    <td className={`px-3 py-1.5 text-right group-hover:text-white transition-colors ${isLight ? 'text-gray-600 hover:text-gray-900' : 'text-[#888888]'}`}>{item.unitsSold}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold group-hover:text-[#C9A84C] transition-colors ${isLight ? 'text-gray-900' : 'text-white'}`}>
                       Rs {item.revenue.toLocaleString()}
                     </td>
                   </tr>
@@ -560,10 +657,15 @@ export default function AdminReportsPage() {
       </div>
 
       {/* Revenue Heatmap / Hourly */}
-      <div className="panel p-6 bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10">
-        <h2 className="mb-2 text-xl font-bold text-white">Peak Order Hours</h2>
-        <p className="mb-6 text-sm text-night-400">When customers order most frequently</p>
-        <div className="grid grid-cols-12 gap-2">
+      <div className={`panel p-3 backdrop-blur-xl border hover:border-[#C9A84C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#C9A84C]/20 relative overflow-hidden ${
+        isLight 
+          ? 'bg-white border-gray-200 hover:shadow-gray-100' 
+          : 'bg-gradient-to-br from-[#1A1A1A]/80 to-[#0F0F0F]/80 border-white/10'
+      }`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#C9A84C]/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
+        <h2 className={`relative mb-1 text-xs font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>Peak Order Hours</h2>
+        <p className={`relative mb-2 text-[10px] ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>When customers order most frequently</p>
+        <div className="relative grid grid-cols-12 gap-0.5">
           {Array.from({ length: 24 }, (_, h) => {
             const rand = randomSeed(h * 7 + 3);
             const intensity = rand();
@@ -571,15 +673,15 @@ export default function AdminReportsPage() {
             return (
               <div key={h} className="group relative">
                 <div
-                  className="flex aspect-square items-center justify-center rounded-lg text-[10px] font-semibold transition-transform hover:scale-110"
+                  className="flex aspect-square items-center justify-center rounded text-[7px] font-semibold transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-[#C9A84C]/30"
                   style={{
-                    background: `rgba(245, 158, 11, ${0.08 + intensity * 0.55})`,
+                    background: `rgba(201, 168, 76, ${0.08 + intensity * 0.55})`,
                     color: intensity > 0.5 ? '#fef3c7' : '#92400e',
                   }}
                 >
                   {h}h
                 </div>
-                <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 rounded bg-night-950 px-2 py-1 text-[10px] font-semibold text-neon-amber shadow-lg ring-1 ring-neon-amber/30 group-hover:block">
+                <div className="pointer-events-none absolute -top-5 left-1/2 z-10 hidden -translate-x-1/2 rounded bg-[#0A0A0A] backdrop-blur-sm px-1 py-0.5 text-[7px] font-semibold text-[#C9A84C] shadow-lg ring-1 ring-[#C9A84C]/30 group-hover:block animate-fade-in">
                   {orders} orders
                 </div>
               </div>
@@ -589,35 +691,36 @@ export default function AdminReportsPage() {
       </div>
 
       {/* Bills Section */}
-      <div className="panel overflow-hidden bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10">
-        <div className="border-b border-white/10 px-6 py-5 bg-night-950/30 flex items-center justify-between">
+      <div className="panel overflow-hidden bg-gradient-to-br from-[#1A1A1A]/80 to-[#0F0F0F]/80 backdrop-blur-xl border border-white/10 hover:border-[#C9A84C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#C9A84C]/20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#C9A84C]/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative border-b border-white/10 px-3 py-2 bg-[#0A0A0A]/30 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <FileText className="h-5 w-5 text-neon-amber" />
+            <h2 className="text-xs font-bold text-white flex items-center gap-2">
+              <FileText className="h-3 w-3 text-[#C9A84C] animate-pulse-slow" />
               Recent Bills
             </h2>
-            <p className="mt-1 text-sm text-night-400">Latest invoices and transactions</p>
+            <p className="mt-0.5 text-[10px] text-[#888888]">Latest invoices and transactions</p>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="border-b border-white/10 px-6 py-4 bg-night-900/50">
-          <div className="flex items-center gap-2 bg-night-950 rounded-lg px-4 py-2 border border-white/5 hover:border-white/10 transition-colors">
-            <Search className="h-4 w-4 text-night-500" />
+        <div className="relative border-b border-white/10 px-3 py-2 bg-[#1A1A1A]/50">
+          <div className="flex items-center gap-2 bg-[#0A0A0A]/80 backdrop-blur-sm rounded-lg px-2 py-1 border border-white/5 hover:border-[#C9A84C]/30 focus-within:border-[#C9A84C]/50 focus-within:shadow-lg focus-within:shadow-[#C9A84C]/20 transition-all duration-300">
+            <Search className="h-2.5 w-2.5 text-[#888888]" />
             <input
               type="text"
               placeholder="Search by order number, customer name, or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-white placeholder-night-500 outline-none"
+              className="flex-1 bg-transparent text-[10px] text-white placeholder-[#888888] outline-none"
             />
           </div>
         </div>
 
         {/* Bills Table */}
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           {billsLoading ? (
-            <div className="flex items-center justify-center h-40 text-night-400">
+            <div className="flex items-center justify-center h-20 text-[#888888]">
               <p>Loading bills...</p>
             </div>
           ) : billsData.filter(bill =>
@@ -625,20 +728,20 @@ export default function AdminReportsPage() {
             bill.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             bill.customer_phone.includes(searchTerm)
           ).length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-night-400">
-              <FileText className="h-8 w-8 mb-2 opacity-50" />
-              <p className="text-sm">No bills found</p>
+            <div className="flex flex-col items-center justify-center h-20 text-[#888888]">
+              <FileText className="h-5 w-5 mb-2 opacity-50" />
+              <p className="text-[10px]">No bills found</p>
             </div>
           ) : (
-            <table className="w-full text-left text-sm">
-              <thead className="bg-night-950/60 text-xs uppercase tracking-wider text-night-500 sticky top-0">
+            <table className="w-full text-left text-[10px]">
+              <thead className="bg-[#0A0A0A]/60 text-[10px] uppercase tracking-wider text-[#888888] sticky top-0">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">Order #</th>
-                  <th className="px-6 py-4 font-semibold">Customer</th>
-                  <th className="px-6 py-4 font-semibold">Method</th>
-                  <th className="px-6 py-4 font-semibold text-right">Amount</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
-                  <th className="px-6 py-4 font-semibold text-center">Action</th>
+                  <th className="px-3 py-1.5 font-semibold">Order #</th>
+                  <th className="px-3 py-1.5 font-semibold">Customer</th>
+                  <th className="px-3 py-1.5 font-semibold">Method</th>
+                  <th className="px-3 py-1.5 font-semibold text-right">Amount</th>
+                  <th className="px-3 py-1.5 font-semibold">Status</th>
+                  <th className="px-3 py-1.5 font-semibold text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -649,34 +752,34 @@ export default function AdminReportsPage() {
                     bill.customer_phone.includes(searchTerm)
                   )
                   .slice(0, 10)
-                  .map((bill) => (
-                    <tr key={bill.id} className="hover:bg-white/[0.03] transition-colors">
-                      <td className="px-6 py-4 font-mono text-neon-amber font-semibold">{bill.order_number}</td>
-                      <td className="px-6 py-4 text-white">
+                  .map((bill, index) => (
+                    <tr key={bill.id} className="hover:bg-white/[0.05] hover:shadow-lg hover:shadow-[#C9A84C]/10 transition-all duration-300 group" style={{ animationDelay: `${index * 50}ms` }}>
+                      <td className="px-3 py-1.5 font-mono text-[#C9A84C] font-semibold group-hover:text-[#C9A84C]/80 transition-colors">{bill.order_number}</td>
+                      <td className="px-3 py-1.5 text-white">
                         <div>
-                          <p className="font-semibold">{bill.customer_name}</p>
-                          <p className="text-xs text-night-400">{bill.customer_phone}</p>
+                          <p className="font-semibold group-hover:text-[#C9A84C] transition-colors">{bill.customer_name}</p>
+                          <p className="text-[10px] text-[#888888] group-hover:text-[#666666] transition-colors">{bill.customer_phone}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 capitalize text-night-300">{bill.payment_method}</td>
-                      <td className="px-6 py-4 text-right font-bold text-white">Rs {bill.total_amount.toLocaleString()}</td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                      <td className="px-3 py-1.5 capitalize text-[#888888] group-hover:text-white transition-colors">{bill.payment_method}</td>
+                      <td className="px-3 py-1.5 text-right font-bold text-white group-hover:text-[#C9A84C] transition-colors">Rs {bill.total_amount.toLocaleString()}</td>
+                      <td className="px-3 py-1.5">
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${
                           bill.order_status === 'delivered'
-                            ? 'bg-green-500/20 text-green-400'
+                            ? 'bg-green-500/15 text-green-400 border-green-500/20 shadow-lg shadow-green-500/10'
                             : bill.order_status === 'cancelled'
-                            ? 'bg-red-500/20 text-red-400'
-                            : 'bg-amber-500/20 text-amber-400'
+                            ? 'bg-red-500/15 text-red-400 border-red-500/20 shadow-lg shadow-red-500/10'
+                            : 'bg-[#C9A84C]/15 text-[#C9A84C] border-[#C9A84C]/20 shadow-lg shadow-[#C9A84C]/10'
                         }`}>
                           {bill.order_status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-3 py-1.5 text-center">
                         <button
                           onClick={() => handleViewBill(bill.id)}
-                          className="inline-flex items-center gap-1 text-neon-amber hover:text-neon-amber/80 transition-colors font-semibold text-xs hover:underline"
+                          className="inline-flex items-center gap-1 text-[#C9A84C] hover:text-[#C9A84C]/80 transition-colors font-semibold text-[10px] hover:underline hover:scale-105 inline-block"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-2.5 w-2.5" />
                           View
                         </button>
                       </td>

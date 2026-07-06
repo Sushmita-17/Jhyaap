@@ -65,6 +65,8 @@ export interface User {
   password?: string;
   authMethod?: 'phone' | 'google';
   profilePhoto?: string;
+  googleId?: string;
+  phoneVerified?: boolean;
   walletBalance: number;
   loyaltyPoints?: number;
 }

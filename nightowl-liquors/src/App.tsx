@@ -27,10 +27,18 @@ import AdminReportsPage from './pages/admin/AdminReportsPage';
 import AdminProfessionalsPage from './pages/admin/AdminProfessionalsPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminTrendingPage from './pages/admin/AdminTrendingPage';
+import AdminFlashSalePage from './pages/admin/AdminFlashSalePage';
+import AdminCouponsPage from './pages/admin/AdminCouponsPage';
+import AdminDeliveryPage from './pages/admin/AdminDeliveryPage';
+import AdminInventoryPage from './pages/admin/AdminInventoryPage';
+import AdminRevenuePage from './pages/admin/AdminRevenuePage';
 import { useAppStore } from './store/appStore';
 import { isAdminPath, ADMIN_LOGIN_PATH, ADMIN_BASE_PATH } from './lib/adminRoutes';
 import AiChatbot from './components/AiChatbot';
+import BottomNav from './components/BottomNav';
 import { useGlobalRiderTracking } from './hooks/useGlobalRiderTracking';
+import { useThemeStore } from './store/themeStore';
 
 function GlobalRiderTrackingBridge() {
   useGlobalRiderTracking();
@@ -77,7 +85,8 @@ function StoreShell({ children }: { children: React.ReactNode }) {
     <>
       <Navbar />
       <AiChatbot />
-      <main className="flex-1 w-full pt-[138px]">{children}</main>
+      <BottomNav />
+      <main className="flex-1 w-full pb-[80px] md:pb-0">{children}</main>
       <Footer />
     </>
   );
@@ -86,9 +95,11 @@ function StoreShell({ children }: { children: React.ReactNode }) {
 function App() {
   const location = useLocation();
   const isAdminRoute = isAdminPath(location.pathname);
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
 
   return (
-    <div className="min-h-screen bg-night-950">
+    <div className={`min-h-screen ${isLight ? 'bg-gray-50' : 'bg-night-950'}`}>
       <GlobalRiderTrackingBridge />
       {!isAdminRoute && <AgeConsentGate />}
       <StoreNavigationBridge />
@@ -98,10 +109,17 @@ function App() {
         <Route path={ADMIN_BASE_PATH} element={<AdminGuard />}>
           <Route index element={<AdminDashboardPage />} />
           <Route path="products" element={<AdminProductsPage />} />
+          <Route path="products/new" element={<AdminProductFormPage />} />
           <Route path="products/:id/edit" element={<AdminProductFormPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="trending" element={<AdminTrendingPage />} />
+          <Route path="flash-sale" element={<AdminFlashSalePage />} />
+          <Route path="inventory" element={<AdminInventoryPage />} />
+          <Route path="delivery" element={<AdminDeliveryPage />} />
+          <Route path="revenue" element={<AdminRevenuePage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
           <Route path="banners" element={<AdminBannersPage />} />
+          <Route path="coupons" element={<AdminCouponsPage />} />
           <Route path="professionals" element={<AdminProfessionalsPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="reports" element={<AdminReportsPage />} />

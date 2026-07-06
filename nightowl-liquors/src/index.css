@@ -19,12 +19,14 @@ html, body {
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-[#0A0A0A] text-white font-sans antialiased;
-    background: #0A0A0A;
+    @apply font-sans antialiased;
   }
 }
 
 @layer components {
+  .panel {
+    @apply rounded-2xl backdrop-blur-xl border;
+  }
   .btn-primary {
     @apply rounded-[6px] bg-gold-primary px-[28px] py-[12px] font-bold text-black
              transition-colors duration-200

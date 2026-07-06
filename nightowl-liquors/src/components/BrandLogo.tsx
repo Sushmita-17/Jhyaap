@@ -6,11 +6,11 @@ interface BrandLogoProps {
 }
 
 const sizeMap: Record<string, { box: string; src: string; px: number }> = {
-  sm: { box: 'h-8 w-8', src: '/logo-256.png', px: 32 },
-  md: { box: 'h-[48px] w-[48px]', src: '/logo-256.png', px: 48 },
-  lg: { box: 'h-[72px] w-[72px]', src: '/logo-512.png', px: 72 },
-  xl: { box: 'h-[96px] w-[96px]', src: '/logo-512.png', px: 96 },
-  custom: { box: '', src: '/logo-512.png', px: 512 },
+  sm: { box: 'h-8 w-8', src: '/logo.png', px: 32 },
+  md: { box: 'h-[48px] w-[48px]', src: '/logo.png', px: 48 },
+  lg: { box: 'h-[72px] w-[72px]', src: '/logo.png', px: 72 },
+  xl: { box: 'h-[96px] w-[96px]', src: '/logo.png', px: 96 },
+  custom: { box: '', src: '/logo.png', px: 512 },
 };
 
 export default function BrandLogo({ size = 'md', className = '' }: BrandLogoProps) {

@@ -1,31 +1,95 @@
 import { MapPin, Mail, Phone, MessageSquare, Facebook, Instagram, Send } from 'lucide-react';
 import { STORE_INFO } from '@/lib/storeInfo';
 import { useAppStore } from '@/store/appStore';
+import { useThemeStore } from '@/store/themeStore';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function Footer() {
   const { setPage } = useAppStore();
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
 
-  const handleLink = (page: string) => {
-    setPage(page as any);
+  const handleQuickLink = (name: string) => {
+    const formatted = name.toLowerCase();
+    if (formatted === 'home') {
+      setPage('home');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (formatted === 'shop all' || formatted === 'all products') {
+      setPage('products');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (formatted === 'deals') {
+      setPage('home');
+      setTimeout(() => {
+        const el = document.getElementById('deals');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else if (formatted === 'trending') {
+      setPage('home');
+      setTimeout(() => {
+        const el = document.getElementById('trending');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else if (formatted === 'new arrivals') {
+      setPage('products');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (formatted === 'brands') {
+      setPage('products');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (formatted === 'combo offers') {
+      setPage('home');
+      setTimeout(() => {
+        const el = document.getElementById('combos');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else if (formatted === 'my orders') {
+      setPage('orders');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setPage('products');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleCompanyLink = (name: string) => {
+    const formatted = name.toLowerCase();
+    if (formatted === 'about us') {
+      setPage('about');
+    } else if (formatted === 'faq' || formatted === 'how it works' || formatted === 'delivery areas') {
+      setPage('faqs');
+    } else if (formatted === 'contact') {
+      setPage('contact');
+    } else if (formatted === 'reviews') {
+      setPage('reviews');
+    } else if (formatted === 'offers & promotions') {
+      setPage('products');
+    } else {
+      setPage('home');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <footer className="w-full bg-[#0A0A0A] border-t border-[#1A1A1A] box-border">
+    <footer className={`w-full border-t box-border pb-[160px] md:pb-0 ${
+      isLight ? 'bg-gray-50 border-gray-200' : 'bg-[#0A0A0A] border-[#1A1A1A]'
+    }`}>
       {/* ━━━━━━━━━━━━━━━━━━━━━
           TOP SECTION — 3 columns
           ━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="max-w-[1248px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-10 p-[32px_20px] md:p-[48px_40px_32px_40px] border-b border-[#1A1A1A]">
-        
+      <div className={`max-w-[1360px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10 p-[12px_10px] md:p-[38px_34px_30px_34px] border-b ${
+        isLight ? 'border-gray-200' : 'border-[#1A1A1A]'
+      }`}>
+
         {/* COL 1 — QUICK LINKS */}
         <div>
-          <h4 className="text-gold-primary text-[11px] font-bold uppercase tracking-[1.5px] mb-4">QUICK LINKS</h4>
-          <div className="grid grid-cols-1 gap-0">
+          <h4 className="text-[#C9A84C] text-[9px] font-bold uppercase tracking-[1.2px] mb-2 md:mb-3">QUICK LINKS</h4>
+          <div className="grid grid-cols-2 md:grid-cols-1 gap-1.5 md:gap-0">
             {['Home', 'Shop All', 'Deals', 'Trending', 'New Arrivals', 'All Products', 'Brands', 'Combo Offers', 'My Orders'].map((link) => (
               <button
                 key={link}
-                onClick={() => handleLink(link.toLowerCase().replace(' ', '-'))}
-                className="text-[#888888] text-[13px] leading-[2.2] hover:text-white transition-colors text-left"
+                onClick={() => handleQuickLink(link)}
+                className={`text-[9px] md:text-[10px] leading-[1.6] md:leading-[1.8] transition-colors text-left ${
+                  isLight ? 'text-gray-600 hover:text-gray-900' : 'text-[#888888] hover:text-white'
+                }`}
               >
                 {link}
               </button>
@@ -35,29 +99,33 @@ export default function Footer() {
 
         {/* COL 2 — COMPANY + PAYMENT QR */}
         <div>
-          <h4 className="text-gold-primary text-[11px] font-bold uppercase tracking-[1.5px] mb-4">COMPANY</h4>
-          <div className="grid grid-cols-1 gap-0">
+          <h4 className="text-[#C9A84C] text-[9px] font-bold uppercase tracking-[1.2px] mb-2 md:mb-3">COMPANY</h4>
+          <div className="grid grid-cols-2 md:grid-cols-1 gap-1.5 md:gap-0">
             {['About Us', 'How It Works', 'Delivery Areas', 'Offers & Promotions', 'Reviews', 'FAQ', 'Contact'].map((link) => (
               <button
                 key={link}
-                onClick={() => handleLink(link.toLowerCase().replace(' ', '-'))}
-                className="text-[#888888] text-[13px] leading-[2.2] hover:text-white transition-colors text-left"
+                onClick={() => handleCompanyLink(link)}
+                className={`text-[9px] md:text-[10px] leading-[1.6] md:leading-[1.8] transition-colors text-left ${
+                  isLight ? 'text-gray-600 hover:text-gray-900' : 'text-[#888888] hover:text-white'
+                }`}
               >
                 {link}
               </button>
             ))}
           </div>
 
-          <div className="mt-6">
-            <h4 className="text-gold-primary text-[11px] font-bold uppercase tracking-[1.5px] mb-3">SCAN TO PAY</h4>
-            <div className="flex gap-3">
-              <div className="bg-white rounded-[8px] p-2 w-[90px] md:w-[90px] flex flex-col items-center">
+          <div className="mt-3 md:mt-4">
+            <h4 className="text-[#C9A84C] text-[9px] font-bold uppercase tracking-[1.2px] mb-1.5 md:mb-2">SCAN TO PAY</h4>
+            <div className={`flex gap-2 ${
+            isLight ? 'bg-gray-100 rounded-[6px] p-1 md:p-1.5' : 'bg-white rounded-[6px] p-1 md:p-1.5'
+          }`}>
+              <div className={`w-[60px] md:w-[70px] flex flex-col items-center ${isLight ? 'bg-white rounded-[4px] p-1' : 'p-0'}`}>
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MOCO" alt="MOCO QR" className="w-full h-auto grayscale opacity-90" />
-                <span className="text-black text-[10px] font-bold mt-1 uppercase">MOCO</span>
+                <span className={`text-[7px] md:text-[8px] font-bold mt-0.5 uppercase ${isLight ? 'text-gray-900' : 'text-black'}`}>MOCO</span>
               </div>
-              <div className="bg-white rounded-[8px] p-2 w-[90px] md:w-[90px] flex flex-col items-center">
+              <div className={`w-[60px] md:w-[70px] flex flex-col items-center ${isLight ? 'bg-white rounded-[4px] p-1' : 'p-0'}`}>
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=FONEPAY" alt="FONEPAY QR" className="w-full h-auto grayscale opacity-90" />
-                <span className="text-black text-[10px] font-bold mt-1 uppercase">FONEPAY</span>
+                <span className={`text-[7px] md:text-[8px] font-bold mt-0.5 uppercase ${isLight ? 'text-gray-900' : 'text-black'}`}>FONEPAY</span>
               </div>
             </div>
           </div>
@@ -65,32 +133,58 @@ export default function Footer() {
 
         {/* COL 3 — GET CONNECTED + CONTACT */}
         <div>
-          <h4 className="text-gold-primary text-[11px] font-bold uppercase tracking-[1.5px] mb-3">GET CONNECTED</h4>
-          <div className="flex gap-3.5 mb-6">
-            {[Facebook, Instagram, Send].map((Icon, i) => (
-              <a key={i} href="#" className="p-2 border border-white/5 rounded-full text-[#888888] hover:text-gold-primary hover:border-gold-primary/30 transition-all">
-                <Icon size={18} />
-              </a>
-            ))}
+          <h4 className="text-[#C9A84C] text-[9px] font-bold uppercase tracking-[1.2px] mb-1.5 md:mb-2">GET CONNECTED</h4>
+          <div className={`flex gap-2 md:gap-2.5 mb-3 md:mb-4 ${
+            isLight ? 'bg-gray-100 rounded-[8px] p-2' : ''
+          }`}>
+            <a href={STORE_INFO.facebook} target="_blank" rel="noopener noreferrer" className={`p-1 md:p-1.5 rounded-full transition-all ${
+              isLight 
+                ? 'border border-gray-300 text-gray-600 hover:text-[#C9A84C] hover:border-[#C9A84C]/30' 
+                : 'border border-white/5 text-[#888888] hover:text-[#C9A84C] hover:border-[#C9A84C]/30'
+            }`}>
+              <Facebook size={14} className="w-3 h-3 md:w-auto md:h-auto" />
+            </a>
+            <a href={STORE_INFO.instagram} target="_blank" rel="noopener noreferrer" className={`p-1 md:p-1.5 rounded-full transition-all ${
+              isLight 
+                ? 'border border-gray-300 text-gray-600 hover:text-[#C9A84C] hover:border-[#C9A84C]/30' 
+                : 'border border-white/5 text-[#888888] hover:text-[#C9A84C] hover:border-[#C9A84C]/30'
+            }`}>
+              <Instagram size={14} className="w-3 h-3 md:w-auto md:h-auto" />
+            </a>
+            <a href={STORE_INFO.whatsapp} target="_blank" rel="noopener noreferrer" className={`p-1 md:p-1.5 rounded-full transition-all ${
+              isLight 
+                ? 'border border-gray-300 text-gray-600 hover:text-[#C9A84C] hover:border-[#C9A84C]/30' 
+                : 'border border-white/5 text-[#888888] hover:text-[#C9A84C] hover:border-[#C9A84C]/30'
+            }`}>
+              <Send size={14} className="w-3 h-3 md:w-auto md:h-auto" />
+            </a>
           </div>
 
-          <h4 className="text-gold-primary text-[11px] font-bold uppercase tracking-[1.5px] mb-3">CONTACT US</h4>
-          <div className="space-y-3.5">
-            <div className="flex items-start gap-2 group cursor-default">
-              <MapPin size={13} className="text-gold-primary shrink-0 mt-0.5" />
-              <span className="text-[#888888] text-[12px] leading-[1.6] group-hover:text-white transition-colors">Jhyaap Station, Kathmandu</span>
+          <h4 className="text-[#C9A84C] text-[9px] font-bold uppercase tracking-[1.2px] mb-1.5 md:mb-2">CONTACT US</h4>
+          <div className="space-y-1.5 md:space-y-2">
+            <div className="flex items-start gap-1 md:gap-1.5 group cursor-default">
+              <MapPin size={11} className="text-[#C9A84C] shrink-0 mt-0.5 w-2.5 h-2.5 md:w-auto md:h-auto" />
+              <span className={`text-[9px] md:text-[10px] leading-[1.4] md:leading-[1.5] transition-colors ${
+                isLight ? 'text-gray-600 group-hover:text-gray-900' : 'text-[#888888] group-hover:text-white'
+              }`}>Jhyaap Station, Kathmandu</span>
             </div>
-            <a href={`mailto:${STORE_INFO.email}`} className="flex items-start gap-2 group">
-              <Mail size={13} className="text-gold-primary shrink-0 mt-0.5" />
-              <span className="text-[#888888] text-[12px] leading-[1.6] group-hover:text-white transition-colors">{STORE_INFO.email}</span>
+            <a href={`mailto:${STORE_INFO.email}`} className="flex items-start gap-1 md:gap-1.5 group">
+              <Mail size={11} className="text-[#C9A84C] shrink-0 mt-0.5 w-2.5 h-2.5 md:w-auto md:h-auto" />
+              <span className={`text-[9px] md:text-[10px] leading-[1.4] md:leading-[1.5] transition-colors ${
+                isLight ? 'text-gray-600 group-hover:text-gray-900' : 'text-[#888888] group-hover:text-white'
+              }`}>{STORE_INFO.email}</span>
             </a>
-            <a href={`tel:${STORE_INFO.phoneTel}`} className="flex items-start gap-2 group">
-              <Phone size={13} className="text-gold-primary shrink-0 mt-0.5" />
-              <span className="text-[#888888] text-[12px] leading-[1.6] group-hover:text-white transition-colors">{STORE_INFO.phone}</span>
+            <a href={`tel:${STORE_INFO.phoneTel}`} className="flex items-start gap-1 md:gap-1.5 group">
+              <Phone size={11} className="text-[#C9A84C] shrink-0 mt-0.5 w-2.5 h-2.5 md:w-auto md:h-auto" />
+              <span className={`text-[9px] md:text-[10px] leading-[1.4] md:leading-[1.5] transition-colors ${
+                isLight ? 'text-gray-600 group-hover:text-gray-900' : 'text-[#888888] group-hover:text-white'
+              }`}>{STORE_INFO.phone}</span>
             </a>
-            <a href={`https://wa.me/${STORE_INFO.phoneTel}`} className="flex items-start gap-2 group">
-              <MessageSquare size={13} className="text-gold-primary shrink-0 mt-0.5" />
-              <span className="text-[#888888] text-[12px] leading-[1.6] group-hover:text-white transition-colors">WhatsApp: {STORE_INFO.phone}</span>
+            <a href={`https://wa.me/${STORE_INFO.phoneTel}`} className="flex items-start gap-1 md:gap-1.5 group">
+              <MessageSquare size={11} className="text-[#C9A84C] shrink-0 mt-0.5 w-2.5 h-2.5 md:w-auto md:h-auto" />
+              <span className={`text-[9px] md:text-[10px] leading-[1.4] md:leading-[1.5] transition-colors ${
+                isLight ? 'text-gray-600 group-hover:text-gray-900' : 'text-[#888888] group-hover:text-white'
+              }`}>WhatsApp: {STORE_INFO.phone}</span>
             </a>
           </div>
         </div>
@@ -99,20 +193,26 @@ export default function Footer() {
       {/* ━━━━━━━━━━━━━━━━━━━━━
           MIDDLE SECTION — brand
           ━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="p-[28px_40px] text-center border-b border-[#1A1A1A]">
-        <div className="inline-flex items-center justify-center p-2 rounded-full border border-gold-primary mb-2.5">
-          <img src="/logo-256.png" alt="Logo" className="w-[32px] h-[32px] object-contain rounded-full" />
+      <div className={`p-[10px_10px] md:p-[24px_30px] text-center border-b ${
+        isLight ? 'bg-white border-gray-200' : 'border-[#1A1A1A]'
+      }`}>
+        <div className="inline-flex items-center justify-center p-1 md:p-1.5 rounded-full border border-[#C9A84C] mb-1.5 md:mb-2">
+          <BrandLogo size="sm" />
         </div>
-        <h2 className="text-white text-[15px] font-bold tracking-[2px] mb-1">JHYAAP STATION</h2>
-        <p className="text-[#888888] text-[11px] tracking-[3px] uppercase">Raise Your Glass</p>
+        <h2 className={`text-[11px] md:text-[12px] font-bold tracking-[1.5px] mb-0.5 ${isLight ? 'text-gray-900' : 'text-white'}`}>JHYAAP STATION</h2>
+        <p className={`text-[8px] md:text-[9px] tracking-[2px] uppercase ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>Raise Your Glass</p>
       </div>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━
           18+ DISCLAIMER BAR
           ━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="p-5 md:p-[20px_40px] text-center border-b border-[#1A1A1A]">
-        <h4 className="text-gold-primary text-[11px] font-bold uppercase tracking-[1.5px] mb-1.5">18+ ONLY · DRINK RESPONSIBLY</h4>
-        <p className="text-[#555555] text-[12px] leading-[1.5] max-w-[480px] mx-auto">
+      <div className={`p-[6px_10px] md:p-[16px_34px] text-center border-b ${
+        isLight ? 'bg-gray-50 border-gray-200' : 'border-[#1A1A1A]'
+      }`}>
+        <h4 className="text-[#C9A84C] text-[8px] md:text-[9px] font-bold uppercase tracking-[1.2px] mb-0.5 md:mb-1">18+ ONLY · DRINK RESPONSIBLY</h4>
+        <p className={`text-[8px] md:text-[9px] leading-[1.3] md:leading-[1.4] max-w-[480px] mx-auto ${
+          isLight ? 'text-gray-500' : 'text-[#555555]'
+        }`}>
           Notice: Spirits cannot be sold to minors under the age of 18. Consuming excessive amounts of alcohol is detrimental to health.
         </p>
       </div>
@@ -120,12 +220,14 @@ export default function Footer() {
       {/* ━━━━━━━━━━━━━━━━━━━━━
           BOTTOM BAR
           ━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="flex flex-col md:flex-row items-center justify-between p-[14px_40px] gap-2 md:gap-0 bg-[#080808]">
-        <p className="text-[#444444] text-[12px]">© 2026 Jhyaap Station. All rights reserved.</p>
-        <div className="flex gap-4">
-          <button onClick={() => handleLink('terms')} className="text-[#444444] text-[12px] hover:text-white transition-colors">Terms & Conditions</button>
-          <span className="text-[#222222]">·</span>
-          <button onClick={() => handleLink('privacy')} className="text-[#444444] text-[12px] hover:text-white transition-colors">Privacy Policy</button>
+      <div className={`flex flex-col md:flex-row items-center justify-between p-[6px_10px] md:p-[14px_40px] gap-1 md:gap-0 ${
+        isLight ? 'bg-gray-100' : 'bg-[#080808]'
+      }`}>
+        <p className={`text-[8px] md:text-[9px] ${isLight ? 'text-gray-500' : 'text-[#444444]'}`}>© 2026 Jhyaap Station. All rights reserved.</p>
+        <div className="flex gap-2 md:gap-3">
+          <button onClick={() => handleCompanyLink('terms')} className={`text-[8px] md:text-[9px] transition-colors ${isLight ? 'text-gray-500 hover:text-gray-900' : 'text-[#444444] hover:text-white'}`}>Terms & Conditions</button>
+          <span className={isLight ? 'text-gray-300' : 'text-[#222222]'}>·</span>
+          <button onClick={() => handleCompanyLink('privacy')} className={`text-[8px] md:text-[9px] transition-colors ${isLight ? 'text-gray-500 hover:text-gray-900' : 'text-[#444444] hover:text-white'}`}>Privacy Policy</button>
         </div>
       </div>
     </footer>

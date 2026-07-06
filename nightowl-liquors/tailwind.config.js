@@ -38,6 +38,8 @@ export default {
         'slide-up': 'slideUp 0.3s ease-out',
         'fade-in': 'fadeIn 0.4s ease-out',
         'float': 'float 6s ease-in-out infinite',
+        'shimmer': 'shimmer 3s ease-in-out infinite',
+        'swing': 'swing 2s ease-in-out infinite',
       },
       keyframes: {
         glow: {
@@ -55,6 +57,15 @@ export default {
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-10px)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
+        swing: {
+          '0%, 100%': { transform: 'rotate(-5deg)' },
+          '50%': { transform: 'rotate(5deg)' },
         }
       }
     },

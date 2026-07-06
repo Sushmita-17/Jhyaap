@@ -1,5 +1,5 @@
-import { create } from 'zustand';
 import { User } from '@/types';
+import { create } from 'zustand';
 
 interface SignupInput {
   phone: string;
@@ -49,7 +49,13 @@ const PENDING_GOOGLE_KEY = 'jhyaap_pending_google';
 
 const generateUserId = () => `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-const normalizePhone = (phone: string) => phone.replace(/\D/g, '');
+const normalizePhone = (phone: string) => {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length > 10 && digits.startsWith('977')) {
+    return digits.slice(-10);
+  }
+  return digits;
+};
 
 // ---- localStorage helpers (swap internals for real API calls later) ----
 

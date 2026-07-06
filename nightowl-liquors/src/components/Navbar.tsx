@@ -1,37 +1,74 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { Clock, Phone, Search, ShoppingCart, User, CreditCard } from 'lucide-react';
-import { useCartStore } from '@/store/cartStore';
-import { useAppStore } from '@/store/appStore';
-import { useAuthStore } from '@/store/authStore';
-import { useCatalogStore, useCategories } from '@/store/catalogStore';
+import BrandLogo from '@/components/BrandLogo';
 import { STORE_INFO } from '@/lib/storeInfo';
+import { useAppStore } from '@/store/appStore';
+import { useCartStore } from '@/store/cartStore';
+import { useCatalogStore, useCategories } from '@/store/catalogStore';
+import { useThemeStore } from '@/store/themeStore';
+import { Clock, CreditCard, Menu, Phone, Search, ShoppingCart, User, X, Minus, Plus, Sun, Moon } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function Navbar() {
-  const { setPage, setSelectedCategory, setSearchQuery, setOnlyDeals } = useAppStore();
-  const totalItems = useCartStore((s) => s.getTotalItems());
-  const user = useAuthStore((s) => s.user);
+  const { currentPage, setPage, setSelectedCategory, setSearchQuery, setOnlyDeals } = useAppStore();
   const products = useCatalogStore((s) => s.products);
   const categories = useCategories();
+  const cartQty = useCartStore((s) => s.getTotalItems());
+  const { theme, toggleTheme } = useThemeStore();
+  const isLight = theme === 'light';
   
   const [searchValue, setSearchValue] = useState('');
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [brandsOpen, setBrandsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [announcementHeight, setAnnouncementHeight] = useState(38);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showMobileSecondary, setShowMobileSecondary] = useState(true);
+  const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   
   const headerRef = useRef<HTMLDivElement>(null);
   const announcementRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     const updateHeaderH = () => {
+      let annH = 38;
       if (announcementRef.current) {
-        setAnnouncementHeight(announcementRef.current.offsetHeight);
+        annH = announcementRef.current.offsetHeight;
+        setAnnouncementHeight(annH);
+      }
+
+      const main = document.querySelector('main');
+      if (main) {
+        const isMobile = window.innerWidth < 768;
+        const hNavbar = isMobile ? 60 : 80;
+        const hSecondary = isMobile ? 90 : 44;
+        const isScrolled = window.scrollY > 80;
+        const topOffset = isMobile
+          ? annH + hNavbar + hSecondary
+          : isScrolled
+            ? hNavbar + hSecondary
+            : annH + hNavbar + hSecondary;
+
+        main.style.paddingTop = `${topOffset}px`;
+        main.style.paddingBottom = isMobile ? '84px' : '0px';
       }
     };
 
     updateHeaderH();
     const handleScroll = () => {
-      setScrolled(window.scrollY > 80);
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 80);
+      
+      // Mobile secondary nav hide/show based on scroll direction
+      if (window.innerWidth < 768) {
+        const scrollDirection = currentScrollY > lastScrollY.current ? 'down' : 'up';
+        if (scrollDirection === 'down' && currentScrollY > 100) {
+          setShowMobileSecondary(false);
+        } else if (scrollDirection === 'up') {
+          setShowMobileSecondary(true);
+        }
+        lastScrollY.current = currentScrollY;
+      }
+      
       updateHeaderH();
     };
 
@@ -61,24 +98,7 @@ export default function Navbar() {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, []);
-
-  // Update global padding dynamically
-  useEffect(() => {
-    const main = document.querySelector('main');
-    if (main) {
-      const hNavbar = 72; // Mobile height
-      const hSecondary = 40; // Mobile height
-      const hDesktopNav = 88;
-      const hDesktopSec = 44;
-      
-      if (window.innerWidth < 768) {
-        main.style.paddingTop = `${announcementHeight + hNavbar + hSecondary}px`;
-      } else {
-        main.style.paddingTop = `${scrolled ? (hDesktopNav + hDesktopSec) : (announcementHeight + hDesktopNav + hDesktopSec)}px`;
-      }
-    }
-  }, [announcementHeight, scrolled]);
+  }, [scrolled]);
 
   const brands = useMemo(() => {
     return Array.from(new Set(products.map(p => p.brand))).filter(Boolean).sort();
@@ -99,7 +119,7 @@ export default function Navbar() {
   const scrollToSection = (id: string) => {
     setMegaMenuOpen(false);
     setBrandsOpen(false);
-    if (useAppStore.getState().page !== 'home') {
+    if (currentPage !== 'home') {
       setPage('home');
       setTimeout(() => {
         const el = document.getElementById(id);
@@ -131,20 +151,20 @@ export default function Navbar() {
         }`}
       >
         {/* Desktop */}
-        <div className="hidden md:flex max-w-[1248px] mx-auto h-[38px] items-center justify-between px-10 text-[12px] font-medium text-black">
-          <div className="flex-1 flex items-center justify-start border-r border-black/15 h-full px-5">
+        <div className="hidden md:flex max-w-[1248px] mx-auto h-[38px] items-center justify-between px-[28px] lg:px-[44px] text-[12px] font-medium text-black">
+          <div className="flex-1 flex items-center justify-start border-r border-black/15 h-full px-[22px]">
             <a href={`tel:${STORE_INFO.phoneTel}`} className="flex items-center gap-2 underline px-2">
               <Phone size={12} className="stroke-[2.5]" />
               Order by Phone: {STORE_INFO.phone}
             </a>
           </div>
-          <div className="flex-1 flex items-center justify-center border-r border-black/15 h-full px-5">
+          <div className="flex-1 flex items-center justify-center border-r border-black/15 h-full px-[18px]">
             <span className="flex items-center gap-2 px-2">
               <Clock size={12} className="stroke-[2.5]" />
               Delivery Hours: 6:00 PM to 2:00 AM (NST)
             </span>
           </div>
-          <div className="flex-1 flex items-center justify-end h-full px-5">
+          <div className="flex-1 flex items-center justify-end h-full px-[18px]">
             <span className="flex items-center gap-2 px-2">
               <CreditCard size={12} className="stroke-[2.5]" />
               Cash or Card on Delivery
@@ -154,58 +174,109 @@ export default function Navbar() {
 
         {/* Mobile (iPhone XR Fix) */}
         <div className="md:hidden flex flex-col items-center justify-center py-[6px] px-[12px] gap-[2px] text-center text-black font-medium leading-tight">
-          <a href={`tel:${STORE_INFO.phoneTel}`} className="text-[11px] flex items-center gap-1.5 underline">
+          <span className="text-[11px] flex items-center gap-1.5 font-semibold">
             <Phone size={11} /> {STORE_INFO.phone}
-          </a>
+          </span>
           <span className="text-[10px] opacity-90">
-            🕐 6 PM – 2 AM  •  💳 Cash or Card
+            6 PM - 2 AM - Cash or Card
           </span>
         </div>
       </div>
 
       {/* 2. NAVBAR */}
       <div 
-        className={`fixed left-0 right-0 z-[1001] bg-[#0A0A0A] transition-all duration-300 will-change-transform flex items-center border-b border-[#1A1A1A]`}
+        className={`fixed left-0 right-0 z-[1001] transition-all duration-300 will-change-transform flex items-center border-b ${
+          isLight 
+            ? 'bg-white border-gray-200' 
+            : 'bg-[#0A0A0A] border-[#1A1A1A]'
+        }`}
         style={{ 
           top: scrolled ? '0px' : `${announcementHeight}px`,
-          height: window.innerWidth < 768 ? '72px' : '88px'
+          height: window.innerWidth < 768 ? '60px' : '80px'
         }}
       >
-        <div className="max-w-[1248px] mx-auto px-[12px] md:px-[40px] flex items-center justify-between gap-4 md:gap-5 h-full w-full box-border">
+        <div className="max-w-[1248px] mx-auto px-[10px] md:px-[48px] lg:px-[64px] flex items-center justify-between gap-3 md:gap-6 h-full w-full box-border">
           {/* LOGO */}
           <button 
             onClick={() => { setPage('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             className="shrink-0 flex items-center"
           >
-            <div className="h-[60px] w-[60px] md:h-[80px] md:w-[80px] border-[2px] border-gold-primary rounded-full p-[4px] overflow-hidden flex items-center justify-center shadow-[0_0_20px_rgba(245,166,35,0.3)]">
-               <img src="/logo-256.png" alt="Logo" className="h-full w-full object-contain rounded-full" />
-            </div>
+            <BrandLogo size="md" className="h-[42px] w-[42px] md:h-[72px] md:w-[72px] shadow-[0_0_14px_rgba(245,166,35,0.24)]" />
           </button>
 
           {/* SEARCH BAR (iPhone XR Fix) */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-[840px] relative h-[34px] md:h-[38px] box-border">
-            <Search className="absolute left-[12px] top-1/2 -translate-y-1/2 w-[14px] h-[14px] text-[#888888]" />
+          <form onSubmit={handleSearch} className="flex-1 max-w-[520px] relative h-[30px] md:h-[34px] box-border">
+            <Search className={`absolute left-[9px] top-1/2 -translate-y-1/2 w-[11px] h-[11px] ${isLight ? 'text-gray-400' : 'text-[#888888]'}`} />
             <input
               type="text"
               placeholder="Search whisky, beer, vodka, rum..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="w-full h-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-[6px] pl-[38px] pr-4 text-[12px] md:text-[13px] text-white placeholder:text-[#666666] focus:outline-none focus:border-gold-primary focus:bg-[#1E1E1E] transition-all font-sans box-border"
+              className={`w-full h-full border rounded-[8px] pl-[30px] pr-2 text-[10px] md:text-[11px] focus:outline-none focus:border-gold-primary transition-all font-sans box-border ${
+                isLight 
+                  ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:bg-white' 
+                  : 'bg-[#1A1A1A] border-[#2A2A2A] text-white placeholder:text-[#777777] focus:bg-[#1E1E1E]'
+              }`}
             />
           </form>
 
-          {/* ICONS (Stop Shift) */}
-          <div className="shrink-0 flex items-center gap-[12px] md:gap-[16px]">
-            <button onClick={() => setPage(user ? 'profile' : 'login')} className="text-[#AAAAAA] hover:text-white transition-colors">
-              <User size={window.innerWidth < 768 ? 18 : 20} />
-            </button>
-            <button onClick={() => setPage('cart')} className="relative text-[#AAAAAA] hover:text-white transition-colors">
-              <ShoppingCart size={window.innerWidth < 768 ? 18 : 20} />
-              {totalItems > 0 && (
-                <span className="absolute -top-[5px] -right-[5px] w-[14px] h-[14px] md:w-[16px] md:h-[16px] bg-gold-primary text-black text-[8px] md:text-[9px] font-black rounded-full flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
+          <div className="flex items-center gap-2">
+            {/* Desktop icons (no hamburger) */}
+            <div className="hidden md:flex items-center gap-2">
+              {/* Theme Toggle Switch */}
+              <button
+                onClick={toggleTheme}
+                className={`shrink-0 relative w-12 h-6 rounded-full p-1 transition-all duration-300 ${
+                  isLight 
+                    ? 'bg-gray-200' 
+                    : 'bg-[#C9A84C]'
+                }`}
+                aria-label="Toggle theme"
+              >
+                <div className={`absolute top-1 w-4 h-4 rounded-full transition-all duration-300 ${
+                  isLight 
+                    ? 'left-1 bg-white shadow-md' 
+                    : 'left-7 bg-black shadow-md'
+                }`} />
+                <Sun className={`absolute left-1.5 top-1 w-3 h-3 transition-opacity duration-300 ${isLight ? 'opacity-100 text-gray-600' : 'opacity-0'}`} />
+                <Moon className={`absolute right-1.5 top-1 w-3 h-3 transition-opacity duration-300 ${!isLight ? 'opacity-100 text-white' : 'opacity-0'}`} />
+              </button>
+              <button
+                onClick={() => setPage('login')}
+                className={`shrink-0 rounded-2xl p-2.5 transition-colors ${
+                  isLight 
+                    ? 'bg-gray-100 text-gray-600 hover:text-gray-900' 
+                    : 'bg-white/5 text-[#AAAAAA] hover:text-white'
+                }`}
+                aria-label="Login"
+              >
+                <User size={20} />
+              </button>
+              <button
+                onClick={() => setPage('cart')}
+                className={`shrink-0 rounded-2xl p-2.5 transition-colors relative ${
+                  isLight 
+                    ? 'bg-gray-100 text-gray-600 hover:text-gray-900' 
+                    : 'bg-white/5 text-[#AAAAAA] hover:text-white'
+                }`}
+                aria-label="Cart"
+              >
+                <ShoppingCart size={20} />
+                {cartQty > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-[5px] rounded-full bg-gold-primary text-black text-[10px] font-black leading-[18px] text-center shadow-[0_0_0_2px_rgba(245,166,35,0.15)]">
+                    {cartQty}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden shrink-0 rounded-2xl bg-white/5 p-2.5 text-[#AAAAAA] hover:text-white transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu size={18} />
             </button>
           </div>
         </div>
@@ -213,62 +284,263 @@ export default function Navbar() {
 
       {/* 3. SECONDARY NAV */}
       <div 
-        className={`fixed left-0 right-0 z-[1000] bg-[#0A0A0A] border-b border-[#1A1A1A] transition-all duration-300 will-change-transform flex items-center box-border w-100% overflow-hidden`}
+        className={`fixed left-0 right-0 z-[1000] border-t border-b shadow-[0_18px_40px_rgba(0,0,0,0.45)] transition-all duration-300 will-change-transform box-border overflow-hidden md:block ${showMobileSecondary ? 'block' : 'hidden'} ${
+          isLight 
+            ? 'bg-gray-50 border-gray-200 shadow-[0_18px_40px_rgba(0,0,0,0.1)]' 
+            : 'bg-[#171717] border-t border-white/15 border-b border-white/10'
+        }`}
         style={{ 
           top: scrolled 
-            ? (window.innerWidth < 768 ? '72px' : '88px') 
-            : `${announcementHeight + (window.innerWidth < 768 ? 72 : 88)}px`,
-          height: window.innerWidth < 768 ? '40px' : '44px'
+            ? (window.innerWidth < 768 ? '60px' : '80px') 
+            : `${announcementHeight + (window.innerWidth < 768 ? 60 : 80)}px`,
+          height: window.innerWidth < 768 ? '90px' : '44px'
         }}
       >
-        <div className="max-w-[1248px] mx-auto px-[12px] md:px-[40px] w-full h-full box-border">
-          <nav className="flex items-center md:justify-center gap-[16px] md:gap-[32px] h-full overflow-x-auto hide-scrollbar whitespace-nowrap">
-            {navLinks.map((link) => (
-              <button
-                key={link.label}
-                onClick={() => {
-                  if (link.type === 'categories') {
-                    setMegaMenuOpen(!megaMenuOpen); setBrandsOpen(false);
-                  } else if (link.type === 'brands') {
-                    setBrandsOpen(!brandsOpen); setMegaMenuOpen(false);
-                  } else if (link.action) {
-                    link.action();
-                  }
-                }}
-                className={`text-[11px] md:text-[13px] font-medium uppercase tracking-[0.3px] transition-colors ${
-                  (link.type === 'categories' && megaMenuOpen) || (link.type === 'brands' && brandsOpen)
-                    ? 'text-gold-primary'
-                    : 'text-[#CCCCCC] hover:text-white'
-                }`}
-              >
-                {link.label}
-              </button>
-            ))}
-          </nav>
+        <div className="max-w-[1248px] mx-auto px-[12px] md:px-[40px] w-full box-border h-full">
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex h-full items-center justify-center">
+            <nav className="flex items-center md:justify-center gap-[16px] md:gap-[34px] lg:gap-[40px] h-full overflow-x-auto hide-scrollbar whitespace-nowrap">
+              {navLinks.map((link) => (
+                <button
+                  key={link.label}
+                  onClick={() => {
+                    if (link.type === 'categories') {
+                      setMegaMenuOpen(!megaMenuOpen); setBrandsOpen(false);
+                    } else if (link.type === 'brands') {
+                      setBrandsOpen(!brandsOpen); setMegaMenuOpen(false);
+                    } else if (link.action) {
+                      link.action();
+                    }
+                  }}
+                  className={`text-[11px] md:text-[13px] font-medium uppercase tracking-[0.3px] transition-colors ${
+                    (link.type === 'categories' && megaMenuOpen) || (link.type === 'brands' && brandsOpen)
+                      ? 'text-gold-primary'
+                      : isLight ? 'text-gray-600 hover:text-gray-900' : 'text-[#CCCCCC] hover:text-white'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Mobile Category Circles Row */}
+          <div className="md:hidden h-full flex items-center">
+            <div className="w-full px-2 py-1">
+              <div className="flex w-full gap-2.5 overflow-x-auto hide-scrollbar pb-1">
+                {/* All pill */}
+                <button
+                  onClick={() => { setSelectedCategory(null); setPage('products'); }}
+                  className="flex-shrink-0 flex flex-col items-center gap-1 transition opacity-90 hover:opacity-100"
+                >
+                  <div className={`h-[44px] w-[44px] flex items-center justify-center rounded-full border text-gold-primary text-[9px] font-black ${
+                    isLight 
+                      ? 'bg-gray-200 border-gray-300' 
+                      : 'bg-[#222] border-gold-primary/40'
+                  }`}>
+                    ALL
+                  </div>
+                  <span className={`block text-[8px] font-bold uppercase tracking-[0.1em] leading-[1.1] ${isLight ? 'text-gray-900' : 'text-white'}`}>All</span>
+                </button>
+                {filteredCategories.slice(0, 6).map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      setPage('products');
+                    }}
+                    className="flex-shrink-0 flex flex-col items-center gap-1 transition opacity-80 hover:opacity-100"
+                  >
+                    <div className={`h-[44px] w-[44px] overflow-hidden rounded-full border p-[3px] flex items-center justify-center ${
+                      isLight 
+                        ? 'bg-gray-100 border-gray-300' 
+                        : 'bg-[#1A1A1A] border-white/10'
+                    }`}>
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                    <span className={`block text-[8px] font-bold uppercase tracking-[0.1em] leading-[1.1] max-w-[44px] text-center truncate ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                      {cat.name}
+                    </span>
+                  </button>
+                ))}
+                {filteredCategories.length > 6 && (
+                  <button
+                    type="button"
+                    onClick={() => { setMegaMenuOpen(true); setBrandsOpen(false); }}
+                    className="flex-shrink-0 flex flex-col items-center gap-1.5 transition opacity-80 hover:opacity-100"
+                  >
+                    <div className={`h-[56px] w-[56px] flex items-center justify-center rounded-full border text-[16px] ${
+                      isLight 
+                        ? 'bg-gray-100 border-gray-300 text-gray-900' 
+                        : 'bg-[#1A1A1A] border-white/10 text-white'
+                    }`}>
+                      •••
+                    </div>
+                    <span className={`block text-[9px] font-bold uppercase tracking-[0.1em] leading-[1.1] ${isLight ? 'text-gray-900' : 'text-white'}`}>More</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* MEGA DROP */}
       {(brandsOpen || megaMenuOpen) && (
         <div 
-          className="fixed left-0 right-0 z-[998] bg-[#141414] border-y border-[#222222] p-[20px_40px] shadow-[0_8px_24px_rgba(0,0,0,0.6)] flex flex-wrap gap-[12px_24px] max-h-[300px] overflow-y-auto"
+          className={`fixed left-0 right-0 z-[998] border-y p-[20px_26px] lg:p-[20px_56px] shadow-[0_8px_24px_rgba(0,0,0,0.6)] flex flex-wrap gap-[12px_24px] max-h-[300px] overflow-y-auto ${
+            isLight 
+              ? 'bg-white border-gray-200 shadow-[0_8px_24px_rgba(0,0,0,0.1)]' 
+              : 'bg-[#141414] border-y border-[#222222]'
+          }`}
           style={{ 
             top: scrolled 
-              ? (window.innerWidth < 768 ? '112px' : '132px') 
-              : `${announcementHeight + (window.innerWidth < 768 ? 112 : 132)}px` 
+              ? (window.innerWidth < 768 ? '164px' : '124px') 
+              : `${announcementHeight + (window.innerWidth < 768 ? 164 : 124)}px` 
           }}
         >
           {brandsOpen ? (
             brands.map((brand) => (
-              <button key={brand} onClick={() => {setSearchQuery(brand); setPage('products'); setBrandsOpen(false);}} className="text-[#CCCCCC] text-[13px] p-[6px_12px] rounded-[4px] hover:bg-[#1E1E1E] hover:text-white transition-all font-medium uppercase">{brand}</button>
+              <button key={brand} onClick={() => {setSearchQuery(brand); setPage('products'); setBrandsOpen(false);}} className={`text-[13px] p-[6px_12px] rounded-[4px] hover:transition-all font-medium uppercase ${
+                isLight 
+                  ? 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' 
+                  : 'text-[#CCCCCC] hover:bg-[#1E1E1E] hover:text-white'
+              }`}>{brand}</button>
             ))
           ) : (
             filteredCategories.map((cat) => (
-              <button key={cat.id} onClick={() => {setSelectedCategory(cat.id); setPage('products'); setMegaMenuOpen(false);}} className="text-[#CCCCCC] text-[13px] p-[6px_12px] rounded-[4px] hover:bg-[#1E1E1E] hover:text-white transition-all font-medium uppercase">{cat.name}</button>
+              <button key={cat.id} onClick={() => {setSelectedCategory(cat.id); setPage('products'); setMegaMenuOpen(false);}} className={`text-[13px] p-[6px_12px] rounded-[4px] hover:transition-all font-medium uppercase ${
+                isLight 
+                  ? 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' 
+                  : 'text-[#CCCCCC] hover:bg-[#1E1E1E] hover:text-white'
+              }`}>{cat.name}</button>
             ))
           )}
         </div>
       )}
+      {/* MOBILE SLIDE-IN MENU */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[1100] bg-black/60 backdrop-blur-sm md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          {/* Drawer */}
+          <div className={`fixed top-0 right-0 bottom-0 z-[1101] w-[75vw] max-w-[300px] border-l flex flex-col md:hidden shadow-2xl ${
+            isLight 
+              ? 'bg-white border-gray-200' 
+              : 'bg-[#0D0D0D] border-l border-white/10'
+          }`}>
+            {/* Header */}
+            <div className={`flex items-center justify-between px-4 py-4 border-b ${
+              isLight ? 'border-gray-200' : 'border-white/10'
+            }`}>
+              <span className={`font-bold text-[14px] uppercase tracking-wider ${isLight ? 'text-gray-900' : 'text-white'}`}>Menu</span>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className={`rounded-full p-2 transition-colors ${
+                  isLight 
+                    ? 'bg-gray-100 text-gray-600 hover:text-gray-900' 
+                    : 'bg-white/5 text-[#AAAAAA] hover:text-white'
+                }`}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Quick Nav Links */}
+            <div className={`px-3 py-3 border-b ${
+              isLight ? 'border-gray-200' : 'border-white/5'
+            }`}>
+              <p className={`text-[9px] uppercase tracking-[1.5px] font-bold mb-2 px-1 ${isLight ? 'text-gray-500' : 'text-[#555555]'}`}>Navigate</p>
+              {[
+                { label: 'Home', action: () => { setPage('home'); setMobileMenuOpen(false); } },
+                { label: 'All Products', action: () => { setPage('products'); setMobileMenuOpen(false); } },
+                { label: 'Flash Deals', action: () => { const el = document.getElementById('deals'); if(el) el.scrollIntoView({behavior:'smooth'}); setMobileMenuOpen(false); } },
+                { label: 'My Cart', action: () => { setPage('cart'); setMobileMenuOpen(false); } },
+                { label: 'My Account', action: () => { setPage('profile'); setMobileMenuOpen(false); } },
+                { label: 'Track Order', action: () => { setPage('order-tracking'); setMobileMenuOpen(false); } },
+              ].map(link => (
+                <button
+                  key={link.label}
+                  onClick={link.action}
+                  className={`w-full text-left px-3 py-2.5 text-[12px] font-medium rounded-[8px] transition-all ${
+                    isLight 
+                      ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' 
+                      : 'text-[#CCCCCC] hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              ))}
+              <div className="flex items-center gap-2 mt-2">
+                {/* Theme Toggle Switch */}
+                <button
+                  onClick={toggleTheme}
+                  className={`flex-1 relative h-6 rounded-full p-1 transition-all duration-300 ${
+                    isLight 
+                      ? 'bg-gray-200' 
+                      : 'bg-[#C9A84C]'
+                  }`}
+                  aria-label="Toggle theme"
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full transition-all duration-300 ${
+                    isLight 
+                      ? 'left-1 bg-white shadow-md' 
+                      : 'left-[calc(50%-8px)] bg-black shadow-md'
+                  }`} />
+                  <Sun className={`absolute left-1.5 top-1 w-3 h-3 transition-opacity duration-300 ${isLight ? 'opacity-100 text-gray-600' : 'opacity-0'}`} />
+                  <Moon className={`absolute right-1.5 top-1 w-3 h-3 transition-opacity duration-300 ${!isLight ? 'opacity-100 text-white' : 'opacity-0'}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Categories */}
+            <div className="px-3 py-3 flex-1 overflow-y-auto">
+              <div className="flex items-center justify-between mb-2 px-1">
+                <p className={`text-[9px] uppercase tracking-[1.5px] font-bold ${isLight ? 'text-gray-500' : 'text-[#555555]'}`}>Categories</p>
+                <button
+                  onClick={() => setCategoriesExpanded(!categoriesExpanded)}
+                  className="w-6 h-6 rounded-full border border-gold-primary/40 text-gold-primary hover:bg-gold-primary hover:text-black transition-all flex items-center justify-center"
+                >
+                  {categoriesExpanded ? <Minus size={12} /> : <Plus size={12} />}
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {(categoriesExpanded ? filteredCategories : filteredCategories.slice(0, 5)).map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => { setSelectedCategory(cat.id); setPage('products'); setMobileMenuOpen(false); }}
+                    className={`flex items-center gap-2 px-2.5 py-2 border rounded-[8px] hover:border-gold-primary/30 transition-all text-left ${
+                      isLight 
+                        ? 'bg-gray-50 border-gray-200' 
+                        : 'bg-[#161616] border-white/5'
+                    }`}
+                  >
+                    <img src={cat.image} alt={cat.name} className={`w-6 h-6 object-contain rounded-full flex-shrink-0 ${
+                      isLight ? 'bg-gray-100' : 'bg-[#111111]'
+                    }`} />
+                    <span className={`text-[10px] font-medium truncate ${isLight ? 'text-gray-900' : 'text-white'}`}>{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className={`px-4 py-3 border-t ${
+              isLight ? 'border-gray-200' : 'border-white/5'
+            }`}>
+              <p className={`text-[10px] text-center ${isLight ? 'text-gray-500' : 'text-[#555555]'}`}>📞 {STORE_INFO.phone} · 6PM–2AM</p>
+            </div>
+          </div>
+        </>
+      )}
     </header>
   );
 }
+

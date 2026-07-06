@@ -5,8 +5,12 @@ import { useAdminStore } from '@/store/adminStore';
 import { ADMIN_BASE_PATH } from '@/lib/adminRoutes';
 import { Link } from 'react-router-dom';
 import BrandLogo from '@/components/BrandLogo';
+import { useThemeStore } from '@/store/themeStore';
 
 export default function AdminLoginPage() {
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+  
   const navigate = useNavigate();
   const login = useAdminStore((s) => s.login);
   const isAdmin = useAdminStore((s) => s.isAdmin);
@@ -30,11 +34,19 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-night-950 via-night-900 to-night-950 px-4">
+    <div className={`flex min-h-screen items-center justify-center px-4 ${
+      isLight 
+        ? 'bg-gray-100' 
+        : 'bg-gradient-to-br from-night-950 via-night-900 to-night-950'
+    }`}>
       <div className="w-full max-w-md">
         <Link
           to="/"
-          className="mb-8 inline-flex items-center gap-2 text-sm text-night-400 transition-colors hover:text-neon-amber font-medium"
+          className={`mb-8 inline-flex items-center gap-2 text-sm font-medium transition-colors ${
+            isLight 
+              ? 'text-gray-600 hover:text-[#C9A84C]' 
+              : 'text-night-400 hover:text-neon-amber'
+          }`}
         >
           <ArrowLeft className="h-4 w-4" />
           Back to store
@@ -44,18 +56,26 @@ export default function AdminLoginPage() {
             <BrandLogo size="xl" className="mx-auto ring-2 ring-neon-amber/40 shadow-2xl shadow-neon-amber/20" />
             <div className="absolute -inset-4 rounded-full bg-neon-amber/10 blur-xl -z-10"></div>
           </div>
-          <h1 className="mt-6 font-display text-3xl font-bold text-white tracking-tight">Admin Panel</h1>
-          <p className="mt-2 text-sm text-night-300">Night Owl Liquors — staff login</p>
+          <h1 className={`mt-6 font-display text-3xl font-bold tracking-tight ${isLight ? 'text-gray-900' : 'text-white'}`}>Admin Panel</h1>
+          <p className={`mt-2 text-sm ${isLight ? 'text-gray-600' : 'text-night-300'}`}>Night Owl Liquors — staff login</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="panel space-y-6 p-8 bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10 shadow-2xl">
+        <form onSubmit={handleSubmit} className={`panel space-y-6 p-8 border shadow-2xl ${
+          isLight 
+            ? 'bg-white border-gray-200' 
+            : 'bg-gradient-to-br from-night-900/80 to-night-800/40 border-white/10'
+        }`}>
           <div>
-            <label htmlFor="admin-username" className="mb-2 block text-xs font-bold uppercase tracking-wider text-night-400">
+            <label htmlFor="admin-username" className={`mb-2 block text-xs font-bold uppercase tracking-wider ${isLight ? 'text-gray-500' : 'text-night-400'}`}>
               Username
             </label>
             <input
               id="admin-username"
-              className="input-field w-full bg-night-800/50 border-white/10 focus:border-neon-amber/50 focus:ring-neon-amber/20"
+              className={`input-field w-full focus:border-neon-amber/50 focus:ring-neon-amber/20 ${
+                isLight 
+                  ? 'bg-gray-50 border-gray-300 text-gray-900 focus:bg-white' 
+                  : 'bg-night-800/50 border-white/10 text-white'
+              }`}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="admin"
@@ -64,13 +84,17 @@ export default function AdminLoginPage() {
             />
           </div>
           <div>
-            <label htmlFor="admin-password" className="mb-2 block text-xs font-bold uppercase tracking-wider text-night-400">
+            <label htmlFor="admin-password" className={`mb-2 block text-xs font-bold uppercase tracking-wider ${isLight ? 'text-gray-500' : 'text-night-400'}`}>
               Password
             </label>
             <input
               id="admin-password"
               type="password"
-              className="input-field w-full bg-night-800/50 border-white/10 focus:border-neon-amber/50 focus:ring-neon-amber/20"
+              className={`input-field w-full focus:border-neon-amber/50 focus:ring-neon-amber/20 ${
+                isLight 
+                  ? 'bg-gray-50 border-gray-300 text-gray-900 focus:bg-white' 
+                  : 'bg-night-800/50 border-white/10 text-white'
+              }`}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"

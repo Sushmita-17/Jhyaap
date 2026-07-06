@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const base = 'c:/Users/LENOVO/Downloads/nightowl-liquors/nightowl-liquors';
 

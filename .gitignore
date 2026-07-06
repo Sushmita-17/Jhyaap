@@ -1,0 +1,19 @@
+# Root-level ignores
+node_modules/
+dist/
+
+# Temp/scraping files
+tmp_*.html
+tmp_cookies.txt
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.qodo/

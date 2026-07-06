@@ -32,11 +32,11 @@ export default function FaqSection({ showHeader = true }: FaqSectionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="mx-auto max-w-[680px] px-4 py-12">
+    <section className="mx-auto max-w-[680px] px-4 py-4 md:py-12">
       {showHeader && (
-        <div className="mb-6 text-left">
-          <h2 className="text-[28px] font-bold text-white mb-1">Common questions</h2>
-          <p className="text-[14px] leading-6 text-[#888888]">
+        <div className="mb-3 md:mb-6 text-left">
+          <h2 className="text-[18px] md:text-[28px] font-bold text-white mb-1">Common questions</h2>
+          <p className="text-[11px] md:text-[14px] leading-4 md:leading-6 text-[#888888]">
             The stuff people usually ask before their first order.
           </p>
         </div>
@@ -53,18 +53,21 @@ export default function FaqSection({ showHeader = true }: FaqSectionProps) {
               <button
                 type="button"
                 onClick={() => setOpenIndex(isOpen ? null : idx)}
-                className="flex w-full items-center justify-between gap-4 py-[16px] text-left group transition-all"
+                className="flex w-full items-center justify-between gap-2 md:gap-4 py-[10px] md:py-[16px] text-left group transition-all"
               >
-                <p className={`text-[15px] font-medium transition-colors ${isOpen ? 'text-gold-primary' : 'text-white group-hover:text-gold-primary'}`}>
+                <p className={`text-[12px] md:text-[15px] font-medium transition-colors ${isOpen ? 'text-gold-primary' : 'text-white group-hover:text-gold-primary'}`}>
                   {item.q}
                 </p>
+                <div className="hidden md:flex items-center justify-center w-8 h-8 rounded-full border border-[#C9A84C]/30 bg-[#1A1A1A] text-[#C9A84C] transition-all hover:bg-[#C9A84C] hover:text-black">
+                  {isOpen ? '−' : '+'}
+                </div>
                 <ChevronDown
-                  className={`h-5 w-5 shrink-0 text-[#888888] transition-transform ${isOpen ? 'rotate-180 text-gold-primary' : ''}`}
+                  className={`h-3.5 w-3.5 md:hidden shrink-0 text-[#888888] transition-transform ${isOpen ? 'rotate-180 text-gold-primary' : ''}`}
                 />
               </button>
               {isOpen && (
-                <div className="pb-4 pt-3">
-                  <p className="text-[14px] leading-[1.6] text-gold-primary">
+                <div className="pb-2 pt-1.5 md:pb-4 md:pt-3">
+                  <p className="text-[11px] md:text-[14px] leading-[1.4] md:leading-[1.6] text-gold-primary">
                     {item.a}
                   </p>
                 </div>
@@ -74,8 +77,8 @@ export default function FaqSection({ showHeader = true }: FaqSectionProps) {
         })}
       </div>
 
-      <div className="mt-4 flex justify-end">
-        <button className="text-[13px] font-bold text-gold-primary hover:text-white transition-colors">
+      <div className="mt-2 md:mt-4 flex justify-end">
+        <button className="text-[10px] md:text-[13px] font-bold text-gold-primary hover:text-white transition-colors">
           See all FAQs →
         </button>
       </div>

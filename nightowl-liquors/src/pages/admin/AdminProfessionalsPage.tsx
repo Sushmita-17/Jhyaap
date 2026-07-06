@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Search, Pencil, Trash2, Shield, MapPin, Phone, Mail } from 'lucide-react';
 import AdminBackButton from '@/components/admin/AdminBackButton';
+import { useThemeStore } from '@/store/themeStore';
 
 interface Professional {
   id: string;
@@ -71,6 +72,9 @@ const statusColors = {
 };
 
 export default function AdminProfessionalsPage() {
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+  
   const [professionals, setProfessionals] = useState<Professional[]>(mockProfessionals);
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -98,20 +102,22 @@ export default function AdminProfessionalsPage() {
     <div className="mx-auto max-w-7xl space-y-8 animate-fade-in">
       <AdminBackButton />
       
-      <div className="panel flex flex-wrap items-center justify-between gap-6 border-neon-amber/30 bg-gradient-to-r from-neon-amber/15 via-neon-amber/5 to-transparent p-6 shadow-xl shadow-neon-amber/10 animate-gradient-x bg-[length:200%_200%]">
+      <div className={`panel flex flex-wrap items-center justify-between gap-6 border-neon-amber/30 bg-gradient-to-r from-neon-amber/15 via-neon-amber/5 to-transparent p-6 shadow-xl shadow-neon-amber/10 animate-gradient-x bg-[length:200%_200%] ${
+        isLight ? 'border-gray-200' : ''
+      }`}>
         <div>
-          <h1 className="font-display text-3xl font-bold text-white tracking-tight">Team & Professionals</h1>
-          <p className="mt-2 text-sm text-night-300">Manage your Night Owl staff members</p>
+          <h1 className={`font-display text-3xl font-bold tracking-tight ${isLight ? 'text-gray-900' : 'text-white'}`}>Team & Professionals</h1>
+          <p className={`mt-2 text-sm ${isLight ? 'text-gray-600' : 'text-night-300'}`}>Manage your Night Owl staff members</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p className="text-xs text-night-400">Active Staff</p>
-            <p className="text-lg font-bold text-white">{activeCount}</p>
+            <p className={`text-xs ${isLight ? 'text-gray-500' : 'text-night-400'}`}>Active Staff</p>
+            <p className={`text-lg font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>{activeCount}</p>
           </div>
-          <div className="h-8 w-px bg-white/10" />
+          <div className={`h-8 w-px ${isLight ? 'bg-gray-200' : 'bg-white/10'}`} />
           <div className="text-right">
-            <p className="text-xs text-night-400">On Leave</p>
-            <p className="text-lg font-bold text-white">{onLeaveCount}</p>
+            <p className={`text-xs ${isLight ? 'text-gray-500' : 'text-night-400'}`}>On Leave</p>
+            <p className={`text-lg font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>{onLeaveCount}</p>
           </div>
         </div>
       </div>
@@ -127,14 +133,18 @@ export default function AdminProfessionalsPage() {
           };
           const Icon = roleIcons[role as keyof typeof roleIcons];
           return (
-            <div key={role} className="panel p-5 bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 hover:scale-105 animate-slide-up">
+            <div key={role} className={`panel p-5 border hover:border-white/20 transition-all duration-300 hover:shadow-xl hover:scale-105 animate-slide-up ${
+              isLight 
+                ? 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-gray-100' 
+                : 'bg-gradient-to-br from-night-900/80 to-night-800/40 border-white/10 hover:shadow-black/20'
+            }`}>
               <div className="flex items-center gap-4">
                 <span className={`flex h-12 w-12 items-center justify-center rounded-xl ${color} group-hover:scale-110 transition-transform duration-200`}>
                   <Icon className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-night-500">{role}</p>
-                  <p className="mt-1 text-2xl font-bold text-white">{count}</p>
+                  <p className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-gray-500' : 'text-night-500'}`}>{role}</p>
+                  <p className={`mt-1 text-2xl font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>{count}</p>
                 </div>
               </div>
             </div>
@@ -144,16 +154,24 @@ export default function AdminProfessionalsPage() {
 
       <div className="flex flex-wrap gap-4">
         <div className="relative min-w-[250px] flex-1">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-night-500" />
+          <Search className={`absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 ${isLight ? 'text-gray-400' : 'text-night-500'}`} />
           <input
-            className="input-field w-full pl-12 bg-night-800/50 border-white/10 focus:border-neon-amber/50 focus:ring-neon-amber/20"
+            className={`input-field w-full pl-12 focus:border-neon-amber/50 focus:ring-neon-amber/20 ${
+              isLight 
+                ? 'bg-gray-50 border-gray-300 text-gray-900 focus:bg-white' 
+                : 'bg-night-800/50 border-white/10 text-white'
+            }`}
             placeholder="Search name, email, phone…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
         <select
-          className="input-field bg-night-800/50 border-white/10 focus:border-neon-amber/50 focus:ring-neon-amber/20"
+          className={`input-field focus:border-neon-amber/50 focus:ring-neon-amber/20 ${
+            isLight 
+              ? 'bg-gray-50 border-gray-300 text-gray-900' 
+              : 'bg-night-800/50 border-white/10 text-white'
+          }`}
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
         >
@@ -172,10 +190,18 @@ export default function AdminProfessionalsPage() {
         </button>
       </div>
 
-      <div className="panel overflow-hidden bg-gradient-to-br from-night-900/80 to-night-800/40 border border-white/10">
+      <div className={`panel overflow-hidden border ${
+        isLight 
+          ? 'bg-white border-gray-200' 
+          : 'bg-gradient-to-br from-night-900/80 to-night-800/40 border-white/10'
+      }`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-night-950/60 text-xs uppercase tracking-wider text-night-500">
+            <thead className={`text-xs uppercase tracking-wider ${
+              isLight 
+                ? 'bg-gray-50 text-gray-500' 
+                : 'bg-night-950/60 text-night-500'
+            }`}>
               <tr>
                 <th className="px-6 py-4 font-semibold">Professional</th>
                 <th className="px-6 py-4 font-semibold">Role</th>
@@ -186,17 +212,21 @@ export default function AdminProfessionalsPage() {
                 <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className={`divide-y ${
+              isLight ? 'divide-gray-200' : 'divide-white/5'
+            }`}>
               {filtered.map((professional) => (
-                <tr key={professional.id} className="hover:bg-white/[0.03] transition-colors">
+                <tr key={professional.id} className={`transition-colors ${
+                  isLight ? 'hover:bg-gray-50' : 'hover:bg-white/[0.03]'
+                }`}>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-neon-amber to-amber-600 text-sm font-bold uppercase text-white shadow-lg shadow-neon-amber/20">
                         {professional.name.charAt(0)}
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate font-semibold text-white">{professional.name}</p>
-                        <p className="text-xs text-night-500">{professional.email}</p>
+                        <p className={`truncate font-semibold ${isLight ? 'text-gray-900' : 'text-white'}`}>{professional.name}</p>
+                        <p className={`text-xs ${isLight ? 'text-gray-500' : 'text-night-500'}`}>{professional.email}</p>
                       </div>
                     </div>
                   </td>
@@ -205,9 +235,9 @@ export default function AdminProfessionalsPage() {
                       {professional.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-night-300">{professional.phone}</td>
-                  <td className="px-6 py-4 text-night-300">{professional.location}</td>
-                  <td className="px-6 py-4 text-night-400">
+                  <td className={`px-6 py-4 ${isLight ? 'text-gray-600' : 'text-night-300'}`}>{professional.phone}</td>
+                  <td className={`px-6 py-4 ${isLight ? 'text-gray-600' : 'text-night-300'}`}>{professional.location}</td>
+                  <td className={`px-6 py-4 ${isLight ? 'text-gray-500' : 'text-night-400'}`}>
                     {new Date(professional.joinedDate).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4">
@@ -217,12 +247,20 @@ export default function AdminProfessionalsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">
-                      <button className="rounded-xl p-2.5 text-night-400 hover:bg-white/5 hover:text-neon-amber transition-all" aria-label="Edit">
+                      <button className={`rounded-xl p-2.5 transition-all ${
+                        isLight 
+                          ? 'text-gray-400 hover:bg-gray-100 hover:text-gray-900' 
+                          : 'text-night-400 hover:bg-white/5 hover:text-neon-amber'
+                      }`} aria-label="Edit">
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(professional.id, professional.name)}
-                        className="rounded-xl p-2.5 text-night-400 hover:bg-neon-rose/10 hover:text-neon-rose transition-all"
+                        className={`rounded-xl p-2.5 transition-all ${
+                          isLight 
+                            ? 'text-gray-400 hover:bg-red-50 hover:text-red-600' 
+                            : 'text-night-400 hover:bg-neon-rose/10 hover:text-neon-rose'
+                        }`}
                         aria-label="Delete"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -235,22 +273,36 @@ export default function AdminProfessionalsPage() {
           </table>
         </div>
         {filtered.length === 0 && (
-          <p className="px-6 py-16 text-center text-night-500">No professionals match your filters</p>
+          <p className={`px-6 py-16 text-center ${isLight ? 'text-gray-500' : 'text-night-500'}`}>No professionals match your filters</p>
         )}
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 backdrop-blur-sm">
-          <div className="panel w-full max-w-lg p-8 bg-gradient-to-br from-night-900/95 to-night-800/80 border border-white/10 shadow-2xl">
-            <h2 className="font-display text-2xl font-bold text-white mb-6">Add New Professional</h2>
+        <div className={`fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm ${
+          isLight ? 'bg-gray-900/50' : 'bg-night-950/80'
+        }`}>
+          <div className={`panel w-full max-w-lg p-8 border shadow-2xl ${
+            isLight 
+              ? 'bg-white border-gray-200' 
+              : 'bg-gradient-to-br from-night-900/95 to-night-800/80 border-white/10'
+          }`}>
+            <h2 className={`font-display text-2xl font-bold mb-6 ${isLight ? 'text-gray-900' : 'text-white'}`}>Add New Professional</h2>
             <form className="space-y-4">
               <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-night-400">Full Name</label>
-                <input className="input-field w-full bg-night-800/50 border-white/10" placeholder="Enter name" />
+                <label className={`mb-2 block text-xs font-bold uppercase tracking-wider ${isLight ? 'text-gray-500' : 'text-night-400'}`}>Full Name</label>
+                <input className={`input-field w-full ${
+                  isLight 
+                    ? 'bg-gray-50 border-gray-300 text-gray-900' 
+                    : 'bg-night-800/50 border-white/10 text-white'
+                }`} placeholder="Enter name" />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-night-400">Role</label>
-                <select className="input-field w-full bg-night-800/50 border-white/10">
+                <label className={`mb-2 block text-xs font-bold uppercase tracking-wider ${isLight ? 'text-gray-500' : 'text-night-400'}`}>Role</label>
+                <select className={`input-field w-full ${
+                  isLight 
+                    ? 'bg-gray-50 border-gray-300 text-gray-900' 
+                    : 'bg-night-800/50 border-white/10 text-white'
+                }`}>
                   <option value="">Select role</option>
                   <option value="manager">Manager</option>
                   <option value="delivery">Delivery</option>
@@ -259,18 +311,30 @@ export default function AdminProfessionalsPage() {
                 </select>
               </div>
               <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-night-400">Email</label>
-                <input className="input-field w-full bg-night-800/50 border-white/10" type="email" placeholder="email@example.com" />
+                <label className={`mb-2 block text-xs font-bold uppercase tracking-wider ${isLight ? 'text-gray-500' : 'text-night-400'}`}>Email</label>
+                <input className={`input-field w-full ${
+                  isLight 
+                    ? 'bg-gray-50 border-gray-300 text-gray-900' 
+                    : 'bg-night-800/50 border-white/10 text-white'
+                }`} type="email" placeholder="email@example.com" />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-night-400">Phone</label>
-                <input className="input-field w-full bg-night-800/50 border-white/10" placeholder="+977 9XXXXXXXXX" />
+                <label className={`mb-2 block text-xs font-bold uppercase tracking-wider ${isLight ? 'text-gray-500' : 'text-night-400'}`}>Phone</label>
+                <input className={`input-field w-full ${
+                  isLight 
+                    ? 'bg-gray-50 border-gray-300 text-gray-900' 
+                    : 'bg-night-800/50 border-white/10 text-white'
+                }`} placeholder="+977 9XXXXXXXXX" />
               </div>
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 rounded-xl border border-white/10 bg-night-800/50 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-night-700"
+                  className={`flex-1 rounded-xl border px-6 py-3 text-sm font-bold transition-all ${
+                    isLight 
+                      ? 'border-gray-200 bg-gray-50 text-gray-900 hover:bg-gray-100' 
+                      : 'border-white/10 bg-night-800/50 text-white hover:bg-night-700'
+                  }`}
                 >
                   Cancel
                 </button>

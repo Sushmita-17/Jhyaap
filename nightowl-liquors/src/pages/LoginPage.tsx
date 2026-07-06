@@ -1,17 +1,17 @@
+import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
+import { Page } from '@/types';
+import {
+    CheckCircle2,
+    ChevronLeft,
+    Eye,
+    EyeOff,
+    LockKeyhole,
+    Phone,
+    UserPlus,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  ChevronLeft,
-  LockKeyhole,
-  Phone,
-  UserPlus,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
-import { useAppStore } from '@/store/appStore';
-import { Page } from '@/types';
 
 const pagePaths: Record<Page, string> = {
   home: '/',
@@ -39,8 +39,6 @@ type View =
   | 'forgot-phone'
   | 'forgot-otp'
   | 'forgot-reset'
-  | 'phone-verify-otp' // Google account with no verified phone on file yet
-  | 'google-dob' // Google never gives us a birthdate; collect it for the age gate
   | 'success';
 
 const OTP_LENGTH = 6;
@@ -67,8 +65,7 @@ function isAdult(dob: string) {
 }
 
 export default function LoginPage() {
-  const { login, signup, resetPassword, findUserByPhone, loginWithGoogle, attachPhoneToGoogleAccount, updateProfile } =
-    useAuthStore();
+  const { login, signup, resetPassword, findUserByPhone, updateProfile } = useAuthStore();
   const { setPage, postLoginPage, setPostLoginPage } = useAppStore();
   const navigate = useNavigate();
 
@@ -81,7 +78,7 @@ export default function LoginPage() {
   const [signinPassword, setSigninPassword] = useState('');
   const [showSigninPassword, setShowSigninPassword] = useState(false);
 
-  // Shared phone/OTP fields (used by signup, forgot-password, and Google phone-verify)
+  // Shared phone/OTP fields (used by signup and forgot-password)
   const [phone, setPhone] = useState('');
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -101,12 +98,9 @@ export default function LoginPage() {
   const [resetPasswordValue, setResetPasswordValue] = useState('');
   const [resetConfirm, setResetConfirm] = useState('');
 
-  // Google pending-signup token, returned by loginWithGoogle when phone verification is needed
-  const [googlePendingToken, setGooglePendingToken] = useState<string | null>(null);
-
   // Countdown timer for OTP resend
   useEffect(() => {
-    if (view !== 'signup-otp' && view !== 'forgot-otp' && view !== 'phone-verify-otp') return;
+    if (view !== 'signup-otp' && view !== 'forgot-otp') return;
     if (resendIn <= 0) return;
     const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
     return () => clearTimeout(t);
@@ -153,38 +147,6 @@ export default function LoginPage() {
       return;
     }
     finishAuth();
-  };
-
-  // ---------- Google ----------
-  const handleGoogleAuth = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // TODO: replace with a real Google OAuth call. The profile shape below
-      // (googleId, email, name, optional phone) should come from that response.
-      await new Promise((r) => setTimeout(r, 600));
-      const googleProfile = {
-        googleId: 'mock-google-id',
-        email: 'mockuser@gmail.com',
-        name: 'Mock User',
-        phone: undefined as string | undefined,
-      };
-      const result = loginWithGoogle(googleProfile);
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-      if (result.status === 'logged_in') {
-        finishAuth();
-        return;
-      }
-      // needs_phone
-      setGooglePendingToken(result.pendingToken ?? null);
-      await sendOtp();
-      goTo('phone-verify-otp');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   // ---------- Signup: phone ----------
@@ -257,18 +219,6 @@ export default function LoginPage() {
       goTo('signup-profile');
     } else if (view === 'forgot-otp') {
       goTo('forgot-reset');
-    } else if (view === 'phone-verify-otp') {
-      if (!googlePendingToken) {
-        setError('This sign-in session expired. Please try Google sign-in again.');
-        goTo('signin');
-        return;
-      }
-      const err = attachPhoneToGoogleAccount(googlePendingToken, phone);
-      if (err) {
-        setError(err);
-        return;
-      }
-      goTo('google-dob');
     }
   };
 
@@ -314,21 +264,6 @@ export default function LoginPage() {
       setError(err);
       return;
     }
-    goTo('success');
-  };
-
-  // ---------- Google: DOB collection (age gate) ----------
-  const handleGoogleDobSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isAdult(dob)) {
-      setError('You must be 18 or older to create a Jhyaap Station account.');
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    await new Promise((r) => setTimeout(r, 400));
-    updateProfile({ dob });
-    setIsLoading(false);
     goTo('success');
   };
 
@@ -379,9 +314,6 @@ export default function LoginPage() {
         break;
       case 'forgot-reset':
         setView('forgot-otp');
-        break;
-      case 'phone-verify-otp':
-        setView('signin');
         break;
       default:
         setView('signin');
@@ -495,21 +427,6 @@ export default function LoginPage() {
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </button>
 
-              <div className="flex items-center gap-3 text-xs text-night-500">
-                <div className="h-px flex-1 bg-night-600/40" />
-                or
-                <div className="h-px flex-1 bg-night-600/40" />
-              </div>
-
-              <button
-                type="button"
-                onClick={handleGoogleAuth}
-                disabled={isLoading}
-                className="btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Continue with Google
-              </button>
-
               <p className="text-center text-sm text-night-300">
                 New here?{' '}
                 <button
@@ -559,21 +476,6 @@ export default function LoginPage() {
                 {isLoading ? 'Sending code...' : 'Send OTP'}
               </button>
 
-              <div className="flex items-center gap-3 text-xs text-night-500">
-                <div className="h-px flex-1 bg-night-600/40" />
-                or
-                <div className="h-px flex-1 bg-night-600/40" />
-              </div>
-
-              <button
-                type="button"
-                onClick={handleGoogleAuth}
-                disabled={isLoading}
-                className="btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Sign up with Google
-              </button>
-
               <p className="text-center text-xs leading-5 text-night-500">
                 By continuing, you confirm you are of legal drinking age and agree to our Terms of Service and
                 Privacy Policy.
@@ -619,8 +521,8 @@ export default function LoginPage() {
             </form>
           )}
 
-          {/* ---------------- OTP (shared: signup / forgot / google phone-verify) ---------------- */}
-          {(view === 'signup-otp' || view === 'forgot-otp' || view === 'phone-verify-otp') && (
+          {/* ---------------- OTP (shared: signup / forgot) ---------------- */}
+          {(view === 'signup-otp' || view === 'forgot-otp') && (
             <form onSubmit={handleVerifyOtp} className="space-y-5">
               <div>
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neon-amber/10 text-neon-amber">
@@ -801,45 +703,6 @@ export default function LoginPage() {
                 className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isLoading ? 'Creating account...' : 'Create account'}
-              </button>
-            </form>
-          )}
-
-          {/* ---------------- GOOGLE: DOB COLLECTION (age gate) ---------------- */}
-          {view === 'google-dob' && (
-            <form onSubmit={handleGoogleDobSubmit} className="space-y-5">
-              <div>
-                <div className="mb-4 flex items-center gap-2 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm font-semibold text-green-300 w-fit">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Phone verified
-                </div>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neon-amber/10 text-neon-amber">
-                  <UserPlus className="h-6 w-6" />
-                </div>
-                <h2 className="text-3xl font-bold text-white">One last thing</h2>
-                <p className="mt-2 text-sm text-night-300">We need your date of birth to confirm you're eligible to order.</p>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-night-200">Date of Birth</label>
-                <input
-                  type="date"
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
-                  className="input-field w-full"
-                  autoFocus
-                />
-                {dob && !isAdult(dob) && (
-                  <p className="mt-1 text-xs text-red-400">You must be 18 or older to use Jhyaap Station.</p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={!isAdult(dob) || isLoading}
-                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isLoading ? 'Saving...' : 'Continue'}
               </button>
             </form>
           )}

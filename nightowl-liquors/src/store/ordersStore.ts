@@ -9,6 +9,7 @@ import {
 } from '@/lib/deliveryLocations';
 import { useLoyaltyStore } from '@/store/loyaltyStore';
 import { shouldAutoAdvance, shouldAutoDeliver } from '@/lib/orderAutomation';
+import { useNotificationStore } from '@/store/notificationStore';
 
 interface OrdersState {
   orders: Order[];
@@ -139,6 +140,14 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
       return { orders: updated };
     });
 
+    // Add notification for new order
+    useNotificationStore.getState().addNotification({
+      type: 'order',
+      title: 'New Order Received',
+      message: `Order ${newOrder.id} placed for Rs ${newOrder.total.toLocaleString()}`,
+      actionUrl: `/admin/orders`,
+    });
+
     return newOrder;
   },
 
@@ -151,10 +160,22 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
 
         if (status === 'preparing') {
           next = applyRiderPicking(next);
+          useNotificationStore.getState().addNotification({
+            type: 'order',
+            title: 'Order Preparing',
+            message: `Order ${orderId} is now being prepared`,
+            actionUrl: `/admin/orders`,
+          });
         }
 
         if (status === 'out_for_delivery') {
           next = applyRiderForDelivery(next);
+          useNotificationStore.getState().addNotification({
+            type: 'delivery',
+            title: 'Order Out for Delivery',
+            message: `Order ${orderId} is now out for delivery`,
+            actionUrl: `/admin/orders`,
+          });
         }
 
         if (status === 'delivered') {
@@ -174,6 +195,12 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
               routeProgress: 1,
             };
           }
+          useNotificationStore.getState().addNotification({
+            type: 'delivery',
+            title: 'Order Delivered',
+            message: `Order ${orderId} has been delivered successfully`,
+            actionUrl: `/admin/orders`,
+          });
         }
 
         return next;
