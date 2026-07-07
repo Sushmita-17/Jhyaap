@@ -12,14 +12,19 @@ export default function Footer() {
   const [shopAllDropdownOpen, setShopAllDropdownOpen] = useState(false);
   const [filtersDropdownOpen, setFiltersDropdownOpen] = useState(false);
 
+  // Consolidated scroll to top function - reduces redundant scroll operations
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleQuickLink = (name: string) => {
     const formatted = name.toLowerCase();
     if (formatted === 'home') {
       setPage('home');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTop();
     } else if (formatted === 'shop all' || formatted === 'all products') {
       setPage('products');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTop();
     } else if (formatted === 'deals') {
       setPage('home');
       setTimeout(() => {
@@ -34,10 +39,10 @@ export default function Footer() {
       }, 100);
     } else if (formatted === 'new arrivals') {
       setPage('products');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTop();
     } else if (formatted === 'brands') {
       setPage('products');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTop();
     } else if (formatted === 'combo offers') {
       setPage('home');
       setTimeout(() => {
@@ -46,10 +51,10 @@ export default function Footer() {
       }, 100);
     } else if (formatted === 'my orders') {
       setPage('orders');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTop();
     } else {
       setPage('products');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTop();
     }
   };
 
@@ -68,7 +73,7 @@ export default function Footer() {
     } else {
       setPage('home');
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   };
 
   return (
@@ -111,7 +116,7 @@ export default function Footer() {
               {shopAllDropdownOpen && (
                 <div className={`absolute top-full left-0 mt-1 w-40 rounded-lg border shadow-xl z-50 ${isLight ? 'bg-white border-gray-200 shadow-[0_8px_24px_rgba(0,0,0,0.1)]' : 'bg-[#141414] border-[#222222]'}`}>
                   <button
-                    onClick={() => { setPage('products'); setShopAllDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { setPage('products'); setShopAllDropdownOpen(false); scrollToTop(); }}
                     className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-[#CCCCCC] hover:bg-white/5'}`}
                   >
                     <Grid3X3 size={14} />
@@ -133,19 +138,19 @@ export default function Footer() {
                     {filtersDropdownOpen && (
                       <div className={`absolute top-0 left-full ml-1 w-36 rounded-lg border shadow-xl z-[60] ${isLight ? 'bg-white border-gray-200 shadow-[0_8px_24px_rgba(0,0,0,0.1)]' : 'bg-[#141414] border-[#222222]'}`}>
                         <button
-                          onClick={() => { setPage('products'); setShopAllDropdownOpen(false); setFiltersDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          onClick={() => { setPage('products'); setShopAllDropdownOpen(false); setFiltersDropdownOpen(false); scrollToTop(); }}
                           className={`w-full text-left px-3 py-2 text-[10px] transition-colors ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-[#CCCCCC] hover:bg-white/5'}`}
                         >
                           Featured
                         </button>
                         <button
-                          onClick={() => { setPage('products'); setShopAllDropdownOpen(false); setFiltersDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          onClick={() => { setPage('products'); setShopAllDropdownOpen(false); setFiltersDropdownOpen(false); scrollToTop(); }}
                           className={`w-full text-left px-3 py-2 text-[10px] transition-colors ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-[#CCCCCC] hover:bg-white/5'}`}
                         >
                           Price: Low to High
                         </button>
                         <button
-                          onClick={() => { setPage('products'); setShopAllDropdownOpen(false); setFiltersDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          onClick={() => { setPage('products'); setShopAllDropdownOpen(false); setFiltersDropdownOpen(false); scrollToTop(); }}
                           className={`w-full text-left px-3 py-2 text-[10px] transition-colors ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-[#CCCCCC] hover:bg-white/5'}`}
                         >
                           Price: High to Low

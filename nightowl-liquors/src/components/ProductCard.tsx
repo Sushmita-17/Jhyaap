@@ -11,7 +11,6 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
   const quantity = useCartStore((s) => s.getItemQuantity(product.id));
   const addItem = useCartStore((s) => s.addItem);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
@@ -70,20 +69,12 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
             {discount}% OFF
           </span>
         )}
-        
-        {/* Pulsing Skeleton Placeholder */}
-        {!imageLoaded && (
-          <div className="absolute inset-0 bg-white/[0.06] animate-pulse" />
-        )}
 
         <img
           src={product.image}
           alt={product.name}
-          onLoad={() => setImageLoaded(true)}
           className={`object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-md ${
             viewMode === 'list' ? 'h-[65%] w-[65%] sm:h-[70%] sm:w-[70%] md:h-[75%] md:w-[75%]' : 'h-[85%] w-[85%]'
-          } ${
-            imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}
           loading="lazy"
           decoding="async"

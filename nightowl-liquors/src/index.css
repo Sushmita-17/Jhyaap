@@ -16,7 +16,7 @@ html, body {
 
 @layer base {
   html {
-    scroll-behavior: smooth;
+    /* Removed: scroll-behavior: smooth; - Only JS controls scrolling now */
   }
   body {
     @apply font-sans antialiased;

@@ -1,9 +1,21 @@
 import { Product } from '@/types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from './ProductCardSkeleton';
 import { useThemeStore } from '@/store/themeStore';
+
+// Throttle utility: delays function execution and batches rapid calls
+const throttle = (func: Function, limit: number) => {
+  let inThrottle: boolean;
+  return function (this: any, ...args: any[]) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
+};
 
 interface ProductCarouselProps {
   label?: string;
@@ -49,34 +61,30 @@ export default function ProductCarousel({
     return mobileScrollRef.current;
   };
 
-  const checkScroll = () => {
+  const checkScroll = useCallback(() => {
     const el = getActiveScrollEl();
     if (!el) return;
 
     const { scrollLeft, scrollWidth, clientWidth } = el;
     setShowLeftArrow(scrollLeft > 10);
     setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
-  };
+  }, []);
+
+  // Throttle scroll handler to 100ms (batch updates, reduce re-renders)
+  const throttledCheckScroll = useCallback(throttle(checkScroll, 100), [checkScroll]);
 
   useEffect(() => {
-    // Measure after paint + after images settle a bit.
+    // Single initial check after paint
     const raf = requestAnimationFrame(() => checkScroll());
-    const t1 = window.setTimeout(() => checkScroll(), 150);
-    const t2 = window.setTimeout(() => checkScroll(), 450);
-
-    window.addEventListener('resize', checkScroll);
-
-    // Remove artificial delay for instant rendering
+    
+    window.addEventListener('resize', throttledCheckScroll);
     setIsLoading(false);
 
     return () => {
-      window.removeEventListener('resize', checkScroll);
+      window.removeEventListener('resize', throttledCheckScroll);
       cancelAnimationFrame(raf);
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [products]);
+  }, [checkScroll, throttledCheckScroll]);
 
   const scroll = (direction: 'left' | 'right') => {
     const el = getActiveScrollEl();
@@ -172,7 +180,7 @@ export default function ProductCarousel({
             {/* Scroll Track (Desktop) */}
             <div
               ref={desktopScrollRef}
-              onScroll={checkScroll}
+              onScroll={throttledCheckScroll}
               className="flex gap-[16px] overflow-x-auto hide-scrollbar snap-x snap-mandatory px-[16px] pb-4 box-border scroll-smooth"
               style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
             >
@@ -226,7 +234,7 @@ export default function ProductCarousel({
             {/* Scroll Track - Shows exactly 2 cards */}
             <div
               ref={mobileScrollRef}
-              onScroll={checkScroll}
+              onScroll={throttledCheckScroll}
               className="flex gap-[10px] overflow-x-auto hide-scrollbar snap-x snap-mandatory px-[6px] pb-2 box-border scroll-smooth"
               style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
             >
@@ -281,7 +289,7 @@ export default function ProductCarousel({
             {/* Scroll Track (Tablet) */}
             <div
               ref={tabletScrollRef}
-              onScroll={checkScroll}
+              onScroll={throttledCheckScroll}
               className="flex gap-[10px] overflow-x-auto hide-scrollbar snap-x snap-mandatory px-[8px] pb-2 box-border scroll-smooth"
             >
               {isLoading
