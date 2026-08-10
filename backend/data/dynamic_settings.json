@@ -1,0 +1,9 @@
+{
+    "SUPABASE_URL": "https://jbibgtqxjckuaidmodvo.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiaWJndHF4amNrdWFpZG1vZHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MTQ3MzMsImV4cCI6MjA5OTE5MDczM30.dR4gf5o-oDNWAc5FQXjYWSyHfipFy_FMhMSjQafRi0o",
+    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiaWJndHF4amNrdWFpZG1vZHZvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzYxNDczMywiZXhwIjoyMDk5MTkwNzMzfQ.D2pvdbZuOnJ_IEzPmpZj4Y4xK_-DnNga3jkR7eWIsZg",
+    "OTP_MODE": "mock",
+    "FRONTEND_ORIGIN": "http://localhost:5173",
+    "BACKEND_API_KEY": "jhyaap-super-secret-backend-developer-key",
+    "DATABASE_URL": "postgresql://postgres:kV7DjxQNiaKsTtQV@db.jbibgtqxjckuaidmodvo.supabase.co:5432/postgres"
+}

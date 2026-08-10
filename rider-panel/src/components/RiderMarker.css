@@ -1,0 +1,71 @@
+/* ============================================================
+   RiderMarker — floating "YOU" label + rotating rider image.
+   Only the <img> rotates; the label stays horizontal at all times.
+   ============================================================ */
+
+.custom-rider-marker {
+  background: transparent;
+  border: 0;
+  z-index: 1000 !important;
+}
+
+/* Outer wrapper: stacks label above the icon, centered. */
+.rider-marker-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* inDrive-style orange direction ring — only shown while the rider drives. */
+.rider-direction-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 3px solid #ff7a1a;
+  background: rgba(255, 122, 26, 0.12);
+  box-shadow: 0 0 0 2px rgba(255, 122, 26, 0.35), 0 0 12px rgba(255, 122, 26, 0.5);
+  animation: riderRingSpin 1.2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes riderRingSpin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Floating "YOU" pill — never rotates (separate element). */
+.you-label {
+  background: #1a1a1a;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* The rider image — NO rotation, stays upright on both wheels.
+   Medium size so the delivery boy shows clearly.
+   object-fit:contain + no border-radius = full rider + scooter, no rectangle/circle crop. */
+.rider-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 0;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.4));
+  transition: none;
+  transform-origin: 50% 50%;
+  transform: none; /* NO transform - rider stays upright on both wheels */
+  -webkit-user-drag: none;
+  user-select: none;
+}
+

@@ -1,0 +1,77 @@
+==== rider-panel/src/components/RiderMap.jsx ====
+RUN: hex=efbbbf
+  latin1='ï»¿'
+  utf8  ='\ufeff'
+  ctx   = ...[RUN]import { useEffect, useSt...
+RUN: hex=e296b6
+  latin1='â\x96¶'
+  utf8  ='▶'
+  ctx   = ...      <span>{isPaused ? '[RUN]' : 'â¸'}</span>
+       ...
+RUN: hex=e28fb8
+  latin1='â\x8f¸'
+  utf8  ='⏸'
+  ctx   = ...pan>{isPaused ? 'â¶' : '[RUN]'}</span>
+        </butto...
+RUN: hex=e28892
+  latin1='â\x88\x92'
+  utf8  ='−'
+  ctx   = ...       >
+          <span>[RUN]</span>
+        </button>...
+RUN: hex=e286ba
+  latin1='â\x86º'
+  utf8  ='↺'
+  ctx   = ...       >
+          <span>[RUN]</span>
+        </button>...
+==== rider-panel/src/pages/Dashboard.jsx ====
+RUN: hex=efbbbf
+  latin1='ï»¿'
+  utf8  ='\ufeff'
+  ctx   = ...[RUN]import { useEffect, useMe...
+RUN: hex=e28690
+  latin1='â\x86\x90'
+  utf8  ='←'
+  ctx   = ...    >
+                  [RUN] Prev
+                </...
+RUN: hex=e28692
+  latin1='â\x86\x92'
+  utf8  ='→'
+  ctx   = ...
+                  Next [RUN]
+                </butto...
+==== rider-panel/src/pages/OrderDetail.jsx ====
+RUN: hex=efbbbf
+  latin1='ï»¿'
+  utf8  ='\ufeff'
+  ctx   = ...[RUN]import { useEffect, useSt...
+RUN: hex=e28690
+  latin1='â\x86\x90'
+  utf8  ='←'
+  ctx   = ...y-200"
+      >
+        [RUN] Back
+      </button>
+...
+RUN: hex=e28094
+  latin1='â\x80\x94'
+  utf8  ='—'
+  ctx   = ...t-gray-400">Already paid [RUN] no cash to collect.</p>...
+RUN: hex=c397
+  latin1='Ã\x97'
+  utf8  ='×'
+  ctx   = ...    {item.product?.name} [RUN] {item.quantity}
+       ...
+RUN: hex=c397
+  latin1='Ã\x97'
+  utf8  ='×'
+  ctx   = ...  >
+                    [RUN]
+                  </but...
+RUN: hex=e28094
+  latin1='â\x80\x94'
+  utf8  ='—'
+  ctx   = ...onfirming online payment [RUN] no cash expected</p>
+  ...

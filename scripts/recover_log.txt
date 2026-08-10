@@ -1,0 +1,4 @@
+latin1 repr: '           >\r\n                  Ã¢â\x80\xa0Â\x90 Prev\r\n    '
+hex: 20202020202020202020203e0d0a202020202020202020202020202020202020c3a2e280a0c29020507265760d0a20202020
+after 1: '           >\r\n                  â†\x90 Prev\r\n    '
+after 2 FAILED: 'latin-1' codec can't encode character '\u2020' in position 33: ordinal not in range(256)

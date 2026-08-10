@@ -1,0 +1,218 @@
+@layer base {
+  :root { --jhyaap-bg: #0A0A0A; --jhyaap-surface: #161616; --jhyaap-border: rgba(255,255,255,.10); --jhyaap-gold: #C9A84C; --jhyaap-gold-hover: #D9B85C; }
+}
+
+/* stylelint-disable at-rule-no-unknown */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* stylelint-enable at-rule-no-unknown */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+@layer base {
+  body {
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+.theme-transition-disabled *,
+.theme-transition-disabled *::before,
+.theme-transition-disabled *::after {
+  transition: none !important;
+}
+
+@layer components {
+  .panel {
+    border-radius: 1rem;
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--jhyaap-border);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+  }
+  a { color: var(--jhyaap-gold); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .btn-primary {
+    border-radius: 6px;
+    background-color: var(--jhyaap-gold);
+    padding: 12px 28px;
+    font-weight: 700;
+    color: #000;
+    transition: background-color 0.2s, transform 0.1s;
+  }
+  .btn-primary:hover {
+    background-color: var(--jhyaap-gold-hover);
+  }
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+  .btn-secondary {
+    border-radius: 6px;
+    border: 1.5px solid var(--jhyaap-gold);
+    background-color: transparent;
+    padding: 12px 28px;
+    font-weight: 700;
+    color: var(--jhyaap-gold);
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover {
+    background-color: rgba(201, 168, 76, 0.1);
+  }
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+  .input-field {
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem 1rem;
+    color: #fff;
+  }
+  .input-field::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .input-field:focus {
+    border-color: rgba(201, 168, 76, 0.5);
+    outline: none;
+  }
+}
+
+@layer utilities {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #2A2A2A;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #C9A84C;
+  }
+  .custom-cart-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+  .custom-cart-scrollbar::-webkit-scrollbar-track {
+    background: rgba(15, 11, 8, 0.4);
+    border-radius: 10px;
+  }
+  .custom-cart-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(201, 168, 76, 0.5);
+    border-radius: 10px;
+    border: 1px solid rgba(201, 168, 76, 0.2);
+  }
+  .custom-cart-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(201, 168, 76, 0.8);
+  }
+}
+
+/* Animated delivery rider marker - NO animation for two-wheel stability */
+@keyframes jhyaap-rider-suspension {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(0); }
+}
+
+@keyframes jhyaap-rider-shadow {
+  0%, 100% { transform: scaleX(1); opacity: .35; }
+  50% { transform: scaleX(1); opacity: .35; }
+}
+
+.jhyaap-rider-marker-driving {
+  animation: none;
+}
+
+.jhyaap-rider-marker-driving::after {
+  content: '';
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 4px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, .45);
+  filter: blur(3px);
+  animation: none;
+}
+
+.jhyaap-leaflet-rider-icon { background: transparent; border: 0; }
+.jhyaap-rider-heading { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; transform: rotate(var(--rider-bearing, 0deg)); transform-origin: 50% 50%; transition: transform 0.2s ease-out; }
+.jhyaap-rider-image-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
+.jhyaap-rider-direction-ring { display: none; }
+@keyframes jhyaapRingSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.jhyaap-rider-image-wrap::after { content: ""; position: absolute; left: 12px; bottom: 4px; width: 40px; height: 7px; border-radius: 50%; background: rgba(15,23,42,.28); filter: blur(3px); z-index: -1; animation: none; }
+.jhyaap-rider-image-wrap.is-driving::before { content: none; }
+.jhyaap-rider-motion { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
+
+/* NO bounce - completely stable movement */
+.jhyaap-rider-image-wrap.is-driving .jhyaap-rider-motion {
+  animation: none;
+}
+.jhyaap-leaflet-rider-image { display: block; width: 36px; height: 36px; object-fit: contain; border-radius: 0; filter: drop-shadow(0 3px 4px rgba(0,0,0,.42)); transform: scaleX(-1); /* Flip to face RIGHT (East) */ }
+/* No animations - scooter drives upright and stable on both wheels */
+.jhyaap-rider-you-badge { position: absolute; top: -2px; right: -4px; background: #C9A84C; color: #0F0B08; font-size: 8px; font-weight: 800; line-height: 1; padding: 3px 5px; border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,.4); letter-spacing: .03em; }
+.jhyaap-rider-pulse-ring { position: absolute; inset: 4px; border-radius: 50%; border: 2px solid rgba(245,158,11,.75); animation: none; pointer-events: none; z-index: -1; }
+@keyframes jhyaapIdleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(0); } }
+@keyframes jhyaapIdleShadow { 0%, 100% { transform: scaleX(1); opacity: .35; } 50% { transform: scaleX(1); opacity: .35; } }
+@keyframes jhyaapRiderCruise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(0); } }
+@keyframes jhyaapWheelSpin { to { transform: rotate(360deg); } }
+/* Wheel elements removed per user request */
+.jhyaap-wheel-roll { display: none; }
+@keyframes jhyaap-rider-cruise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(0); } }
+@keyframes jhyaap-speed-lines { 0% { opacity: 0; transform: translateX(5px); } 35% { opacity: 1; } 100% { opacity: 0; transform: translateX(-5px); } }
+
+/* Pulse animation for live rider indicator - disabled for stable movement */
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.animate-ping {
+  animation: none;
+}
+
+/* Drive wobble animation matching rider panel - vertical only */
+@keyframes driveWobble {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1px); }
+}
+
+.animate-drive-wobble {
+  animation: driveWobble 0.3s ease-in-out infinite;
+}
+
+.jhyaap-leaflet-store-icon, .jhyaap-leaflet-destination-icon { background: transparent; border: 0; }
+.jhyaap-store-pin { border-radius: 999px; padding: 5px 10px; color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; box-shadow: 0 3px 10px rgba(0,0,0,.35); background: #16a34a; }
+.jhyaap-destination-pin { position: relative; width: 28px; height: 28px; border: 3px solid #fff; border-radius: 50% 50% 50% 0; background: #dc2626; box-shadow: 0 3px 10px rgba(0,0,0,.45); transform: rotate(-45deg); }
+.jhyaap-destination-pin::after { content: ''; position: absolute; width: 8px; height: 8px; top: 7px; left: 7px; border-radius: 50%; background: #fff; }
+
+
+
+
+
+
+
+
+
+
+
+

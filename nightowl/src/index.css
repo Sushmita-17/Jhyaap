@@ -1,0 +1,157 @@
+@layer base {
+  :root { --jhyaap-bg: #0A0A0A; --jhyaap-surface: #161616; --jhyaap-border: rgba(255,255,255,.10); --jhyaap-gold: #C9A84C; --jhyaap-gold-hover: #D9B85C; }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+@layer base {
+  body {
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+.theme-transition-disabled *,
+.theme-transition-disabled *::before,
+.theme-transition-disabled *::after {
+  transition: none !important;
+}
+
+@layer components {
+  /* Leaflet Map overrides for Top-Notch UI */
+  .leaflet-container {
+    background: #0A0A0A !important;
+    font-family: inherit !important;
+  }
+  .nightowl-map-marker { background: transparent; border: 0; }
+  .nightowl-store-pin { border-radius: 999px; padding: 5px 10px; color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; background: #16a34a; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+  .nightowl-destination-pin { position: relative; width: 28px; height: 28px; border: 3px solid #fff; border-radius: 50% 50% 50% 0; background: #dc2626; box-shadow: 0 3px 10px rgba(0,0,0,.45); transform: rotate(-45deg); }
+  .nightowl-destination-pin::after { content: ''; position: absolute; width: 8px; height: 8px; top: 7px; left: 7px; border-radius: 50%; background: #fff; }
+  .leaflet-marker-icon {
+    /* This makes the motorcycle GLIDE smoothly when GPS updates, rather than teleporting */
+    transition: transform 1.5s linear !important;
+  }
+  
+  .glass-panel {
+    @apply bg-night-950/80 backdrop-blur-md border border-white/10 shadow-xl;
+  }
+  .panel {
+    @apply rounded-2xl backdrop-blur-xl border;
+    box-shadow: 0 10px 32px rgba(0,0,0,0.5);
+  }
+  a { color: var(--jhyaap-gold); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .btn-primary {
+    @apply rounded-[6px] bg-gold-primary px-[28px] py-[12px] font-bold text-black
+             transition-colors duration-200
+             hover:bg-gold-hover active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply rounded-[6px] border-[1.5px] border-gold-primary bg-transparent px-[28px] py-[12px] font-bold 
+           text-gold-primary transition-all duration-200
+           hover:bg-gold-primary/10 active:scale-[0.98];
+  }
+  .input-field {
+    @apply rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white
+           placeholder:text-night-500 focus:border-gold-primary/50 focus:outline-none;
+  }
+}
+
+@layer utilities {
+  @keyframes pulseRing {
+    0% {
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.4;
+    }
+    100% {
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes driveWobble {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(0);
+    }
+  }
+
+  .animate-ping {
+    animation: pulseRing 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-drive-wobble {
+    animation: none;
+  }
+
+  /* Rider marker rotation with hardware acceleration */
+  .custom-leaflet-marker-rider {
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-ping {
+      animation: none;
+    }
+    
+    .animate-drive-wobble {
+      animation: none;
+    }
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #2A2A2A;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #C9A84C;
+  }
+  .custom-cart-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+  .custom-cart-scrollbar::-webkit-scrollbar-track {
+    background: rgba(15, 11, 8, 0.4);
+    border-radius: 10px;
+  }
+  .custom-cart-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(201, 168, 76, 0.5);
+    border-radius: 10px;
+    border: 1px solid rgba(201, 168, 76, 0.2);
+  }
+  .custom-cart-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(201, 168, 76, 0.8);
+  }
+}

@@ -1,0 +1,555 @@
+/* stylelint-disable at-rule-no-unknown */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* stylelint-enable at-rule-no-unknown */
+
+@layer base {
+  :root {
+    --jhyaap-bg: #0A0A0A;
+    --jhyaap-surface: #161616;
+    --jhyaap-surface-raised: #1D1D1D;
+    --jhyaap-border: rgba(255, 255, 255, .10);
+    --jhyaap-text: #FFFFFF;
+    --jhyaap-gold-hover: #D9B85C;
+  }
+
+  .rider-marker {
+    width: 28px;
+    height: 28px;
+  }
+
+  .rider-shadow {
+    width: 48px;
+    height: 12px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body, #root { min-height: 100%; }
+
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    background: var(--jhyaap-bg);
+    color: var(--jhyaap-text);
+    line-height: 1.5;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .rider-page {
+    @apply min-h-screen px-4 py-6;
+  }
+
+  .rider-card {
+    @apply rounded-2xl border bg-[#161616] border-white/10 shadow-xl;
+  }
+
+  .rider-btn {
+    @apply w-full font-semibold rounded-md py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed transition;
+  }
+
+  .rider-btn-primary {
+    @apply bg-[#C9A84C] text-[#0A0A0A] hover:bg-[#D9B85C];
+  }
+
+  .rider-btn-secondary {
+    @apply border border-white/10 bg-white/5 text-gray-200 hover:bg-white/10;
+  }
+
+  .rider-input {
+    @apply w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-200 outline-none focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C];
+  }
+
+  .rider-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .rider-badge-info {
+    @apply bg-blue-900/40 text-blue-300 border border-blue-700;
+  }
+
+  .rider-badge-success {
+    @apply bg-green-900/40 text-green-300 border border-green-700;
+  }
+
+  .rider-badge-warning {
+    @apply border border-[#C9A84C]/40 bg-[#C9A84C]/15 text-[#C9A84C];
+  }
+
+  .rider-badge-danger {
+    @apply bg-red-900/40 text-red-300 border border-red-700;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--jhyaap-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a221c;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3228;
+}
+
+@layer utilities {
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes driveWobble {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes riderBounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes boxPulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.02);
+    }
+  }
+
+  @keyframes riderGlow {
+    0%, 100% {
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
+    }
+  }
+
+  @keyframes pulseRing {
+    0% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-drive-wobble {
+    animation: driveWobble 0.3s ease-in-out infinite;
+  }
+
+  .animate-rider-bounce {
+    animation: riderBounce 0.5s ease-in-out infinite;
+  }
+
+  .animate-box-pulse {
+    animation: boxPulse 1s ease-in-out infinite;
+  }
+
+  .animate-rider-glow {
+    animation: riderGlow 2s ease-in-out infinite;
+  }
+
+  .animate-ping {
+    animation: pulseRing 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Leaflet Map Styles */
+  .leaflet-container {
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+  }
+
+  .custom-store-marker,
+  .custom-dest-marker,
+  .custom-rider-marker {
+    background: transparent;
+    border: none;
+  }
+
+  .custom-store-marker img,
+  .custom-dest-marker img,
+  .custom-rider-marker img {
+    display: none;
+  }
+
+  .rider-store-pin {
+    border-radius: 999px;
+    padding: 5px 10px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    background: #16a34a;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .35);
+  }
+  .rider-destination-pin {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    border: 3px solid #fff;
+    border-radius: 50% 50% 50% 0;
+    background: #dc2626;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .45);
+    transform: rotate(-45deg);
+  }
+
+  .rider-destination-pin::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    top: 7px;
+    left: 7px;
+    border-radius: 50%;
+    background: #fff;
+  }
+/* Enhanced rider marker styles */
+  .custom-rider-marker {
+    z-index: 1000 !important;
+  }
+
+  .custom-rider-marker svg {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+  }
+
+  /* ===== Jhyaap Leaflet rider marker (used by riderTracking.js / riderMarker.js) =====
+     Uses the transparent rider.png (64px). All animation is CSS/JS — the PNG is never edited. */
+  .jhyaap-leaflet-rider-icon {
+    background: transparent;
+    border: 0;
+  }
+
+.jhyaap-rider-heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 68px;
+    height: 68px;
+    transform: rotate(var(--rider-bearing, 0deg));
+    transform-origin: 50% 50%;
+    transition: transform 0.2s ease-out;
+  }
+
+  .jhyaap-rider-image-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+  }
+
+  /* Direction ring disabled for stable movement */
+  .jhyaap-rider-direction-ring {
+    display: none;
+  }
+
+  /* Ground shadow under the rider - no animation for stable movement */
+  .jhyaap-rider-image-wrap::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    bottom: 4px;
+    width: 40px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.35);
+    filter: blur(3px);
+    z-index: -1;
+    animation: none;
+  }
+
+.jhyaap-rider-motion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+  }
+
+  /* Moving state: NO bounce - completely stable movement */
+  .jhyaap-rider-image-wrap.is-driving .jhyaap-rider-motion {
+    animation: none;
+  }
+
+  /* Only the wheel discs rotate while driving — the scooter body stays upright. */
+  .jhyaap-rider-image-wrap.is-driving .jhyaap-rider-image {
+    animation: none;
+  }
+
+  /* Wheel animations disabled for stable movement */
+  .jhyaap-wheel-roll {
+    display: none;
+  }
+
+  /* Idle state: rider stays constant at the hub (no floating/bouncing) */
+  .jhyaap-rider-image-wrap.is-idle .jhyaap-rider-motion {
+    animation: none;
+  }
+
+.jhyaap-rider-image-wrap.is-idle::after {
+    animation: none;
+  }
+
+.jhyaap-rider-image-wrap::after {
+    animation: none;
+  }
+
+.jhyaap-leaflet-rider-image {
+    display: block;
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    /* Show the full scooter (including the wheels) — no circular crop. */
+    border-radius: 0;
+    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.4));
+    transform-origin: 50% 50%;
+    transform: scaleX(-1); /* Flip to face RIGHT (East) */
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  /* Driving state: no bounce/wheelie - smooth stable movement */
+  .jhyaap-rider-image-wrap.is-driving .jhyaap-leaflet-rider-image {
+    animation: none;
+  }
+
+  /* Idle bounce keyframes - disabled for stable movement */
+  @keyframes jhyaapIdleBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(0); }
+  }
+
+  @keyframes jhyaapIdleShadow {
+    0%, 100% { transform: scaleX(1); opacity: 0.35; }
+    50% { transform: scaleX(1); opacity: 0.35; }
+  }
+
+  @keyframes jhyaapRiderCruise {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(0); }
+  }
+
+  @keyframes jhyaapWheelSpin {
+    to { transform: rotate(360deg); }
+  }
+
+.jhyaap-rider-you-badge {
+    position: absolute;
+    top: -3px;
+    right: -6px;
+    background: #C9A84C;
+    color: #0F0B08;
+    font-size: 7px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    letter-spacing: 0.03em;
+  }
+
+  .jhyaap-rider-pulse-ring {
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    border: 2px solid rgba(245, 158, 11, 0.75);
+    animation: none;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* Store & destination pins for Leaflet maps */
+  .jhyaap-leaflet-store-icon,
+  .jhyaap-leaflet-destination-icon {
+    background: transparent;
+    border: 0;
+  }
+
+  .jhyaap-store-pin {
+    border-radius: 999px;
+    padding: 5px 10px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+    background: #16a34a;
+  }
+
+  .jhyaap-destination-pin {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    border: 3px solid #fff;
+    border-radius: 50% 50% 50% 0;
+    background: #dc2626;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+    transform: rotate(-45deg);
+  }
+
+  .jhyaap-destination-pin::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    top: 7px;
+    left: 7px;
+    border-radius: 50%;
+    background: #fff;
+  }
+}
+
+
+/* Rider theme system */
+:root {
+  color-scheme: dark;
+  --rider-bg: #0F0B08;
+  --rider-surface: #1a1512;
+  --rider-border: #2a221c;
+  --rider-text: #F5ECD7;
+  --rider-muted: #9ca3af;
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+  --rider-bg: #f5f7fa;
+  --rider-surface: #ffffff;
+  --rider-border: #e2e8f0;
+  --rider-text: #17202a;
+  --rider-muted: #64748b;
+}
+
+body {
+  background: var(--rider-bg);
+  color: var(--rider-text);
+  transition: background-color .2s ease, color .2s ease;
+}
+
+.rider-page { background: var(--rider-bg); }
+.rider-card { background: var(--rider-surface); border-color: var(--rider-border); box-shadow: 0 10px 30px rgba(15, 23, 42, .06); }
+.rider-stat-label { color: var(--rider-muted); }
+.rider-stat-value { color: var(--rider-text); }
+.rider-status { border-width: 1px; border-style: solid; }
+.rider-status-pending { background: #1f2937; color: #cbd5e1; border-color: #475569; }
+html[data-theme='light'] .rider-status-pending { background: #e8eef7; color: #1e3a5f; border-color: #b8c7dc; }
+html[data-theme='light'] [class*='text-blue-300'] { color: #1d4ed8 !important; }
+html[data-theme='light'] [class*='text-green-300'] { color: #15803d !important; }
+html[data-theme='light'] [class*='text-purple-300'] { color: #7e22ce !important; }
+html[data-theme='light'] [class*='text-orange-300'] { color: #c2410c !important; }
+html[data-theme='light'] [class*='text-[#C9A84C]'] { color: #8a6410 !important; }
+.rider-nav { background: color-mix(in srgb, var(--rider-surface) 94%, transparent); border-top: 1px solid var(--rider-border); box-shadow: 0 -8px 24px rgba(15, 23, 42, .12); backdrop-filter: blur(14px); z-index: 1100; }
+.rider-nav-item { display: flex; flex-direction: column; align-items: center; gap: .25rem; padding: .5rem .75rem; border-radius: .6rem; color: var(--rider-muted); font-size: .72rem; font-weight: 600; transition: color .2s ease, background-color .2s ease; }
+.rider-nav-item:hover, .rider-nav-item.is-active { color: #C9A84C; background: color-mix(in srgb, #C9A84C 12%, transparent); }
+.rider-input { background: var(--rider-bg); border-color: var(--rider-border); color: var(--rider-text); }
+html[data-theme='light'] [class*='bg-[#0F0B08]'] { background-color: #f5f7fa !important; }
+html[data-theme='light'] [class*='bg-[#1a1512]'] { background-color: #ffffff !important; }
+html[data-theme='light'] [class*='bg-[#2a221c]'] { background-color: #eef2f6 !important; }
+html[data-theme='light'] [class*='text-gray-300'], html[data-theme='light'] [class*='text-gray-400'] { color: #475569 !important; }
+html[data-theme='light'] [class*='text-gray-500'] { color: #64748b !important; }
+html[data-theme='light'] [class*='text-gray-200'] { color: #334155 !important; }
+.rider-theme-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 3.75rem;
+  height: 2rem;
+  padding: .2rem;
+  border-radius: 999px;
+  background: #dbe2ea;
+  border: 1px solid #cbd5e1;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+.rider-theme-switch.is-dark {
+  background: #C9A84C;
+  border-color: #C9A84C;
+}
+.rider-theme-switch-knob {
+  display: block;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, .25);
+  transform: translateX(0);
+  transition: transform .2s ease;
+}
+.rider-theme-switch.is-dark .rider-theme-switch-knob {
+  transform: translateX(1.7rem);
+}
+/* Theme toggle — inline by default so it sits beside the availability switch.
+   The component (ThemeToggle.jsx) provides its own sizing via Tailwind utility classes.
+   Use .rider-theme-toggle-fixed only where a floating top-right theme button is desired. */
+.rider-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .35rem .5rem;
+  border: 1px solid var(--rider-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rider-surface) 94%, transparent);
+  color: var(--rider-muted);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .18);
+  backdrop-filter: blur(14px);
+}
+.rider-theme-toggle-fixed {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1200;
+}
+.rider-theme-toggle-label { font-size: .7rem; font-weight: 700; min-width: 2rem; text-align: left; }
+
