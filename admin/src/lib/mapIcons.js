@@ -38,12 +38,12 @@ export const HIGHLIGHT_AREA_DOT_ICON = svgToDataUrl(`
  * It is never edited at runtime — all smooth movement and rotation are applied through
  * JS interpolation + CSS transform. The rider faces west (RIDER_FACING_BEARING = 270°).
  */
-export const RIDER_MARKER_SIZE = 48;
+export const RIDER_MARKER_SIZE = 64;
 
 // Rectangle-free rider.png (rider panel photo, white background removed). No SVG.
-// Uses rider-new.png (cleaner transparent delivery-boy photo) for a medium-size
-// rider marker that matches the customer/rider panels.
-export const DELIVERY_RIDER_MARKER_ICON = '/rider-new.png';
+// Uses rider-animated-transparent.png (processed transparent rider2) for the
+// animated rider marker similar to Uber Eats/Pathao delivery systems.
+export const DELIVERY_RIDER_MARKER_ICON = '/rider-animated-transparent.png';
 
 /** Alias for backward compatibility */
 export const BIKE_RIDER_MARKER_ICON = DELIVERY_RIDER_MARKER_ICON;

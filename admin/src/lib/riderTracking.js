@@ -7,9 +7,10 @@ export const OSRM_URL = 'https://router.project-osrm.org/route/v1/driving';
 export const RIDER_ICON_SIZE = RIDER_MARKER_SIZE;
 // The PNG is a side-facing rider that points WEST (270°) when unrotated.
 // After scaleX(-1) flip, it faces EAST (90°) - use this as the base bearing.
+// Anchor at center to prevent wheelie/pivot effect - both wheels stay grounded.
+// Uses transparent animated rider similar to Uber Eats/Pathao delivery systems.
 export const RIDER_FACING_BEARING = 90;
-// Anchor at bottom-center (wheels) so rider sits on road - prevents wheelie effect
-export const RIDER_ICON_ANCHOR = [RIDER_MARKER_SIZE / 2, Math.round(RIDER_MARKER_SIZE * 0.875)];
+export const RIDER_ICON_ANCHOR = [RIDER_MARKER_SIZE / 2, RIDER_MARKER_SIZE / 2];
 
 export function easeOutCubic(t) {
   return 1 - Math.pow(1 - t, 3);
@@ -122,12 +123,14 @@ export function createRiderLeafletIcon({ heading = 0, showPulse = false, isDrivi
     : '';
 
   const stateClass = isDriving ? 'is-driving' : 'is-idle';
+  const drivingClass = isDriving ? 'jhyaap-rider-marker-driving' : '';
 
-  // 2D rotation only (yaw) - no 3D tilt/lean (roll/pitch)
+  // No rotation - rider moves straight without spinning
+  // Animated transparent rider similar to Uber Eats/Pathao delivery systems
   return L.divIcon({
     className: 'jhyaap-leaflet-rider-icon',
     html: `
-      <div class="jhyaap-rider-heading" style="--rider-bearing:${bearingToIconRotation(heading)}deg;">
+      <div class="jhyaap-rider-heading ${drivingClass}" style="--rider-bearing:0deg;">
         <div class="jhyaap-rider-image-wrap ${stateClass}">
           <span class="jhyaap-rider-motion">
             <img
@@ -161,6 +164,7 @@ export function createAnimatedRiderMarker(map, { position, showPulse, isDriving,
   const marker = L.marker([position.lat, position.lng], {
     icon: createRiderLeafletIcon({ showPulse, isDriving, isSelfView }),
     zIndexOffset: 1000,
+    interactive: false, // Disable click interactions to prevent wheelie effect
   }).addTo(map);
 
   return marker;

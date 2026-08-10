@@ -240,7 +240,7 @@ export default function AdminRidersPage() {
           >
             <p className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Total Earnings</p>
             <p className="text-3xl font-bold text-yellow-400">
-              à¤°à¥ {riders.reduce((sum, r) => sum + r.earnings, 0).toLocaleString()}
+              रु {riders.reduce((sum, r) => sum + r.earnings, 0).toLocaleString()}
             </p>
           </div>
         </div>
@@ -440,7 +440,7 @@ export default function AdminRidersPage() {
                       </div>
                     </td>
                     <td className={`px-6 py-4 font-semibold ${isLight ? 'text-gray-900' : 'text-white'}`}>
-                      à¤°à¥ {rider.earnings.toLocaleString()}
+                      रु {rider.earnings.toLocaleString()}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">

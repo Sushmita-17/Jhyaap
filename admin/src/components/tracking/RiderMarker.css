@@ -65,7 +65,7 @@
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.4));
   transition: transform 0.2s ease-out;
   transform-origin: 50% 50%; /* pivot on center for stable rotation */
-  transform: scaleX(-1); /* Flip to face RIGHT (East) */
+  transform: none; /* No flip - rotation handles direction */
   -webkit-user-drag: none;
   user-select: none;
 }

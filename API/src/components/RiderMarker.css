@@ -55,17 +55,17 @@
 }
 
 /* The rider image — only this element rotates by bearing.
-   Medium size so the delivery boy shows clearly.
+   Larger size to match admin panel and show clearly on map.
    object-fit:contain + no border-radius = full rider + scooter, no rectangle/circle crop. */
 .rider-icon {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
   border-radius: 0;
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.4));
-  transition: transform 0.2s ease-out;
+  transition: none;
   transform-origin: 50% 50%; /* pivot on center for stable rotation */
-  transform: scaleX(-1); /* Flip to face RIGHT (East) */
+  transform: none; /* No rotation - moves straight */
   -webkit-user-drag: none;
   user-select: none;
 }

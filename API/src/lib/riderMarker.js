@@ -11,17 +11,19 @@ import L from 'leaflet';
 
 // Default transparent rider asset served from /public.
 // Rectangle-free rider.png (rider panel photo, white background removed). No SVG.
-// Uses rider-new.png (cleaner transparent delivery-boy photo) for a medium-size marker.
-export const RIDER_IMAGE_URL = '/rider-new.png';
+// Uses rider-animated-transparent.png (processed transparent rider2) for the
+// animated rider marker similar to Uber Eats/Pathao delivery systems.
+export const RIDER_IMAGE_URL = '/rider-animated-transparent.png';
 
-// The side-facing rider points WEST (270°) when unrotated. After scaleX(-1) flip,
-// it faces EAST (90°) - use this as the base bearing.
-export const RIDER_FACING_BEARING = 90;
+// The side-facing rider points WEST (270°) when unrotated.
+// Anchor at center to prevent wheelie/pivot effect - both wheels stay grounded
+export const RIDER_FACING_BEARING = 270;
 
 // Styling / anchor constants per spec.
-// Medium size so the delivery boy shows clearly (matches rider/admin panels).
-export const RIDER_ICON_SIZE = [48, 56];
-export const RIDER_ICON_ANCHOR = [24, 44];
+// Larger size to match admin panel and show clearly on map.
+export const RIDER_ICON_SIZE = [64, 72];
+// Anchor at center to prevent wheelie/pivot effect - both wheels stay grounded
+export const RIDER_ICON_ANCHOR = [32, 36];
 export const RIDER_POPUP_ANCHOR = [0, -48];
 
 /** Convert a compass bearing (0–360) to the CSS rotation needed so the icon points

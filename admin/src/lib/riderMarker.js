@@ -14,14 +14,15 @@ import L from 'leaflet';
 // Uses rider-new.png (cleaner transparent delivery-boy photo) for a medium-size marker.
 export const RIDER_IMAGE_URL = '/rider-new.png';
 
-// The side-facing rider points WEST (270°) when unrotated. After scaleX(-1) flip,
-// it faces EAST (90°) - use this as the base bearing.
-export const RIDER_FACING_BEARING = 90;
+// The side-facing rider points WEST (270°) when unrotated.
+// Anchor at center to prevent wheelie/pivot effect - both wheels stay grounded
+export const RIDER_FACING_BEARING = 270;
 
 // Styling / anchor constants per spec.
 // Smaller so the rider fits inside the inDrive-style orange direction ring.
 export const RIDER_ICON_SIZE = [44, 52];
-export const RIDER_ICON_ANCHOR = [22, 40];
+// Anchor at center to prevent wheelie/pivot effect - both wheels stay grounded
+export const RIDER_ICON_ANCHOR = [22, 26];
 export const RIDER_POPUP_ANCHOR = [0, -44];
 
 /** Convert a compass bearing (0–360) to the CSS rotation needed so the icon points

@@ -4,18 +4,18 @@ function svgToDataUrl(svg) {
 
 /**
  * Rider marker — the delivery-boy photo (rider.png → rider-new.png transparent crop).
- * The SAME rider-new.png exists in rider-panel/public, admin/public and API/public so
+ * The SAME rider2.png exists in rider-panel/public, admin/public and API/public so
  * the marker is pixel-identical in every panel. It is never edited at runtime — all
  * smooth movement and rotation are applied through JS interpolation + CSS transform.
  * The rider faces west (RIDER_FACING_BEARING = 270°).
  */
-// Medium size so the delivery boy shows clearly (matches admin/customer panels).
-export const RIDER_MARKER_SIZE = 48;
+// Larger size to match admin panel and show clearly on map.
+export const RIDER_MARKER_SIZE = 64;
 
 // Rectangle-free rider.png (rider panel photo, white background removed). No SVG.
-// Uses rider-new.png (the cleaner, tightly-cropped transparent delivery-boy photo)
-// so the marker shows the full rider + scooter with no rectangle/circle crop.
-export const DELIVERY_RIDER_MARKER_ICON = '/rider-new.png';
+// Uses rider-animated-transparent.png (processed transparent rider2) for the
+// animated rider marker similar to Uber Eats/Pathao delivery systems.
+export const DELIVERY_RIDER_MARKER_ICON = '/rider-animated-transparent.png';
 
 export const BIKE_RIDER_MARKER_ICON = DELIVERY_RIDER_MARKER_ICON;
 

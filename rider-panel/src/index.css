@@ -276,11 +276,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 68px;
-    height: 68px;
-    transform: rotate(var(--rider-bearing, 0deg));
+    width: 64px;
+    height: 64px;
+    transform: none;
     transform-origin: 50% 50%;
-    transition: transform 0.2s ease-out;
+    transition: none;
   }
 
   .jhyaap-rider-image-wrap {
@@ -350,14 +350,14 @@
 
 .jhyaap-leaflet-rider-image {
     display: block;
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     object-fit: contain;
     /* Show the full scooter (including the wheels) — no circular crop. */
     border-radius: 0;
     filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.4));
     transform-origin: 50% 50%;
-    transform: scaleX(-1); /* Flip to face RIGHT (East) */
+    transform: none; /* No flip - rotation handles direction */
     -webkit-user-drag: none;
     user-select: none;
   }
