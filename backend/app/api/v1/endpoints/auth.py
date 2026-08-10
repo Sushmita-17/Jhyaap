@@ -197,8 +197,19 @@ async def rider_login(request: Request, payload: RiderLogin):
     Returns JWT token and rider profile.
     Rate limited to 5 requests per minute to prevent brute force attacks.
     """
-    # Fetch rider by phone number
-    rider = fetch_rider_by_phone(payload.phone_number)
+    # Normalize phone number - try both with and without +977 prefix
+    phone_number = payload.phone_number.strip()
+    rider = fetch_rider_by_phone(phone_number)
+    
+    # If not found with +977 prefix, try without it
+    if not rider and phone_number.startswith('+977'):
+        phone_number = phone_number[4:]  # Remove +977 prefix
+        rider = fetch_rider_by_phone(phone_number)
+    
+    # If still not found, try adding +977 prefix
+    if not rider and not phone_number.startswith('+977'):
+        phone_number = '+977' + phone_number
+        rider = fetch_rider_by_phone(phone_number)
     
     if not rider:
         raise HTTPException(
