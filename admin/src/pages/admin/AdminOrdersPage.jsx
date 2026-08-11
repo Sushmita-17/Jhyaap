@@ -150,7 +150,9 @@ export default function AdminOrdersPage() {
                     <p className={`text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#666666]'}`}>
                       {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'Unknown Date'} · {order.paymentMethod?.toUpperCase() || 'N/A'}
                     </p>
-                    <p className="mt-1 capitalize text-[10px] md:text-xs text-[#C9A84C]">{order.status?.replace(/_/g, ' ') || 'Unknown'}</p>
+                    <p className={`mt-1 capitalize text-[10px] md:text-xs font-semibold ${
+                      isLight ? 'text-gray-700' : 'text-[#C9A84C]'
+                    }`}>{order.status?.replace(/_/g, ' ') || 'Unknown'}</p>
                     {order.deliveryRider && (
                       <p className={`mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>
                         Rider: {order.deliveryRider.name || 'Unknown'} · {order.deliveryRider.vehicle || 'Unknown'}
@@ -160,8 +162,8 @@ export default function AdminOrdersPage() {
                   <select
                     className={`input-field py-1.5 md:py-2 text-[10px] md:text-sm capitalize backdrop-blur-sm focus:border-[#C9A84C]/50 focus:ring-[#C9A84C]/20 focus:shadow-lg focus:shadow-[#C9A84C]/20 transition-all duration-300 ${
                       isLight 
-                        ? 'bg-gray-100 border-gray-300' 
-                        : 'bg-[#1A1A1A]/80 border-white/10'
+                        ? 'bg-gray-100 border-gray-300 text-gray-900' 
+                        : 'bg-[#1A1A1A]/80 border-white/10 text-white'
                     }`}
                     value={order.status}
                     onChange={(e) =>
