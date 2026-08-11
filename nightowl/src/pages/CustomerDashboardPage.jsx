@@ -670,30 +670,51 @@ export default function CustomerDashboardPage() {
                   <p className={`text-sm md:text-base ${isLight ? 'text-gray-500' : 'text-[#DDDDDD]'}`}>No orders yet</p>
                 </div>
               ) : (
-                orders.map((order) => (
-                  <button
-                    key={order.id}
-                    onClick={() => {
-                      selectOrder(order.id);
-                      setPage('order-tracking');
-                    }}
-                    className={`w-full rounded-2xl border p-3 md:p-4 text-left transition-colors ${isLight ? 'bg-white border-gray-200 hover:border-[#C9A84C]' : 'bg-[#0A0A0A] border-white/5 hover:border-[#C9A84C]/40'}`}
-                  >
-                    <div className="flex items-center justify-between gap-2 md:gap-3">
-                      <div>
-                        <p className={`font-semibold text-sm md:text-base ${isLight ? 'text-gray-900' : 'text-white'}`}>{order.id}</p>
-                        <p className={`mt-0.5 md:mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>{new Date(order.createdAt).toLocaleDateString()}</p>
+                <>
+                  <div className="flex items-center justify-between mb-2 md:mb-3">
+                    <p className={`text-xs md:text-sm font-semibold ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>
+                      {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+                    </p>
+                    {orders.length > 0 && (
+                      <button
+                        onClick={() => {
+                          if (confirm('Are you sure you want to clear your order history? This action cannot be undone.')) {
+                            // Clear orders from local store
+                            const { clearOrders } = useOrdersStore.getState();
+                            clearOrders();
+                          }
+                        }}
+                        className={`text-xs md:text-sm font-semibold transition-colors ${isLight ? 'text-red-600 hover:text-red-700' : 'text-red-400 hover:text-red-300'}`}
+                      >
+                        Clear history
+                      </button>
+                    )}
+                  </div>
+                  {orders.map((order) => (
+                    <button
+                      key={order.id}
+                      onClick={() => {
+                        selectOrder(order.id);
+                        setPage('order-tracking');
+                      }}
+                      className={`w-full rounded-2xl border p-3 md:p-4 text-left transition-colors ${isLight ? 'bg-white border-gray-200 hover:border-[#C9A84C]' : 'bg-[#0A0A0A] border-white/5 hover:border-[#C9A84C]/40'}`}
+                    >
+                      <div className="flex items-center justify-between gap-2 md:gap-3">
+                        <div>
+                          <p className={`font-semibold text-sm md:text-base ${isLight ? 'text-gray-900' : 'text-white'}`}>{order.id}</p>
+                          <p className={`mt-0.5 md:mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>{new Date(order.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-[#888888]" />
                       </div>
-                      <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-[#888888]" />
-                    </div>
-                    <div className="mt-2 md:mt-3 flex flex-wrap items-center justify-between gap-1.5 md:gap-2 text-xs md:text-sm">
-                      <span className="rounded-full bg-[#C9A84C]/10 px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-xs font-semibold capitalize text-[#C9A84C]">
-                        {order.status.replace('_', ' ')}
-                      </span>
-                      <span className={`font-semibold ${isLight ? 'text-gray-900' : 'text-white'}`}>NPR {order.total.toLocaleString()}</span>
-                    </div>
-                  </button>
-                ))
+                      <div className="mt-2 md:mt-3 flex flex-wrap items-center justify-between gap-1.5 md:gap-2 text-xs md:text-sm">
+                        <span className="rounded-full bg-[#C9A84C]/10 px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-xs font-semibold capitalize text-[#C9A84C]">
+                          {order.status.replace('_', ' ')}
+                        </span>
+                        <span className={`font-semibold ${isLight ? 'text-gray-900' : 'text-white'}`}>NPR {order.total.toLocaleString()}</span>
+                      </div>
+                    </button>
+                  ))}
+                </>
               )}
             </div>)}
 

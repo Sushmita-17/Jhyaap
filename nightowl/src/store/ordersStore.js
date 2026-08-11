@@ -281,6 +281,11 @@ export const useOrdersStore = create((set, get) => ({
   selectOrder: (id) => set({ selectedOrderId: id }),
 
   getOrdersCount: () => get().orders.length,
+
+  clearOrders: () => {
+    set({ orders: [] });
+    saveOrdersToStorage([]);
+  },
 }));
 
 

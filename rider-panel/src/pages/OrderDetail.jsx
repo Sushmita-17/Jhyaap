@@ -332,22 +332,23 @@ export default function OrderDetail() {
         ) : null}
       </section>
 
-      {/* OpenStreetMap & Live Location */}
-      <div className="rider-card p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="text-sm font-semibold">Delivery Map & Navigation</h2>
-            <p className="text-xs text-gray-400">OpenStreetMap Interactive Route</p>
+      {/* OpenStreetMap & Live Location - Hide when delivered */}
+      {order.status !== 'delivered' && (
+        <div className="rider-card p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-sm font-semibold">Delivery Map & Navigation</h2>
+              <p className="text-xs text-gray-400">OpenStreetMap Interactive Route</p>
+            </div>
+            {order.delivery_location_url && (
+              <button
+                onClick={openMaps}
+                className="px-3 py-1.5 bg-[#C9A84C] text-[#0F0B08] rounded-md text-xs font-semibold hover:bg-[#b8973b] transition"
+              >
+                External Navigation
+              </button>
+            )}
           </div>
-          {order.delivery_location_url && (
-            <button
-              onClick={openMaps}
-              className="px-3 py-1.5 bg-[#C9A84C] text-[#0F0B08] rounded-md text-xs font-semibold hover:bg-[#b8973b] transition"
-            >
-              External Navigation
-            </button>
-          )}
-        </div>
         
         {/* Delivery Progress Indicator */}
         {order.status === 'out_for_delivery' && deliveryProgress < 100 && (
@@ -426,6 +427,7 @@ export default function OrderDetail() {
           onStatusUpdate={handleStatusUpdate}
         />
       </div>
+      )}
 
       {/* Payment Card */}
       <div className="rider-card p-4 mb-4">
