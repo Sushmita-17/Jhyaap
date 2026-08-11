@@ -29,6 +29,12 @@ export const useCustomerStore = create((set, get) => ({
       ...address,
       id: generateAddressId(),
       deliveryFee: DELIVERY_FEE_BY_AREA[address.area] || 150,
+      // Ensure coordinates and address are preserved
+      lat: address.lat || null,
+      lng: address.lng || null,
+      locationUrl: address.locationUrl || '',
+      // Preserve the full address if provided (from reverse geocoding)
+      fullAddress: address.fullAddress || '',
     };
     set((state) => {
       const updated = [...state.addresses, newAddress];

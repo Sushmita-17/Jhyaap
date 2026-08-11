@@ -313,11 +313,11 @@ const getRiderIcon = (isPicking, isLive, heading = 45) => {
           />
 
           {/* Show all coverage areas (Kathmandu, Lalitpur, Bhaktapur) */}
-          {showAllAreas && DELIVERY_AREAS.map((area) => {
+          {showAllAreas && DELIVERY_AREAS.map((area, index) => {
                 const isDest = area.name === (destinationAreaName ?? (localDestination || destination).label);
             return (
               <CircleMarker
-                key={area.name}
+                key={`${area.city}-${area.name}-${index}`}
                 center={[area.lat, area.lng]}
                 radius={isDest ? 6 : 3}
                 pathOptions={{

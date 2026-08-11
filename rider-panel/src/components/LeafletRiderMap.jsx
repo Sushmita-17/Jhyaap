@@ -102,7 +102,8 @@ async function fetchRoute(from, to) {
 // ---------------------------------------------------------------
 // Status helpers
 // ---------------------------------------------------------------
-const ACTIVE_STATUSES = ['accepted', 'preparing', 'out_for_delivery', 'picked_up'];
+// Only start GPS tracking when rider actually picks up order and starts delivery
+const ACTIVE_STATUSES = ['out_for_delivery', 'picked_up'];
 
 function statusLabel(orderStatus, nearCustomer, arrived) {
   if (arrived || orderStatus === 'delivered') return 'Delivered';

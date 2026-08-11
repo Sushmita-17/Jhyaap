@@ -4,6 +4,7 @@ import EarningsSummaryCard from '../components/EarningsSummaryCard'
 import OrderCard from '../components/OrderCard'
 import ThemeToggle from '../components/ThemeToggle'
 import AvailabilitySwitch from '../components/AvailabilitySwitch'
+import LocationMapModal from '../components/LocationMapModal'
 import { useAuthStore } from '../store/authStore'
 import { getTodayRange } from '../utils/dateUtils'
 import { calculateTotal, formatCurrency } from '../utils/earningsExport'
@@ -23,6 +24,7 @@ import {
   ChevronRight,
   Percent,
   Award,
+  Navigation,
 } from 'lucide-react'
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://127.0.0.1:8001'
@@ -55,6 +57,8 @@ export default function Dashboard() {
   const [earnings, setEarnings] = useState([])
   const [loadingOrders, setLoadingOrders] = useState(false)
   const [activeFilter, setActiveFilter] = useState('available') // 'available' | 'active' | 'history'
+  const [showLocationModal, setShowLocationModal] = useState(false)
+  const [startingLocation, setStartingLocation] = useState(null)
 
   const fetchOrders = async () => {
     if (!rider?.id) return
@@ -108,6 +112,12 @@ export default function Dashboard() {
 
   const todayTotal = calculateTotal(earnings)
 
+  const handleLocationSelect = (lat, lng, address) => {
+    setStartingLocation({ lat, lng, address })
+    // TODO: Save to backend
+    console.log('Starting location set:', { lat, lng, address })
+  }
+
   const availableOrders = orders.filter((o) => o.status === 'pending' || o.status === 'available')
   const activeOrders = orders.filter((o) => ['accepted', 'picked_up', 'out_for_delivery'].includes(o.status))
   const historyOrders = orders.filter((o) => ['delivered', 'cancelled'].includes(o.status))
@@ -143,6 +153,14 @@ export default function Dashboard() {
 
 {/* Original availability switch + order-notification bell + theme toggle — top-right */}
           <div className="flex shrink-0 items-center gap-2">
+            <button
+              onClick={() => setShowLocationModal(true)}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-white text-gray-600 shadow-sm transition hover:text-[#8a6410]"
+              aria-label="Set Starting Location"
+              title="Set Starting Location"
+            >
+              <Navigation className="h-4 w-4" />
+            </button>
             <AvailabilitySwitch />
             <button
               onClick={() => navigate('/notifications-page')}
@@ -275,8 +293,8 @@ export default function Dashboard() {
                 <MapPin className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-bold">0 km</p>
-                <p className="text-[11px] text-gray-400">Distance</p>
+                <p className="text-sm font-bold">{startingLocation ? 'Set' : 'Not Set'}</p>
+                <p className="text-[11px] text-gray-400">Starting Location</p>
               </div>
             </div>
           </div>
@@ -359,6 +377,16 @@ export default function Dashboard() {
           ))}
         </div>
       </section>
+
+      {/* Location Map Modal */}
+      <LocationMapModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        initialLat={startingLocation?.lat}
+        initialLng={startingLocation?.lng}
+        onLocationSelect={handleLocationSelect}
+        isLight={false}
+      />
     </div>
   )
 }

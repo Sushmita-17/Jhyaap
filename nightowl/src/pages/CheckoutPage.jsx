@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CreditCard, MapPin, Plus, ShieldCheck, Sparkles, Navigation } from 'lucide-react';
+import { ArrowLeft, CreditCard, MapPin, Plus, ShieldCheck, Sparkles, Navigation, Map } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useCustomerStore } from '@/store/customerStore';
 import { useOrdersStore } from '@/store/ordersStore';
@@ -14,11 +14,14 @@ import {
   POINTS_PER_100_RS,
 } from '@/store/loyaltyStore';
 import { uploadPaymentScreenshot } from '@/lib/backendAPI';
+import { parseCoordinatesFromUrl, getCurrentGPSLocation, generateOSMUrl } from '@/lib/locationUtils';
+import LocationMapModal from '@/components/LocationMapModal';
 
 const paymentMethods = [
   { id: 'cod', label: 'Cash on Delivery', detail: 'Pay when your order arrives' },
   { id: 'esewa', label: 'eSewa', detail: 'Digital wallet payment' },
   { id: 'khalti', label: 'Khalti', detail: 'Fast mobile wallet checkout' },
+  { id: 'fonepay', label: 'Fonepay', detail: 'Scan to pay via Fonepay' },
 ];
 
 function CheckoutEmptyState({ message, actionLabel, onAction }) {
@@ -32,21 +35,6 @@ function CheckoutEmptyState({ message, actionLabel, onAction }) {
   );
 }
 
-function parseLocationUrl(value) {
-  if (!value) return {};
-  try {
-    const str = String(value);
-    const match = str.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
-    if (match) {
-      const lat = parseFloat(match[1]);
-      const lng = parseFloat(match[2]);
-      if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
-    }
-  } catch {
-    // fallback
-  }
-  return {};
-}
 
 export default function CheckoutPage() {
   const {
@@ -82,6 +70,7 @@ export default function CheckoutPage() {
   const [couponError, setCouponError] = useState('');
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [screenshotPreview, setScreenshotPreview] = useState(null);
+  const [mapModalOpen, setMapModalOpen] = useState(false);
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
@@ -96,12 +85,80 @@ export default function CheckoutPage() {
     if (newAddress.label && newAddress.area && newAddress.street) {
       const saved = addAddress({
         ...newAddress,
-        ...parseLocationUrl(newAddress.locationUrl),
+        ...parseCoordinatesFromUrl(newAddress.locationUrl),
         isDefault: addresses.length === 0,
       });
       setSelectedAddressId(saved.id);
       setNewAddress({ label: '', area: '', street: '', landmark: '', locationUrl: '', lat: null, lng: null });
       setShowAddForm(false);
+    }
+  };
+
+  const handleGPSLocation = async () => {
+    try {
+      const location = await getCurrentGPSLocation();
+      setNewAddress((current) => ({ 
+        ...current, 
+        lat: location.lat, 
+        lng: location.lng,
+        locationUrl: generateOSMUrl(location.lat, location.lng)
+      }));
+    } catch (error) {
+      alert(error.message || 'Unable to get GPS location');
+    }
+  };
+
+  const handleMapLocationSelect = (lat, lng, address = '') => {
+    setNewAddress((current) => ({ 
+      ...current, 
+      lat, 
+      lng,
+      locationUrl: generateOSMUrl(lat, lng),
+      fullAddress: address,
+      // If address is provided and street is empty, try to extract from address
+      street: current.street || (address ? address.split(',')[0] : current.street),
+    }));
+  };
+
+  const handleLocationUrlChange = (e) => {
+    const url = e.target.value;
+    setNewAddress({ 
+      ...newAddress, 
+      locationUrl: url,
+      ...parseCoordinatesFromUrl(url)
+    });
+  };
+
+  const handleViewAddressOnMap = (address) => {
+    if (address.lat && address.lng) {
+      setMapModalOpen(true);
+      setNewAddress({
+        label: address.label,
+        area: address.area,
+        street: address.street,
+        landmark: address.landmark || '',
+        locationUrl: address.locationUrl || generateOSMUrl(address.lat, address.lng),
+        lat: address.lat,
+        lng: address.lng,
+      });
+    } else if (address.locationUrl) {
+      const coords = parseCoordinatesFromUrl(address.locationUrl);
+      if (coords.lat && coords.lng) {
+        setMapModalOpen(true);
+        setNewAddress({
+          label: address.label,
+          area: address.area,
+          street: address.street,
+          landmark: address.landmark || '',
+          locationUrl: address.locationUrl,
+          lat: coords.lat,
+          lng: coords.lng,
+        });
+      } else {
+        window.open(address.locationUrl, '_blank');
+      }
+    } else {
+      alert('No location coordinates saved for this address');
     }
   };
 
@@ -126,7 +183,7 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress || !user) return;
-    if ((paymentMethod === 'esewa' || paymentMethod === 'khalti') && !paymentScreenshot) {
+    if ((paymentMethod === 'esewa' || paymentMethod === 'khalti' || paymentMethod === 'fonepay') && !paymentScreenshot) {
       alert('Please upload a payment screenshot for verification');
       return;
     }
@@ -134,7 +191,7 @@ export default function CheckoutPage() {
     setIsProcessing(true);
     
     let screenshotUrl = null;
-    if (paymentScreenshot && (paymentMethod === 'esewa' || paymentMethod === 'khalti')) {
+    if (paymentScreenshot && (paymentMethod === 'esewa' || paymentMethod === 'khalti' || paymentMethod === 'fonepay')) {
       try {
         const uploadResult = await uploadPaymentScreenshot(paymentScreenshot);
         screenshotUrl = uploadResult.path || uploadResult.url;
@@ -261,8 +318,23 @@ export default function CheckoutPage() {
                       isLight ? 'text-gray-500' : 'text-[#555555]'
                     }`}>{addr.landmark}</p>}
                   </div>
-                  <div className="text-right">
+                  <div className="flex flex-col items-end gap-2">
                     <span className="text-[10px] md:text-[11px] font-mono font-bold text-[#C9A84C]">Rs {addr.deliveryFee}</span>
+                    {(addr.lat && addr.lng || addr.locationUrl) && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewAddressOnMap(addr);
+                        }}
+                        className={`text-[9px] md:text-[10px] font-semibold flex items-center gap-1 transition-colors ${
+                          isLight ? 'text-blue-600 hover:text-blue-700' : 'text-blue-400 hover:text-blue-300'
+                        }`}
+                      >
+                        <Map className="h-3 w-3" />
+                        View Map
+                      </button>
+                    )}
                   </div>
                 </label>
               ))}
@@ -312,8 +384,8 @@ export default function CheckoutPage() {
                       <option value="" className={isLight ? 'bg-white text-gray-900' : 'bg-[#16110F] text-white'}>Select Area</option>
                       {['Kathmandu', 'Lalitpur', 'Bhaktapur'].map((city) => (
                         <optgroup key={city} label={city} className={isLight ? 'bg-gray-100 text-gray-900 font-bold' : 'bg-[#16110F] text-[#C9A84C] font-bold'}>
-                          {DELIVERY_AREAS.filter((a) => a.city === city).map((area) => (
-                            <option key={area.name} value={area.name} className={isLight ? 'bg-white text-gray-900' : 'bg-[#16110F] text-white'}>
+                          {DELIVERY_AREAS.filter((a) => a.city === city).map((area, areaIndex) => (
+                            <option key={`${city}-${area.name}-${areaIndex}`} value={area.name} className={isLight ? 'bg-white text-gray-900' : 'bg-[#16110F] text-white'}>
                               {area.name} (Rs {area.deliveryFee})
                             </option>
                           ))}
@@ -337,40 +409,41 @@ export default function CheckoutPage() {
                       type="url"
                       placeholder="Google/OSM map link (optional)"
                       value={newAddress.locationUrl}
-                      onChange={(e) => setNewAddress({ ...newAddress, locationUrl: e.target.value, ...parseLocationUrl(e.target.value) })}
+                      onChange={handleLocationUrlChange}
                       className={`min-w-0 flex-1 border rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:outline-none focus:border-[#C9A84C] transition-colors ${
                         isLight 
                           ? 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400' 
                           : 'bg-black/30 border-white/10 text-white placeholder:text-gray-500'
                       }`}
                     />
-                    <button 
-                      type="button" 
-                      onClick={() => {
-                        if (!navigator.geolocation) {
-                          alert('Geolocation is not supported by your browser');
-                          return;
-                        }
-                        navigator.geolocation.getCurrentPosition(
-                          ({ coords }) => {
-                            setNewAddress((current) => ({ ...current, lat: coords.latitude, lng: coords.longitude }));
-                            alert('GPS location retrieved successfully!');
-                          }, 
-                          () => alert('Please allow location access to use GPS'), 
-                          { enableHighAccuracy: true, timeout: 10000 }
-                        );
-                      }} 
-                      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
-                        newAddress.lat && newAddress.lng
-                          ? 'bg-emerald-600 text-white hover:bg-emerald-500'
-                          : isLight
-                            ? 'bg-[#C9A84C] text-black hover:bg-[#b5953e] shadow-[0_2px_10px_rgba(201,168,76,0.3)]'
-                            : 'bg-[#C9A84C] text-black hover:bg-[#e0bb56] shadow-[0_2px_15px_rgba(201,168,76,0.2)]'
-                      }`}
-                    >
-                      <Navigation className={`w-4 h-4 ${newAddress.lat ? 'animate-bounce' : ''}`} />
-                      {newAddress.lat && newAddress.lng ? 'GPS Location Set ✓' : 'Use Current GPS'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button 
+                        type="button" 
+                        onClick={handleGPSLocation}
+                        className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
+                          newAddress.lat && newAddress.lng
+                            ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+                            : isLight
+                              ? 'bg-[#C9A84C] text-black hover:bg-[#b5953e] shadow-[0_2px_10px_rgba(201,168,76,0.3)]'
+                              : 'bg-[#C9A84C] text-black hover:bg-[#e0bb56] shadow-[0_2px_15px_rgba(201,168,76,0.2)]'
+                        }`}
+                      >
+                        <Navigation className={`w-4 h-4 ${newAddress.lat ? 'animate-bounce' : ''}`} />
+                        {newAddress.lat && newAddress.lng ? 'GPS ✓' : 'GPS'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMapModalOpen(true)}
+                        className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
+                          isLight
+                            ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-[0_2px_10px_rgba(37,99,235,0.3)]'
+                            : 'bg-blue-600 text-white hover:bg-blue-500 shadow-[0_2px_15px_rgba(37,99,235,0.2)]'
+                        }`}
+                      >
+                        <Map className="w-4 h-4" />
+                        Map
+                      </button>
+                    </div>
                   </div>
                   <input
                     type="text"
@@ -445,7 +518,7 @@ export default function CheckoutPage() {
               ))}
             </div>
 
-            {(paymentMethod === 'esewa' || paymentMethod === 'khalti') && (
+            {(paymentMethod === 'esewa' || paymentMethod === 'khalti' || paymentMethod === 'fonepay') && (
               <div className={`mt-4 md:mt-6 border rounded-2xl p-4 md:p-6 ${
                 isLight ? 'bg-gray-50 border-gray-200' : 'bg-black/20 border-white/5'
               }`}>
@@ -455,7 +528,7 @@ export default function CheckoutPage() {
                 <p className={`text-[10px] md:text-[11px] mb-3 md:mb-4 ${
                   isLight ? 'text-gray-600' : 'text-[#888888]'
                 }`}>
-                  Please upload a screenshot of your {paymentMethod === 'esewa' ? 'eSewa' : 'Khalti'} payment for verification.
+                  Please upload a screenshot of your {paymentMethod === 'esewa' ? 'eSewa' : paymentMethod === 'khalti' ? 'Khalti' : 'Fonepay'} payment for verification.
                 </p>
                 
                 {screenshotPreview ? (
@@ -723,6 +796,16 @@ export default function CheckoutPage() {
           </div>
         </aside>
       </div>
+
+      {/* Location Map Modal */}
+      <LocationMapModal
+        isOpen={mapModalOpen}
+        onClose={() => setMapModalOpen(false)}
+        initialLat={newAddress.lat}
+        initialLng={newAddress.lng}
+        onLocationSelect={handleMapLocationSelect}
+        isLight={isLight}
+      />
 
       {/* MOBILE STICKY CTA */}
       <div className={`fixed inset-x-0 bottom-0 z-40 border-t px-3 md:px-4 py-2.5 md:py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.4)] lg:hidden backdrop-blur-md ${

@@ -349,6 +349,16 @@ def rider_accept_order(request: Request, rider_id: str, order_id: str):
             notification_type="order_status",
             order_id=order_id
         )
+        
+        # Also send notification to admin
+        create_notification(
+            user_id="admin",
+            user_type="admin",
+            title="Rider Accepted Order",
+            message=f"Rider {rider['name']} has accepted order #{order_id}. Ready for pickup.",
+            notification_type="rider_acceptance",
+            order_id=order_id
+        )
     
     return {"message": "Order accepted successfully. Ready for pickup.", "success": True}
 
@@ -1283,6 +1293,141 @@ def get_order_status_history(request: Request, order_id: str):
 def get_delivery_rating(request: Request, order_id: str):
     rating = fetch_delivery_rating(order_id)
     return rating or {"order_id": order_id, "rating": None, "review": None}
+
+
+@router.post("/{order_id}/notify-arrival")
+@limiter.limit(get_rate_limit("general"))
+def notify_customer_arrival(request: Request, order_id: str, payload: dict = None):
+    """
+    Rider notifies customer that they are arriving at the destination.
+    This is called when rider reaches 'near_destination' status.
+    Rate limited to 100 requests per minute.
+    """
+    order = fetch_order_by_id(order_id)
+    if not order:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Order with ID '{order_id}' not found."
+        )
+    
+    # Get rider name from payload or fetch from riders table
+    rider_name = "Rider"
+    if payload and payload.get("rider_name"):
+        rider_name = payload["rider_name"]
+    elif order.get("rider_id"):
+        from app.db.database import fetch_all_riders
+        riders = fetch_all_riders()
+        rider = next((r for r in riders if r["id"] == order["rider_id"]), None)
+        if rider:
+            rider_name = rider["name"]
+    
+    # Create notification for customer
+    create_notification(
+        user_id=order["customer_id"],
+        user_type="customer",
+        title="Rider Arriving!",
+        message=f"Your rider {rider_name} is arriving at your location. Please be ready to receive your order.",
+        notification_type="rider_arrival",
+        order_id=order_id
+    )
+    
+    # Mark arrival notification as sent in order
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        if is_postgres(conn):
+            cursor.execute(
+                "UPDATE orders SET arrival_notification_sent = true, updated_at = %s WHERE id = %s",
+                (datetime.now().isoformat(), order_id)
+            )
+        else:
+            cursor.execute(
+                "UPDATE orders SET arrival_notification_sent = 1, updated_at = ? WHERE id = ?",
+                (datetime.now().isoformat(), order_id)
+            )
+        conn.commit()
+    except Exception as e:
+        # Column might not exist yet, that's okay
+        print(f"Warning: Could not mark arrival notification as sent: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return {"message": "Customer notified of rider arrival", "success": True}
+
+
+@router.get("/{order_id}/notifications")
+@limiter.limit(get_rate_limit("general"))
+def get_order_notifications(request: Request, order_id: str):
+    """
+    Get notifications for a specific order, including arrival notifications.
+    Rate limited to 100 requests per minute.
+    """
+    order = fetch_order_by_id(order_id)
+    if not order:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Order with ID '{order_id}' not found."
+        )
+    
+    # Check if arrival notification has been sent
+    has_arrival_notification = False
+    rider_name = None
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        if is_postgres(conn):
+            cursor.execute(
+                "SELECT arrival_notification_sent, rider_id FROM orders WHERE id = %s",
+                (order_id,)
+            )
+        else:
+            cursor.execute(
+                "SELECT arrival_notification_sent, rider_id FROM orders WHERE id = ?",
+                (order_id,)
+            )
+        
+        row = cursor.fetchone()
+        if row:
+            if isinstance(row, dict):
+                has_arrival_notification = row.get("arrival_notification_sent", False)
+                rider_id = row.get("rider_id")
+            else:
+                has_arrival_notification = row[0] if row else False
+                rider_id = row[1] if len(row) > 1 else None
+            
+            # Get rider name if arrival notification was sent
+            if has_arrival_notification and rider_id:
+                from app.db.database import fetch_all_riders
+                riders = fetch_all_riders()
+                rider = next((r for r in riders if r["id"] == rider_id), None)
+                if rider:
+                    rider_name = rider["name"]
+    except Exception as e:
+        # Column might not exist yet, check notifications table instead
+        print(f"Warning: Could not check arrival_notification_sent column: {e}")
+        
+        # Fallback: check notifications table
+        from app.db.supabase_client import get_supabase_client
+        supabase = get_supabase_client()
+        try:
+            result = supabase.table("notifications").select("*").eq("order_id", order_id).eq("type", "rider_arrival").eq("is_read", False).execute()
+            if result.data:
+                has_arrival_notification = True
+                if result.data[0].get("data", {}).get("rider_name"):
+                    rider_name = result.data[0]["data"]["rider_name"]
+        except Exception as e2:
+            print(f"Could not check notifications table: {e2}")
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return {
+        "order_id": order_id,
+        "hasArrivalNotification": has_arrival_notification,
+        "rider_name": rider_name
+    }
 
 
 @router.post("/{order_id}/rating")

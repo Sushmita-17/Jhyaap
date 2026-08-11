@@ -1,4 +1,5 @@
 ﻿import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { adminPath } from '@/lib/adminRoutes';
 import {
   Package,
@@ -15,6 +16,8 @@ import { useOrdersStore } from '@/store/ordersStore';
 import { useAdminStore } from '@/store/adminStore';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { useThemeStore } from '@/store/themeStore';
+import FloatingNotification from '@/components/FloatingNotification';
+import { requestNotificationPermission, showBrowserNotification } from '@/lib/notificationUtils';
 
 function StatCard({
   label,
@@ -76,6 +79,47 @@ export default function AdminDashboardPage() {
   const { newOrderCount, dismissNotifications } = useAdminNotifications();
   const { theme } = useThemeStore();
   const isLight = theme === 'light';
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationData, setNotificationData] = useState({ title: '', message: '', type: 'info' });
+
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
+
+  // Poll for admin notifications
+  useEffect(() => {
+    const checkForNotifications = async () => {
+      try {
+        const response = await fetch('/api/v1/notifications/admin');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.notifications && data.notifications.length > 0) {
+            const latestNotification = data.notifications[0];
+            if (!latestNotification.is_read) {
+              setNotificationData({
+                title: latestNotification.title,
+                message: latestNotification.message,
+                type: latestNotification.type === 'rider_acceptance' ? 'rider' : 'order'
+              });
+              setShowNotification(true);
+              
+              // Also show browser notification
+              showBrowserNotification(latestNotification.title, latestNotification.message, {
+                onClick: () => window.focus()
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking notifications:', error);
+      }
+    };
+
+    // Check every 15 seconds
+    const interval = setInterval(checkForNotifications, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const inStock = products.filter((p) => p.inStock).length;
   const outOfStock = products.length - inStock;
@@ -376,6 +420,16 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Floating Notification */}
+      <FloatingNotification
+        show={showNotification}
+        onClose={() => setShowNotification(false)}
+        title={notificationData.title}
+        message={notificationData.message}
+        type={notificationData.type}
+        duration={8000}
+      />
     </div>
   );
 }

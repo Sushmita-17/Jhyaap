@@ -121,12 +121,38 @@ export default function OrderDetail() {
     if (statusMapping[status] && order?.status !== statusMapping[status]) {
       setOrder(prev => ({ ...prev, status: statusMapping[status] }))
       
+      // When near destination, send notification to customer
+      if (status === 'near_destination') {
+        sendCustomerNotification()
+      }
+      
       // When order is delivered, automatically show payment modal
       if (status === 'delivered') {
         setTimeout(() => {
           setShowPaymentModal(true)
         }, 1000)
       }
+    }
+  }
+
+  const sendCustomerNotification = async () => {
+    try {
+      const token = localStorage.getItem('jhyaap_rider_token')
+      await fetch(BACKEND_API_URL + '/api/v1/orders/' + encodeURIComponent(id) + '/notify-arrival', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: 'Bearer ' + token } : {}) 
+        },
+        body: JSON.stringify({
+          message: 'Rider is arriving at your location',
+          rider_name: rider?.name,
+          order_id: id
+        })
+      })
+      console.log('Customer notification sent')
+    } catch (err) {
+      console.error('Failed to send customer notification:', err)
     }
   }
 

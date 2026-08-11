@@ -56,6 +56,7 @@ export default function AdminRidersPage() {
     password: '',
     email: '',
     vehicleType: 'bike',
+    vehicleNumber: '',
     status: 'active',
   });
 
@@ -84,6 +85,7 @@ export default function AdminRidersPage() {
         password: rider.password,
         email: rider.email || '',
         vehicleType: rider.vehicleType,
+        vehicleNumber: rider.vehicleNumber || '',
         status: rider.status,
       });
       setEditingId(rider.id);
@@ -94,6 +96,7 @@ export default function AdminRidersPage() {
         password: '',
         email: '',
         vehicleType: 'bike',
+        vehicleNumber: '',
         status: 'active',
       });
       setEditingId(null);
@@ -112,6 +115,7 @@ export default function AdminRidersPage() {
         const saved = await updateBackendRider(editingId, {
           name: formData.riderName,
           vehicle_type: formData.vehicleType,
+          vehicle_number: formData.vehicleNumber,
           status: formData.status,
           ...(formData.password ? { password: formData.password } : {}),
         });
@@ -120,6 +124,7 @@ export default function AdminRidersPage() {
           riderName: saved.name || formData.riderName,
           phoneNumber: saved.phone_number || formData.phoneNumber,
           vehicleType: saved.vehicle_type || formData.vehicleType,
+          vehicleNumber: saved.vehicle_number || formData.vehicleNumber,
           status: saved.status || formData.status,
         } : rider));
       } else {
@@ -128,6 +133,7 @@ export default function AdminRidersPage() {
           phone_number: formData.phoneNumber,
           password: formData.password,
           vehicle_type: formData.vehicleType,
+          vehicle_number: formData.vehicleNumber,
           status: formData.status,
         });
         setRiders((prev) => [{
@@ -137,6 +143,7 @@ export default function AdminRidersPage() {
           password: '',
           email: '',
           vehicleType: saved.vehicle_type || formData.vehicleType,
+          vehicleNumber: saved.vehicle_number || formData.vehicleNumber,
           status: saved.status || formData.status,
           createdAt: saved.created_at || new Date().toISOString(),
           earnings: saved.total_earnings || 0,
@@ -342,6 +349,13 @@ export default function AdminRidersPage() {
                     isLight ? 'text-gray-900' : 'text-gray-100'
                   }`}
                 >
+                  Vehicle No.
+                </th>
+                <th
+                  className={`px-6 py-3 text-left text-sm font-semibold ${
+                    isLight ? 'text-gray-900' : 'text-gray-100'
+                  }`}
+                >
                   Status
                 </th>
                 <th
@@ -423,6 +437,9 @@ export default function AdminRidersPage() {
                     </td>
                     <td className={`px-6 py-4 capitalize ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>
                       {rider.vehicleType}
+                    </td>
+                    <td className={`px-6 py-4 ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>
+                      {rider.vehicleNumber || '-'}
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -613,6 +630,29 @@ export default function AdminRidersPage() {
                     <option value="scooter">Scooter</option>
                     <option value="car">Car</option>
                   </select>
+                </div>
+
+                <div>
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      isLight ? 'text-gray-700' : 'text-gray-300'
+                    }`}
+                  >
+                    Vehicle Number *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.vehicleNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, vehicleNumber: e.target.value })
+                    }
+                    className={`w-full px-4 py-2 rounded-lg border outline-none ${
+                      isLight
+                        ? 'bg-white border-gray-300 text-gray-900'
+                        : 'bg-gray-700 border-gray-600 text-white'
+                    }`}
+                    placeholder="BA 1 PA 1234"
+                  />
                 </div>
 
                 <div>

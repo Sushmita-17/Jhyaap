@@ -280,3 +280,33 @@ def clear_all_notifications(
         )
 
 
+@router.get("/admin")
+@limiter.limit(get_rate_limit("general"))
+def get_admin_notifications(
+    request: Request,
+    is_read: Optional[bool] = None,
+    limit: int = 50,
+    offset: int = 0
+):
+    """
+    Get all notifications for admin using Supabase.
+    Rate limited to 100 requests per minute.
+    """
+    supabase = get_supabase_client()
+    
+    try:
+        query = supabase.table("notifications").select("*").eq("user_id", "admin").eq("user_type", "admin")
+        
+        if is_read is not None:
+            query = query.eq("is_read", is_read)
+        
+        result = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+        return {"notifications": result.data if result.data else []}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch admin notifications: {str(e)}"
+        )
+
+
+
