@@ -132,6 +132,18 @@ function FitMap({ store, destination, rider }) {
   return null;
 }
 
+function MapController({ onMapReady }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (onMapReady) {
+      onMapReady(map);
+    }
+  }, [map, onMapReady]);
+  
+  return null;
+}
+
 export default function DeliveryMap({ riders = [], selectedRider = null, onRiderSelect = null, height = '100%' }) {
   const { theme } = useThemeStore();
   const isLight = theme === 'light';
@@ -139,6 +151,7 @@ export default function DeliveryMap({ riders = [], selectedRider = null, onRider
   const [isFullMap, setIsFullMap] = useState(false);
   const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [animatedPosition, setAnimatedPosition] = useState(null);
+  const [mapInstance, setMapInstance] = useState(null);
 
   const activeRider = clickedRider || selectedRider || riders.find((rider) => rider.status === 'busy') || riders[0] || null;
   const destination = activeRider?.destinationCoords || DEFAULT_DESTINATION;
@@ -188,6 +201,7 @@ export default function DeliveryMap({ riders = [], selectedRider = null, onRider
         />
         <ResizeMap isFullMap={isFullMap} />
         <FitMap store={STORE_LOCATION} destination={destination} rider={displayedRider?.coordinates} />
+        <MapController onMapReady={setMapInstance} />
         <Marker position={[STORE_LOCATION.lat, STORE_LOCATION.lng]} icon={storeIcon} />
         <Marker position={[destination.lat, destination.lng]} icon={destinationIcon} />
         {routeCoordinates.length > 1 && (
@@ -207,42 +221,42 @@ export default function DeliveryMap({ riders = [], selectedRider = null, onRider
       </MapContainer>
 
         {/* Bottom-centered delivery info card (matches customer screenshot) */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 bottom-6 z-[600] pointer-events-auto">
-          <div className="w-[720px] max-w-[92vw] bg-white rounded-2xl shadow-xl p-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+        <div className="absolute left-1/2 transform -translate-x-1/2 bottom-16 z-[600] pointer-events-auto">
+          <div className="w-[420px] max-w-[92vw] bg-white rounded-2xl shadow-xl p-2.5 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
                 <img src={BIKE_RIDER_MARKER_ICON} alt="Rider" className="w-full h-full object-cover" />
               </div>
               <div>
-                <div className="text-sm font-semibold text-gray-900">{activeRider?.name || 'Ramesh Tamang'} <span className="text-amber-400">★ 4.8</span></div>
-                <div className="text-xs text-gray-500 mt-1">{activeRider?.phone || '9801234567'} · {activeRider?.vehicle || 'Ba 95 Pa 1234'}</div>
+                <div className="text-xs font-semibold text-gray-900">{activeRider?.name || 'Raj Thapa'} <span className="text-amber-400 text-[10px]">★ 4.8</span></div>
+                <div className="text-[10px] text-gray-500 mt-0.5">{activeRider?.phone || '9801234567'} · {activeRider?.vehicle || 'Ba 95 Pa 1234'}</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
               <div className="text-center">
-                <div className="text-xs text-gray-500">Distance</div>
-                <div className="text-lg font-bold text-gray-900">{routeCoordinates?.length ? `${Math.round(routeCoordinates.reduce((acc, p, i, arr) => acc + (i>0? Math.hypot((p.lat - arr[i-1].lat)*111000, (p.lng - arr[i-1].lng)*100000):0),0))} m` : Math.round(activeRider?.distance||3200)} </div>
+                <div className="text-[10px] text-gray-500">Distance</div>
+                <div className="text-sm font-bold text-gray-900">{routeCoordinates?.length ? `${Math.round(routeCoordinates.reduce((acc, p, i, arr) => acc + (i>0? Math.hypot((p.lat - arr[i-1].lat)*111000, (p.lng - arr[i-1].lng)*100000):0),0))} m` : Math.round(activeRider?.distance||3200)} </div>
               </div>
               <div className="text-center">
-                <div className="text-xs text-gray-500">ETA</div>
-                <div className="text-lg font-bold text-gray-900">{routeCoordinates?.length ? `${Math.round((routeCoordinates.length>0? (routeCoordinates.length/100):12))} min` : `${Math.round(activeRider?.eta||12)} min`}</div>
+                <div className="text-[10px] text-gray-500">ETA</div>
+                <div className="text-sm font-bold text-gray-900">{routeCoordinates?.length ? `${Math.round((routeCoordinates.length>0? (routeCoordinates.length/100):12))} min` : `${Math.round(activeRider?.eta||12)} min`}</div>
               </div>
             </div>
 
             <div className="flex-1">
-              <div className="flex items-center justify-end gap-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="inline-flex items-center justify-center w-8 h-8 bg-green-50 rounded-full text-green-600">🍽️</span>
-                  <div className="text-xs">Restaurant<br/><span className="font-semibold text-gray-800">Confirmed</span></div>
+              <div className="flex items-center justify-end gap-1.5">
+                <div className="flex items-center gap-1 text-[10px] text-gray-600">
+                  <span className="inline-flex items-center justify-center w-5 h-5 bg-green-50 rounded-full text-green-600 text-[8px]">🍽️</span>
+                  <div className="text-[9px] leading-tight">Liquor<br/><span className="font-semibold text-gray-800">Confirmed</span></div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="inline-flex items-center justify-center w-8 h-8 bg-gray-50 rounded-full text-gray-700">📦</span>
-                  <div className="text-xs">Order<br/><span className="font-semibold text-gray-800">Picked Up</span></div>
+                <div className="flex items-center gap-1 text-[10px] text-gray-600">
+                  <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-50 rounded-full text-gray-700 text-[8px]">📦</span>
+                  <div className="text-[9px] leading-tight">Order<br/><span className="font-semibold text-gray-800">{activeRider?.status === 'assigned' || activeRider?.status === 'picking' ? 'Pending' : 'Picked Up'}</span></div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 rounded-full text-emerald-600">🛵</span>
-                  <div className="text-xs">Status<br/><span className="font-semibold text-gray-800">In Transit</span></div>
+                <div className="flex items-center gap-1 text-[10px] text-gray-600">
+                  <span className="inline-flex items-center justify-center w-5 h-5 bg-emerald-50 rounded-full text-emerald-600 text-[8px]">🛵</span>
+                  <div className="text-[9px] leading-tight">Status<br/><span className="font-semibold text-gray-800">In Transit</span></div>
                 </div>
               </div>
             </div>
@@ -266,8 +280,8 @@ export default function DeliveryMap({ riders = [], selectedRider = null, onRider
         <button type="button" onClick={() => setIsFullMap((value) => !value)} className="rounded-xl bg-black/80 p-3 text-white shadow-lg hover:bg-black">
           {isFullMap ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
         </button>
-        <button type="button" onClick={() => document.querySelector('.leaflet-container')?.zoomIn()} className="rounded-xl bg-black/80 p-3 text-white shadow-lg hover:bg-black"><ZoomIn className="h-4 w-4" /></button>
-        <button type="button" onClick={() => document.querySelector('.leaflet-container')?.zoomOut()} className="rounded-xl bg-black/80 p-3 text-white shadow-lg hover:bg-black"><ZoomOut className="h-4 w-4" /></button>
+        <button type="button" onClick={() => mapInstance?.zoomIn()} className="rounded-xl bg-black/80 p-3 text-white shadow-lg hover:bg-black"><ZoomIn className="h-4 w-4" /></button>
+        <button type="button" onClick={() => mapInstance?.zoomOut()} className="rounded-xl bg-black/80 p-3 text-white shadow-lg hover:bg-black"><ZoomOut className="h-4 w-4" /></button>
       </div>
     </div>
   );

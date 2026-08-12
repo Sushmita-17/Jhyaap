@@ -91,7 +91,8 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const checkForNotifications = async () => {
       try {
-        const response = await fetch('/api/v1/notifications/admin');
+        const API_BASE = import.meta.env.VITE_BACKEND_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8001';
+        const response = await fetch(`${API_BASE}/api/v1/notifications/admin`);
         if (response.ok) {
           const data = await response.json();
           if (data.notifications && data.notifications.length > 0) {
@@ -103,7 +104,7 @@ export default function AdminDashboardPage() {
                 type: latestNotification.type === 'rider_acceptance' ? 'rider' : 'order'
               });
               setShowNotification(true);
-              
+
               // Also show browser notification
               showBrowserNotification(latestNotification.title, latestNotification.message, {
                 onClick: () => window.focus()

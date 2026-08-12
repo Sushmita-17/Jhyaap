@@ -265,6 +265,20 @@ def init_db():
             )
             """)
             
+            # Admin users table
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS admin_users (
+                id VARCHAR PRIMARY KEY,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                role VARCHAR(50) DEFAULT 'admin',
+                is_active BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """)
+            
             # Create indexes for performance
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_rider_credentials_phone ON rider_credentials(phone_number)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_orders_rider_id ON orders(rider_id)")
@@ -482,6 +496,20 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+            )
+            """)
+            
+            # Admin users table (SQLite)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS admin_users (
+                id TEXT PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                name TEXT NOT NULL,
+                role TEXT DEFAULT 'admin',
+                is_active INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """)
             
@@ -1100,8 +1128,11 @@ def fetch_orders_by_rider(rider_id: str, status: Optional[str] = None) -> List[D
     params = [rider_id]
     
     if status:
-        sql += " AND status = ?"
-        params.append(status)
+        # Handle comma-separated status values
+        status_list = [s.strip() for s in status.split(',')]
+        placeholders = ','.join(['?' for _ in status_list])
+        sql += f" AND status IN ({placeholders})"
+        params.extend(status_list)
         
     sql += " ORDER BY created_at DESC"
     

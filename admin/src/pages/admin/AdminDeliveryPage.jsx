@@ -5,7 +5,7 @@ import AdminBackButton from '@/components/admin/AdminBackButton';
 import { useThemeStore } from '@/store/themeStore';
 import { notificationService } from '@/lib/notifications';
 import DeliveryMap from '@/components/DeliveryMap';
-import { getBackendOrders, getBackendRiders } from '@/lib/backendAPI';
+import { getBackendOrders, getBackendRiders, assignRiderToOrder } from '@/lib/backendAPI';
 import { adminPath } from '@/lib/adminRoutes';
 import { STORE_LOCATION } from '@/lib/deliveryLocations';
 
@@ -166,19 +166,25 @@ export default function AdminDeliveryPageFixed() {
     }
   };
 
-  const assignRider = (orderId, riderId) => {
+  const assignRider = async (orderId, riderId) => {
     const order = orders.find(o => o.id === orderId);
     const rider = riders.find(r => r.id === riderId);
     
     if (order && rider) {
-      order.riderId = riderId;
-      order.status = 'assigned';
-      order.estimatedTime = `${Math.floor(Math.random() * 20 + 10)} mins`;
-      rider.status = 'busy';
-      rider.activeOrders += 1;
-      
-      notificationService.showOrderNotification(order, 'assigned');
-      console.log(`Customer notification sent: Order ${order.orderId} assigned to ${rider.name}`);
+      try {
+        await assignRiderToOrder(orderId, riderId);
+        order.riderId = riderId;
+        order.status = 'assigned';
+        order.estimatedTime = `${Math.floor(Math.random() * 20 + 10)} mins`;
+        rider.status = 'busy';
+        rider.activeOrders += 1;
+        
+        notificationService.showOrderNotification(order, 'assigned');
+        console.log(`Customer notification sent: Order ${order.orderId} assigned to ${rider.name}`);
+      } catch (error) {
+        console.error('Failed to assign rider:', error);
+        alert('Failed to assign rider. Please try again.');
+      }
     }
   };
 

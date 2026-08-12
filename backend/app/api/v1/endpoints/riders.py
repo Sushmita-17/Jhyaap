@@ -12,17 +12,15 @@ from app.db.database import (
 from app.models.rider import RiderCreate, RiderUpdate, RiderResponse
 from app.middleware.rate_limiter import limiter, get_rate_limit
 from app.middleware.auth import get_current_admin
-from app.core.auth import require_rider_admin
 
 router = APIRouter(prefix="/riders", tags=["riders"])
 
 
 @router.get("", response_model=List[RiderResponse])
-@limiter.limit(get_rate_limit("admin"))
+@limiter.limit(get_rate_limit("general"))
 def get_riders(request: Request, status: Optional[str] = None):
     """
     Get all riders, optionally filtered by status.
-    Admin-only endpoint (authentication middleware should be added).
     Rate limited to 50 requests per minute.
     """
     try:
@@ -37,8 +35,8 @@ def get_riders(request: Request, status: Optional[str] = None):
 
 @router.get("/{rider_id}", response_model=RiderResponse)
 @limiter.limit(get_rate_limit("admin"))
-def get_rider(request: Request, rider_id: str):
-    """Get a specific rider by ID. Rate limited to 50 requests per minute."""
+def get_rider(request: Request, rider_id: str, current_admin: dict = Depends(get_current_admin)):
+    """Get a specific rider by ID. Admin-only. Rate limited to 50 requests per minute."""
     rider = fetch_rider_by_id(rider_id)
     if not rider:
         raise HTTPException(
@@ -50,7 +48,7 @@ def get_rider(request: Request, rider_id: str):
 
 @router.post("", response_model=RiderResponse)
 @limiter.limit(get_rate_limit("admin"))
-def create_rider(request: Request, payload: RiderCreate, current_admin: dict = Depends(require_rider_admin)):
+def create_rider(request: Request, payload: RiderCreate, current_admin: dict = Depends(get_current_admin)):
     """
     Create a new rider credential.
     Password is automatically hashed before storage.
@@ -104,7 +102,7 @@ def create_rider(request: Request, payload: RiderCreate, current_admin: dict = D
 
 @router.put("/{rider_id}", response_model=RiderResponse)
 @limiter.limit(get_rate_limit("admin"))
-def update_rider(request: Request, rider_id: str, payload: RiderUpdate, current_admin: dict = Depends(require_rider_admin)):
+def update_rider(request: Request, rider_id: str, payload: RiderUpdate, current_admin: dict = Depends(get_current_admin)):
     """Update an existing rider's details. Rate limited to 50 requests per minute."""
     rider = fetch_rider_by_id(rider_id)
     if not rider:
@@ -143,7 +141,7 @@ def update_rider(request: Request, rider_id: str, payload: RiderUpdate, current_
 
 @router.delete("/{rider_id}")
 @limiter.limit(get_rate_limit("admin"))
-def delete_rider_endpoint(request: Request, rider_id: str, current_admin: dict = Depends(require_rider_admin)):
+def delete_rider_endpoint(request: Request, rider_id: str, current_admin: dict = Depends(get_current_admin)):
     """Delete a rider by ID. Rate limited to 50 requests per minute."""
     deleted = delete_rider(rider_id)
     if not deleted:

@@ -66,6 +66,7 @@ export function createBackendRider(rider) {
     phone_number: rider.phone_number,
     password: rider.password,
     vehicle_type: rider.vehicle_type,
+    vehicle_number: rider.vehicle_number,
     status: rider.status || 'active',
   }) });
 }
@@ -76,6 +77,13 @@ export function updateBackendRider(id, rider) {
 
 export function deleteBackendRider(id) {
   return request('/api/v1/riders/' + encodeURIComponent(id), { method: 'DELETE' });
+}
+
+export function assignRiderToOrder(orderId, riderId) {
+  return request('/api/v1/orders/' + encodeURIComponent(orderId), { 
+    method: 'PUT', 
+    body: JSON.stringify({ rider_id: riderId }) 
+  });
 }
 
 export function getBackendRiders() {
