@@ -229,7 +229,7 @@ export default function OrderDetail() {
           ? BACKEND_API_URL + '/api/v1/orders/rider/' + encodeURIComponent(riderId) + '/pickup/' + encodeURIComponent(id)
           : BACKEND_API_URL + '/api/v1/orders/' + encodeURIComponent(id) + '/status?status=' + encodeURIComponent(newStatus)
       const response = await fetch(endpoint, {
-        method: newStatus === 'accepted' || newStatus === 'out_for_delivery' ? 'POST' : 'PATCH',
+        method: newStatus === 'accepted' || newStatus === 'picked_up' ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
       })
       if (!response.ok) throw new Error('Failed to update order status')
@@ -274,7 +274,7 @@ export default function OrderDetail() {
   }
 
   return (
-    <div className="rider-page pb-24">
+    <div className="rider-page pb-24 relative">
       <button
         onClick={() => navigate('/dashboard')}
         className="text-sm text-gray-400 mb-4 hover:text-gray-200"
@@ -421,6 +421,8 @@ export default function OrderDetail() {
           destinationLng={order.destinationCoords?.lng ?? order.address?.longitude ?? order.longitude}
           destinationName={order.address?.street || order.address?.area || 'Customer Delivery Address'}
           destinationLocationUrl={order.delivery_location_url}
+          customerName={order.customer_name || order.customer?.name}
+          customerPhone={order.customer?.phone_number}
           manualProgress={deliveryProgress}
           height="260px"
           onProgressUpdate={handleProgressUpdate}

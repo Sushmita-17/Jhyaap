@@ -1219,17 +1219,23 @@ def save_order(order: Dict[str, Any]) -> Dict[str, Any]:
     """Create or update an order."""
     conn = get_connection()
     cursor = get_cursor(conn)
-    
+
     # Serialize items to JSON
     items_json = json.dumps(order["items"]) if isinstance(order["items"], list) else order["items"]
-    
+
     try:
         if is_postgres(conn):
+            # Auto-assign order_number if not provided
+            if "order_number" not in order or order["order_number"] is None:
+                cursor.execute("SELECT nextval('order_number_seq')")
+                order_number = cursor.fetchone()[0]
+                order["order_number"] = order_number
+
             cursor.execute("""
             INSERT INTO orders (
-                id, customer_id, rider_id, status, items, subtotal, delivery_fee, 
+                id, order_number, customer_id, rider_id, status, items, subtotal, delivery_fee,
                 tax, total, delivery_address, delivery_notes
-            ) VALUES (%(id)s, %(customer_id)s, %(rider_id)s, %(status)s, %(items)s, 
+            ) VALUES (%(id)s, %(order_number)s, %(customer_id)s, %(rider_id)s, %(status)s, %(items)s,
                       %(subtotal)s, %(delivery_fee)s, %(tax)s, %(total)s, %(delivery_address)s, %(delivery_notes)s)
             ON CONFLICT (id) DO UPDATE SET
                 status = EXCLUDED.status,
@@ -1237,13 +1243,19 @@ def save_order(order: Dict[str, Any]) -> Dict[str, Any]:
                 updated_at = CURRENT_TIMESTAMP
             """, {**order, "items": items_json})
         else:
+            # Auto-assign order_number if not provided
+            if "order_number" not in order or order["order_number"] is None:
+                cursor.execute("SELECT MAX(order_number) FROM orders")
+                max_num = cursor.fetchone()[0] or 99
+                order["order_number"] = max_num + 1
+
             cursor.execute("""
             INSERT OR REPLACE INTO orders (
-                id, customer_id, rider_id, status, items, subtotal, delivery_fee, 
+                id, order_number, customer_id, rider_id, status, items, subtotal, delivery_fee,
                 tax, total, delivery_address, delivery_notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                order["id"], order["customer_id"], order["rider_id"], order["status"],
+                order["id"], order["order_number"], order["customer_id"], order["rider_id"], order["status"],
                 items_json, order["subtotal"], order["delivery_fee"], order["tax"],
                 order["total"], order["delivery_address"], order["delivery_notes"]
             ))
@@ -1315,7 +1327,101 @@ def save_earning(earning: Dict[str, Any]) -> Dict[str, Any]:
     """Create a new earning record."""
     conn = get_connection()
     cursor = get_cursor(conn)
+
+def save_rider_location(location: Dict[str, Any]) -> Dict[str, Any]:
+    """Save rider GPS location."""
+    conn = get_connection()
+    cursor = get_cursor(conn)
     
+    try:
+        if is_postgres(conn):
+            cursor.execute("""
+                INSERT INTO rider_location (rider_id, latitude, longitude, heading, speed, accuracy, battery_level)
+                VALUES (%(rider_id)s, %(latitude)s, %(longitude)s, %(heading)s, %(speed)s, %(accuracy)s, %(battery_level)s)
+                RETURNING id, created_at
+            """, location)
+            row = cursor.fetchone()
+            if row:
+                location['id'] = row[0]
+                location['created_at'] = row[1]
+        else:
+            import uuid
+            location['id'] = str(uuid.uuid4())
+            cursor.execute("""
+                INSERT INTO rider_location (id, rider_id, latitude, longitude, heading, speed, accuracy, battery_level)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                location['id'], location['rider_id'], location['latitude'], location['longitude'],
+                location.get('heading'), location.get('speed'), location.get('accuracy'), location.get('battery_level')
+            ))
+        
+        conn.commit()
+        return location
+    except Exception as e:
+        print(f"Database save rider location error: {e}")
+        conn.rollback()
+        return location
+    finally:
+        cursor.close()
+        conn.close()
+
+def fetch_latest_rider_location(rider_id: str) -> Optional[Dict[str, Any]]:
+    """Fetch the latest location for a rider."""
+    conn = get_connection()
+    cursor = get_cursor(conn)
+    
+    try:
+        sql = "SELECT * FROM rider_location WHERE rider_id = ? ORDER BY created_at DESC LIMIT 1"
+        if is_postgres(conn):
+            sql = sql.replace("?", "%s")
+        
+        cursor.execute(sql, (rider_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        if isinstance(row, dict):
+            return dict(row)
+        else:
+            columns = [column[0] for column in cursor.description]
+            return dict(zip(columns, row))
+    except Exception as e:
+        print(f"Database fetch rider location error: {e}")
+        return None
+    finally:
+        cursor.close()
+        conn.close()
+
+def fetch_rider_location_history(rider_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    """Fetch location history for a rider."""
+    conn = get_connection()
+    cursor = get_cursor(conn)
+    
+    try:
+        sql = f"SELECT * FROM rider_location WHERE rider_id = ? ORDER BY created_at DESC LIMIT {limit}"
+        if is_postgres(conn):
+            sql = sql.replace("?", "%s")
+        
+        cursor.execute(sql, (rider_id,))
+        rows = cursor.fetchall()
+        
+        if isinstance(rows, list) and len(rows) > 0 and isinstance(rows[0], dict):
+            return [dict(row) for row in rows]
+        else:
+            columns = [column[0] for column in cursor.description]
+            return [dict(zip(columns, row)) for row in rows]
+    except Exception as e:
+        print(f"Database fetch rider location history error: {e}")
+        return []
+    finally:
+        cursor.close()
+        conn.close()
+
+def save_earning(earning: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a new earning record."""
+    conn = get_connection()
+    cursor = get_cursor(conn)
     try:
         if is_postgres(conn):
             cursor.execute("""

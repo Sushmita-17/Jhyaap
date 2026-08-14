@@ -16,6 +16,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_API_URL || import.meta.env.VITE_AP
 export default function AdminDeliveryPageFixed() {
   const [orders, setOrders] = useState([]);
   const [riders, setRiders] = useState([]);
+  const [selectedOrderForDelivery, setSelectedOrderForDelivery] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -27,12 +28,13 @@ export default function AdminDeliveryPageFixed() {
       if (Array.isArray(remoteOrders)) {
         setOrders(remoteOrders.map((order) => ({
           id: order.id,
-          orderId: order.id,
+          orderId: order.order_number || order.id,
           customer: order.customer_id || 'Customer',
           address: order.delivery_address || '',
           phone: '',
           riderId: order.rider_id,
-          status: order.status === 'out_for_delivery' ? 'picked_up' : order.status === 'accepted' ? 'assigned' : order.status,
+          status: order.status,
+          total: order.total || 0,
           estimatedTime: '-',
           createdAt: order.created_at,
           currentLocation: null,
@@ -140,7 +142,11 @@ export default function AdminDeliveryPageFixed() {
     switch (status) {
       case 'pending':
         return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      case 'out_for_delivery':
+        return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
       case 'assigned':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'accepted':
         return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'picked_up':
         return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
@@ -188,22 +194,28 @@ export default function AdminDeliveryPageFixed() {
     }
   };
 
-  const updateOrderStatus = (orderId, newStatus) => {
+  const updateOrderStatus = async (orderId, newStatus) => {
     const order = orders.find(o => o.id === orderId);
     if (order) {
-      order.status = newStatus;
-      notificationService.showOrderNotification(order, newStatus);
-      console.log(`Customer notification sent: Order ${order.orderId} status changed to ${newStatus}`);
-      
-      if (newStatus === 'delivered') {
-        const rider = riders.find(r => r.id === order.riderId);
-        if (rider) {
-          rider.activeOrders -= 1;
-          rider.completedToday += 1;
-          if (rider.activeOrders === 0) {
-            rider.status = 'available';
+      try {
+        await updateBackendOrderStatus(orderId, newStatus);
+        order.status = newStatus;
+        notificationService.showOrderNotification(order, newStatus);
+        console.log(`Customer notification sent: Order ${order.orderId} status changed to ${newStatus}`);
+
+        if (newStatus === 'delivered') {
+          const rider = riders.find(r => r.id === order.riderId);
+          if (rider) {
+            rider.activeOrders -= 1;
+            rider.completedToday += 1;
+            if (rider.activeOrders === 0) {
+              rider.status = 'available';
+            }
           }
         }
+      } catch (error) {
+        console.error('Failed to update order status:', error);
+        alert('Failed to update order status. Please try again.');
       }
     }
   };
@@ -304,14 +316,15 @@ export default function AdminDeliveryPageFixed() {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className={`rounded-lg border px-4 py-2.5 text-sm outline-none focus:border-[#C9A84C]/50 ${
-                  isLight 
-                    ? 'bg-gray-50 border-gray-300 text-gray-900 focus:bg-white' 
+                  isLight
+                    ? 'bg-gray-50 border-gray-300 text-gray-900 focus:bg-white'
                     : 'bg-[#0A0A0A]/50 border-white/10 text-white'
                 }`}
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
-                <option value="assigned">Assigned</option>
+                <option value="out_for_delivery">Out for Delivery</option>
+                <option value="accepted">Accepted</option>
                 <option value="picked_up">Picked Up</option>
                 <option value="delivered">Delivered</option>
               </select>
@@ -334,6 +347,7 @@ export default function AdminDeliveryPageFixed() {
                     <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Order ID</th>
                     <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Customer</th>
                     <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Address</th>
+                    <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Amount</th>
                     <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Rider</th>
                     <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Status</th>
                     <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>ETA</th>
@@ -357,6 +371,7 @@ export default function AdminDeliveryPageFixed() {
                           </div>
                         </td>
                         <td className={`px-6 py-4 text-sm ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>{order.address}</td>
+                        <td className={`px-6 py-4 text-sm font-medium ${isLight ? 'text-gray-900' : 'text-white'}`}>Rs. {order.total?.toFixed(2) || '0.00'}</td>
                         <td className="px-6 py-4">
                           {rider ? (
                             <div className="flex items-center gap-2">
@@ -394,15 +409,21 @@ export default function AdminDeliveryPageFixed() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             {order.status === 'pending' && (
-                              <button 
-                                onClick={() => updateOrderStatus(order.id, 'assigned')}
-                                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors border-none cursor-pointer bg-blue-500/20 text-blue-400 hover:bg-blue-500/30`}
+                              <button
+                                onClick={() => updateOrderStatus(order.id, 'out_for_delivery')}
+                                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors border-none cursor-pointer bg-orange-500/20 text-orange-400 hover:bg-orange-500/30`}
                               >
-                                Assign
+                                Out for Delivery
                               </button>
                             )}
-                            {order.status === 'assigned' && (
-                              <button 
+                            {order.status === 'out_for_delivery' && !order.riderId && (
+                              <span className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>Assign rider</span>
+                            )}
+                            {order.status === 'out_for_delivery' && order.riderId && (
+                              <span className={`text-xs ${isLight ? 'text-green-600' : 'text-green-400'}`}>Rider assigned</span>
+                            )}
+                            {order.status === 'accepted' && (
+                              <button
                                 onClick={() => updateOrderStatus(order.id, 'picked_up')}
                                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors border-none cursor-pointer bg-purple-500/20 text-purple-400 hover:bg-purple-500/30`}
                               >
@@ -410,7 +431,7 @@ export default function AdminDeliveryPageFixed() {
                               </button>
                             )}
                             {order.status === 'picked_up' && (
-                              <button 
+                              <button
                                 onClick={() => updateOrderStatus(order.id, 'delivered')}
                                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors border-none cursor-pointer bg-green-500/20 text-green-400 hover:bg-green-500/30`}
                               >

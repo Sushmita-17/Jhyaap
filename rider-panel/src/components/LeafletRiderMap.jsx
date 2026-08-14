@@ -2,6 +2,7 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Phone } from 'lucide-react';
 import {
   animateRiderMarker,
   createAnimatedRiderMarker,
@@ -13,7 +14,7 @@ const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://127.0.0.
 
 const SIM_STEP_MS = 3500;       // simulated GPS point every 3.5s (slow, realistic delivery)
 const GPS_PUSH_MS = 2000;       // throttle backend pushes to 2s
-const GPS_FALLBACK_MS = 5000;   // if no hardware fix within 5s, run demo sim
+const GPS_FALLBACK_MS = 3000;   // if no hardware fix within 3s, run demo sim
 const NEAR_CUSTOMER_M = 120;    // treat as "near customer" within 120m
 const ANIMATION_DURATION = 3200; // slow, smooth glide along the route
 
@@ -130,6 +131,8 @@ export default function LeafletRiderMap({
   destinationLng,
   destinationName,
   destinationLocationUrl,
+  customerName,
+  customerPhone,
   height = '88vh',
   manualProgress = 0,
   onProgressUpdate,
@@ -162,8 +165,12 @@ const [routeData, setRouteData] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [nearCustomer, setNearCustomer] = useState(false);
   const [arrived, setArrived] = useState(orderStatus === 'delivered');
+  const [locationError, setLocationError] = useState(null);
+  const [isMapCenteredOnRider, setIsMapCenteredOnRider] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
-const lastRiderPositionRef = useRef(KATHMANDU_STORE);
+  const lastRiderPositionRef = useRef(KATHMANDU_STORE);
   const lastRiderHeadingRef = useRef(45);
   const simTimerRef = useRef(null);
   const gpsFallbackTimerRef = useRef(null);
@@ -175,6 +182,7 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
   const isDeliveredRef = useRef(orderStatus === 'delivered');
   const gpsOriginRef = useRef(null);
   const routeFetchedFromGpsRef = useRef(false);
+  const locationRequestIdRef = useRef(0);
 
   // --------------------- Map init ---------------------
   useEffect(() => {
@@ -219,6 +227,18 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
       ]),
       { padding: [70, 70], maxZoom: 16 }
     );
+
+    // Track map movement to update centered state
+    map.on('moveend', () => {
+      if (riderPosition && map) {
+        const center = map.getCenter();
+        const distance = calculateDistance(
+          { lat: center.lat, lng: center.lng },
+          riderPosition
+        );
+        setIsMapCenteredOnRider(distance < 50); // Consider centered if within 50m
+      }
+    });
 
     mapInstanceRef.current = map;
     setMap(map);
@@ -288,16 +308,21 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
     lastPushedPositionRef.current = { ts: now };
 
     const token = localStorage.getItem('jhyaap_rider_token');
+    const riderId = localStorage.getItem('jhyaap_rider_id');
+    
+    // Skip location update if rider is not logged in
+    if (!riderId) return;
+    
     const body = {
-      lat: position.lat,
-      lng: position.lng,
+      rider_id: riderId,
+      latitude: position.lat,
+      longitude: position.lng,
       heading: lastRiderHeadingRef.current || 0,
-      status,
       speed: 8,
       accuracy: 10,
     };
-    fetch(`${BACKEND_API_URL}/api/v1/tracking/${encodeURIComponent(orderId)}/location`, {
-      method: 'PUT',
+    fetch(`${BACKEND_API_URL}/api/v1/location/rider/${riderId}`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify(body),
     }).catch((err) => console.warn('Unable to send rider location:', err));
@@ -334,20 +359,147 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
     }
   }, [routeData, destPoint, nearCustomer, pushLocation, onStatusUpdate]);
 
-  // --------------------- Start simulation fallback (no GPS fix) ---------------------
-  useEffect(() => {
-    if (!trackingActive || arrived || hasGpsFixRef.current || isPaused) return;
-    gpsFallbackTimerRef.current = setTimeout(() => {
-      if (!hasGpsFixRef.current && routeData && routeData.coordinates.length > 1) {
-        setIsSimulating(true);
-        if (gpsWatchIdRef.current != null) {
-          navigator.geolocation.clearWatch(gpsWatchIdRef.current);
-          gpsWatchIdRef.current = null;
+  // --------------------- Get current location ---------------------
+  const getCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      return;
+    }
+    
+    // Generate unique request ID to prevent race conditions
+    const currentRequestId = ++locationRequestIdRef.current;
+    
+    setIsLocating(true);
+    setLocationError(null);
+    
+    // Stop any ongoing simulation
+    setIsSimulating(false);
+    if (simTimerRef.current) {
+      clearInterval(simTimerRef.current);
+      simTimerRef.current = null;
+    }
+    
+    // Stop any existing GPS watch to prevent conflicts
+    if (gpsWatchIdRef.current) {
+      navigator.geolocation.clearWatch(gpsWatchIdRef.current);
+      gpsWatchIdRef.current = null;
+    }
+    
+    // Get current position - single call with no timeout error
+    // If GPS fails, simulation continues as fallback
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        // Check if this is still the current request
+        if (currentRequestId !== locationRequestIdRef.current) {
+          console.log('Ignoring old location request');
+          return;
         }
-      }
-    }, GPS_FALLBACK_MS);
-    return () => { if (gpsFallbackTimerRef.current) clearTimeout(gpsFallbackTimerRef.current); };
-  }, [trackingActive, arrived, isPaused, routeData]);
+        
+        const { latitude, longitude } = position.coords;
+        
+        // Validate coordinates
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+            latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+          console.error('Invalid GPS coordinates:', { latitude, longitude });
+          setIsLocating(false);
+          // Don't show error - let simulation continue
+          return;
+        }
+        
+        const currentPos = { lat: latitude, lng: longitude };
+        
+        console.log('GPS Location obtained:', currentPos);
+        
+        // Clear error state immediately on success
+        setLocationError(null);
+        
+        // Update state immediately
+        setRiderPosition(currentPos);
+        setRouteOrigin(currentPos);
+        gpsOriginRef.current = currentPos;
+        routeIndexRef.current = 0;
+        setHasLiveGps(true);
+        hasGpsFixRef.current = true;
+        setIsMapCenteredOnRider(true);
+        setIsLocating(false);
+        
+        // Force route recalculation from new GPS location
+        routeFetchedFromGpsRef.current = false;
+        
+        // Center map immediately with smooth animation using coordinates directly
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo([latitude, longitude], 17, {
+            animate: true,
+            duration: 1.5
+          });
+        }
+        
+        // Start simulation to move scooter from current location to customer
+        // Force simulation even if hasGpsFix is true
+        if (routeData && routeData.coordinates.length > 1) {
+          setIsSimulating(true);
+          // Don't reset hasGpsFix - let simulation run with GPS active
+        }
+        
+        // Start watching position for live updates if not already watching
+        if (gpsWatchIdRef.current === null) {
+          const watchId = navigator.geolocation.watchPosition(
+            (watchPosition) => {
+              const { latitude: watchLat, longitude: watchLng } = watchPosition.coords;
+              
+              // Validate watch coordinates
+              if (!Number.isFinite(watchLat) || !Number.isFinite(watchLng)) return;
+              
+              const newPos = { lat: watchLat, lng: watchLng };
+              setRiderPosition(newPos);
+              if (Number.isFinite(watchPosition.coords.heading)) {
+                setHeading(watchPosition.coords.heading);
+                lastRiderHeadingRef.current = watchPosition.coords.heading;
+              }
+              const distToDest = calculateDistance(newPos, destPoint);
+              if (distToDest <= NEAR_CUSTOMER_M) setNearCustomer(true);
+              if (distToDest <= 35) setArrived(true);
+              pushLocation(newPos, distToDest <= 35 ? 'arrived' : 'driving');
+            },
+            (watchError) => {
+              // Silently ignore GPS watch errors
+            },
+            { enableHighAccuracy: false, maximumAge: 10000, timeout: 15000 }
+          );
+          gpsWatchIdRef.current = watchId;
+        }
+      },
+      (error) => {
+        // Check if this is still the current request
+        if (currentRequestId !== locationRequestIdRef.current) {
+          console.log('Ignoring old location error');
+          return;
+        }
+        
+        setIsLocating(false);
+        
+        // Only show permission denied error - let simulation continue for other errors
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationError('Location access is required to show your current position. Please allow location access in your browser settings.');
+        } else {
+          // For timeout, unavailable, etc - just let simulation continue
+          console.log('GPS not available, continuing with simulation');
+          setLocationError(null);
+        }
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    );
+  }, [destPoint, pushLocation]);
+
+  // --------------------- Start simulation immediately ---------------------
+  useEffect(() => {
+    if (arrived || isPaused) return;
+    // Start simulation immediately for instant feedback
+    // GPS will override if it gets a fix
+    if (routeData && routeData.coordinates.length > 1) {
+      setIsSimulating(true);
+    }
+  }, [arrived, isPaused, routeData]);
 
   // Run simulation interval
   useEffect(() => {
@@ -358,7 +510,8 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
 
   // --------------------- Real GPS watch ---------------------
   useEffect(() => {
-    if (!orderId || !trackingActive || arrived || !navigator.geolocation) return undefined;
+    // Don't start automatic watch if user is manually requesting location
+    if (!orderId || arrived || !navigator.geolocation || isLocating) return undefined;
 
     const watchId = navigator.geolocation.watchPosition(
 ({ coords }) => {
@@ -390,11 +543,9 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
         pushLocation(position, distToDest <= 35 ? 'arrived' : 'driving');
       },
       (error) => {
-        if (error.code !== error.TIMEOUT) {
-          console.warn('Live location unavailable:', error.message);
-        }
+        // Silently ignore GPS watch errors
       },
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 }
+      { enableHighAccuracy: false, maximumAge: 10000, timeout: 15000 }
     );
     gpsWatchIdRef.current = watchId;
 
@@ -402,7 +553,7 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
       navigator.geolocation.clearWatch(watchId);
       gpsWatchIdRef.current = null;
     };
-  }, [orderId, trackingActive, arrived, destPoint, pushLocation]);
+  }, [orderId, trackingActive, arrived, destPoint, pushLocation, isLocating]);
 
   // --------------------- Smooth marker animation ---------------------
   useEffect(() => {
@@ -430,7 +581,7 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
       animationCancelRef.current = null;
     }
 
-    riderMarkerRef.current.setIcon(createRiderIcon(nextHeading, trackingActive, trackingActive, true));
+    riderMarkerRef.current.setIcon(createRiderIcon(nextHeading, trackingActive, false, true));
     const routePoints = (routeData?.coordinates || []).map((c) => [c.lat, c.lng]);
 
     animationCancelRef.current = animateRiderMarker({
@@ -456,6 +607,16 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
     };
   }, [map, riderPosition, heading, routeData, trackingActive, isPaused, followRider, arrived]);
 
+  // --------------------- Clean up GPS watcher on unmount ---------------------
+  useEffect(() => {
+    return () => {
+      if (gpsWatchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(gpsWatchIdRef.current);
+        gpsWatchIdRef.current = null;
+      }
+    };
+  }, []);
+
   // --------------------- Track order status changes ---------------------
   useEffect(() => {
     if (orderStatus === 'delivered') {
@@ -467,6 +628,23 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
       isDeliveredRef.current = false;
     }
   }, [orderStatus, onStatusUpdate]);
+
+  // --------------------- Auto-request location on map load ---------------------
+  useEffect(() => {
+    if (!mapInstanceRef.current || isLocating || hasLiveGps || arrived) return;
+    
+    // Don't auto-fetch location - let user click button or use simulation
+    // Simulation will start automatically after GPS_FALLBACK_MS if no GPS fix
+  }, [map, arrived]);
+
+  // --------------------- Invalidate map size on full screen toggle ---------------------
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      setTimeout(() => {
+        mapInstanceRef.current.invalidateSize();
+      }, 100);
+    }
+  }, [isFullScreen]);
 
   // --------------------- Derived values ---------------------
   const totalDistance = routeData?.distance || (routeData ? calculateRouteDistance(routeData.coordinates) : 0);
@@ -490,14 +668,16 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
     } else if (provider === 'osrm') {
       url = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${destLng},${destLat}?overview=full&geometries=geojson`;
     } else {
-      url = destinationLocationUrl || `https://www.openstreetmap.org/directions?from=${from.lat},${from.lng}&to=${destLat},${destLng}#map=15/${((from.lat + destLat) / 2)}/${((from.lng + destLng) / 2)}`;
+      // OSM with rider position and full map view
+      url = `https://www.openstreetmap.org/directions?from=${from.lat},${from.lng}&to=${destLat},${destLng}#map=16/${from.lat}/${from.lng}`;
     }
     window.open(url, '_blank');
   };
 
   const recenterOnRider = () => {
     if (mapInstanceRef.current && riderPosition) {
-      mapInstanceRef.current.setView([riderPosition.lat, riderPosition.lng], 16, { animate: true });
+      mapInstanceRef.current.setView([riderPosition.lat, riderPosition.lng], 17, { animate: true });
+      setIsMapCenteredOnRider(true);
     }
   };
 
@@ -519,119 +699,116 @@ const lastRiderPositionRef = useRef(KATHMANDU_STORE);
 
   return (
     <div className="relative rounded-xl overflow-hidden border border-[#2a221c] bg-[#0F0B08]">
-      <div ref={mapRef} style={{ height, width: '100%' }} className="z-0" />
+      <div ref={mapRef} style={{ height: isFullScreen ? '100vh' : height, width: '100%' }} className="z-0" />
 
-      {/* Status badge */}
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000]">
-        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-bold shadow-lg backdrop-blur-sm bg-black/70 ${badgeColor}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${arrived ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse`} />
-          {label}
-        </span>
-      </div>
-
-      {/* Rider controls */}
-      <div className="absolute top-10 left-2 z-[1000] flex flex-col gap-1.5">
+      {/* Full Map button - mobile only */}
+      <div className="absolute top-2 right-2 z-[1000] md:hidden">
         <button
-          onClick={() => setIsPaused((v) => !v)}
-          className="bg-black/80 text-[#C9A84C] text-[10px] font-bold px-2 py-1 rounded border border-[#C9A84C]/30 shadow-md hover:bg-black/90 transition"
-          title={isPaused ? 'Resume Tracking' : 'Pause Tracking'}
+          onClick={() => setIsFullScreen(!isFullScreen)}
+          className="bg-white/90 text-gray-800 text-[10px] font-bold px-2 py-1 rounded border border-gray-300 shadow-md hover:bg-white transition"
         >
-          {isPaused ? '▶' : '⏸'}
-        </button>
-        <button
-          onClick={() => setSpeed((s) => Math.max(0.5, +(s - 0.5).toFixed(1)))}
-          className="bg-black/80 text-[#C9A84C] text-[10px] font-bold px-2 py-1 rounded border border-[#C9A84C]/30 shadow-md hover:bg-black/90 transition"
-          title="Slower"
-        >
-          −
-        </button>
-        <button
-          onClick={() => setSpeed((s) => Math.min(3, +(s + 0.5).toFixed(1)))}
-          className="bg-black/80 text-[#C9A84C] text-[10px] font-bold px-2 py-1 rounded border border-[#C9A84C]/30 shadow-md hover:bg-black/90 transition"
-          title="Faster"
-        >
-          +
-        </button>
-        <button
-          onClick={restartRoute}
-          className="bg-black/80 text-[#C9A84C] text-[10px] font-bold px-2 py-1 rounded border border-[#C9A84C]/30 shadow-md hover:bg-black/90 transition"
-          title="Restart Route"
-        >
-          ↺
-        </button>
-        <button
-          onClick={recenterOnRider}
-          className="bg-black/80 text-[#C9A84C] text-[10px] font-bold px-2 py-1 rounded border border-[#C9A84C]/30 shadow-md hover:bg-black/90 transition"
-          title="Center on Rider"
-        >
-          ◎
+          {isFullScreen ? 'Exit Full' : 'Full Map'}
         </button>
       </div>
 
-      {/* Follow rider toggle */}
+      {/* Current Location Button - Right side (Google Maps style) */}
       <button
-        onClick={() => setFollowRider((v) => !v)}
-        className={`absolute bottom-24 left-2 z-[1000] text-[10px] font-bold px-2.5 py-1.5 rounded-full border shadow-lg backdrop-blur-sm transition ${
-          followRider
-            ? 'bg-[#C9A84C] text-[#0F0B08] border-[#C9A84C]'
-            : 'bg-black/80 text-gray-300 border-white/15 hover:bg-black/90'
-        }`}
+        onClick={getCurrentLocation}
+        disabled={isLocating}
+        className={`absolute bottom-24 right-2 z-[1000] w-12 h-12 rounded-full shadow-lg backdrop-blur-sm transition flex items-center justify-center ${
+          isMapCenteredOnRider && hasLiveGps
+            ? 'bg-blue-500 text-white border-blue-500'
+            : 'bg-black/80 text-blue-400 border-blue-400/30 hover:bg-black/90'
+        } ${isLocating ? 'opacity-50 cursor-not-allowed' : ''}`}
+        title={isLocating ? 'Getting location...' : 'My Location'}
       >
-        {followRider ? '● Follow Rider' : '○ Follow Rider'}
+        {isLocating ? (
+          <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+            <circle cx="12" cy="9" r="2.5" />
+          </svg>
+        )}
       </button>
 
-      {/* External nav */}
-      <div className="absolute top-2 right-2 z-[1000] flex gap-1.5">
-        <button
-          onClick={() => openExternalMap('osm')}
-          className="bg-black/80 text-[#C9A84C] text-[10px] font-bold px-2 py-1 rounded border border-[#C9A84C]/30 shadow-md hover:bg-black/90 transition"
-        >
-          OSM
-        </button>
-        <button
-          onClick={() => openExternalMap('google')}
-          className="bg-black/80 text-[#C9A84C] text-[10px] font-bold px-2 py-1 rounded border border-[#C9A84C]/30 shadow-md hover:bg-black/90 transition"
-        >
-          Google
-        </button>
-        <button
-          onClick={() => openExternalMap('osrm')}
-          className="bg-black/80 text-[#C9A84C] text-[10px] font-bold px-2 py-1 rounded border border-[#C9A84C]/30 shadow-md hover:bg-black/90 transition"
-        >
-          Route
-        </button>
-      </div>
+      {/* Getting Location Message */}
+      {isLocating && (
+        <div className="absolute bottom-40 right-2 z-[1000]">
+          <div className="bg-black/90 text-white text-[11px] px-3 py-2 rounded-lg border border-blue-400/30 shadow-lg backdrop-blur-sm">
+            Getting your location...
+          </div>
+        </div>
+      )}
 
-      {/* Live / Simulation indicator */}
-      <div className="absolute right-2 bottom-24 z-[1000]">
-        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[9px] font-bold bg-black/80 text-gray-300 border border-white/10 backdrop-blur-sm">
-          <span className={`w-1.5 h-1.5 rounded-full ${isSimulating ? 'bg-sky-400' : hasLiveGps ? 'bg-emerald-400' : 'bg-gray-500'} animate-pulse`} />
-          {isLoadingRoute ? 'Routing…' : isSimulating ? 'Demo Movement' : hasLiveGps ? 'Live GPS' : 'Static'}
-        </span>
-      </div>
+      {/* Location Error Message */}
+      {locationError && (
+        <div className="absolute top-20 right-2 z-[1000] max-w-[200px]">
+          <div className="bg-red-900/90 text-white text-[10px] p-2 rounded-lg border border-red-500/30 shadow-lg backdrop-blur-sm">
+            {locationError}
+            <button
+              onClick={() => setLocationError(null)}
+              className="ml-2 text-red-300 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* Compact Rider info card (bottom-left) */}
-      <div className="absolute bottom-6 left-6 z-[1000]">
-        <div className="rounded-xl bg-black/80 backdrop-blur-md border border-white/8 shadow-md p-3 w-[320px] max-w-[90%]">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-white/10">
+
+
+
+      {/* Compact Rider info card (bottom-left) - white */}
+      <div className="absolute bottom-6 left-6 z-[1000] md:bottom-6 md:left-6 bottom-28 left-2">
+        <div className="rounded-xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-md p-1 w-[100px] max-w-[65%] md:w-[320px] md:p-3 md:max-w-[90%]">
+          <div className="flex items-center justify-between gap-1 md:gap-3">
+            <div className="flex items-center gap-1 md:gap-3">
+              <div className="w-4 h-4 md:w-8 md:h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
                 <img src={DELIVERY_RIDER_MARKER_ICON} alt="Rider" className="w-full h-full object-contain" />
               </div>
-              <div className="min-w-0">
-                <div className="text-sm font-bold text-white leading-4">You <span className="text-[11px] text-amber-400 font-semibold">★4.8</span></div>
-                <div className="text-[11px] text-gray-400 truncate">{localStorage.getItem('rider_vehicle') || 'Scooter'}</div>
+              <div className="min-w-0 hidden md:block">
+                <div className="text-sm font-bold text-gray-900 leading-4">You <span className="text-[11px] text-amber-500 font-semibold">★4.8</span></div>
+                <div className="text-[11px] text-gray-600 truncate">{localStorage.getItem('rider_vehicle') || 'Scooter'}</div>
               </div>
             </div>
 
             <div className="text-right">
-              <div className="text-sm font-bold text-[#C9A84C]">{isLoadingRoute ? '—' : displayDistance}</div>
-              <div className="text-[12px] text-gray-300">{isLoadingRoute ? '—' : `${remainingMinutes} min`}</div>
+              <div className="text-[9px] md:text-sm font-bold text-amber-600">{isLoadingRoute ? '—' : displayDistance}</div>
+              <div className="text-[8px] md:text-[12px] text-gray-600">{isLoadingRoute ? '—' : `${remainingMinutes} min`}</div>
             </div>
           </div>
-          <div className="mt-2 text-[11px] text-gray-400">{label}</div>
+          <div className="hidden md:block mt-2 text-[11px] text-gray-500">{label}</div>
         </div>
       </div>
+
+      {/* Customer info card (bottom-right) - smaller white card */}
+      {customerName && (
+        <div className="absolute bottom-6 right-6 z-[1000] md:bottom-6 md:right-6 bottom-14 right-2">
+          <div className="rounded-lg bg-white/95 backdrop-blur-md border border-gray-200 shadow-md p-2 w-[200px] max-w-[80%] md:w-[220px] md:max-w-[85%]">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[11px] font-semibold text-gray-900 leading-3">{customerName}</div>
+                {customerPhone && (
+                  <div className="text-[9px] text-gray-600">{customerPhone}</div>
+                )}
+              </div>
+              {customerPhone && (
+                <a
+                  href={`tel:${customerPhone}`}
+                  className="bg-blue-500 text-white p-1 rounded-full hover:bg-blue-600 transition"
+                  title="Call Customer"
+                >
+                  <Phone size={10} />
+                </a>
+              )}
+            </div>
+            {destinationName && (
+              <div className="mt-1 text-[8px] text-gray-500 truncate">{destinationName}</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

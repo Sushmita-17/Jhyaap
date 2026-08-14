@@ -276,7 +276,7 @@ def update_order_status_endpoint(request: Request, order_id: str, status: str):
             save_order(order)
             
             # Send notification to customer about rider assignment
-            from app.db.database import create_notification, fetch_all_riders
+            from app.db.database import fetch_all_riders
             riders = fetch_all_riders()
             rider = next((r for r in riders if r["id"] == rider_id), None)
             if rider:
@@ -337,7 +337,8 @@ def rider_accept_order(request: Request, rider_id: str, order_id: str):
         )
     
     # Send notification to customer that rider accepted
-    from app.db.database import create_notification, fetch_all_riders
+    # Fixed import - create_notification is defined locally
+    from app.db.database import fetch_all_riders
     riders = fetch_all_riders()
     rider = next((r for r in riders if r["id"] == rider_id), None)
     if rider:
@@ -402,7 +403,7 @@ def rider_pickup_order(request: Request, rider_id: str, order_id: str):
         )
     
     # Send notification to customer that rider picked up order
-    from app.db.database import create_notification, fetch_all_riders
+    from app.db.database import fetch_all_riders
     riders = fetch_all_riders()
     rider = next((r for r in riders if r["id"] == rider_id), None)
     if rider:
@@ -412,6 +413,16 @@ def rider_pickup_order(request: Request, rider_id: str, order_id: str):
             title="Order Picked Up",
             message=f"Rider {rider['name']} has picked up your order. Live tracking started!",
             notification_type="order_status",
+            order_id=order_id
+        )
+        
+        # Also send notification to admin that rider started delivery
+        create_notification(
+            user_id="admin",
+            user_type="admin",
+            title="Rider Started Delivery",
+            message=f"Rider {rider['name']} has picked up order #{order.get('order_number', order_id)}. Live tracking active.",
+            notification_type="delivery_started",
             order_id=order_id
         )
     
@@ -880,60 +891,6 @@ def delete_customer_address(request: Request, address_id: str):
 
 
 # Rider-specific order action endpoints
-@router.post("/rider/{rider_id}/accept/{order_id}")
-@limiter.limit(get_rate_limit("general"))
-def rider_accept_order(request: Request, rider_id: str, order_id: str):
-    """
-    Rider accepts an order. Only allowed if order is in 'pending' status.
-    Rate limited to 100 requests per minute.
-    """
-    order = fetch_order_by_id(order_id)
-    if not order:
-        raise HTTPException(
-            status_code=http_status.HTTP_404_NOT_FOUND,
-            detail=f"Order with ID '{order_id}' not found."
-        )
-    
-    # Check if order can be accepted
-    if order["status"] != "pending":
-        raise HTTPException(
-            status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail=f"Order with status '{order['status']}' cannot be accepted."
-        )
-    
-    # Check if order already has a rider
-    if order.get("rider_id"):
-        raise HTTPException(
-            status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail="Order already assigned to another rider."
-        )
-    
-    # Update order with rider_id and status
-    order["rider_id"] = rider_id
-    order["status"] = "accepted"
-    order["updated_at"] = datetime.now().isoformat()
-    
-    try:
-        save_order(order)
-        
-        # Create notification for customer
-        create_notification(
-            user_id=order["customer_id"],
-            user_type="customer",
-            title="Order Accepted",
-            message="Your order has been accepted by a rider and is being prepared.",
-            notification_type="order_status",
-            order_id=order_id
-        )
-        
-        return {"message": "Order accepted successfully", "success": True}
-    except Exception as e:
-        raise HTTPException(
-            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to accept order: {str(e)}"
-        )
-
-
 @router.post("/rider/{rider_id}/reject/{order_id}")
 @limiter.limit(get_rate_limit("general"))
 def rider_reject_order(request: Request, rider_id: str, order_id: str, reason: Optional[str] = None):
@@ -975,55 +932,6 @@ def rider_reject_order(request: Request, rider_id: str, order_id: str, reason: O
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to reject order: {str(e)}"
         )
-
-
-@router.post("/rider/{rider_id}/pickup/{order_id}")
-@limiter.limit(get_rate_limit("general"))
-def rider_pickup_order(request: Request, rider_id: str, order_id: str):
-    """
-    Rider marks order as picked up. Only allowed if order is assigned to this rider and in 'accepted' status.
-    Rate limited to 100 requests per minute.
-    """
-    order = fetch_order_by_id(order_id)
-    if not order:
-        raise HTTPException(
-            status_code=http_status.HTTP_404_NOT_FOUND,
-            detail=f"Order with ID '{order_id}' not found."
-        )
-    
-    # Check if order is assigned to this rider
-    if order.get("rider_id") != rider_id:
-        raise HTTPException(
-            status_code=http_status.HTTP_403_FORBIDDEN,
-            detail="Order not assigned to this rider."
-        )
-    
-    # Check if order can be picked up
-    if order["status"] not in ["accepted", "preparing"]:
-        raise HTTPException(
-            status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail=f"Order with status '{order['status']}' cannot be marked as picked up."
-        )
-    
-    # Update order status to out_for_delivery
-    success = update_order_status(order_id, "out_for_delivery")
-    if not success:
-        raise HTTPException(
-            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update order status."
-        )
-    
-    # Create notification for customer
-    create_notification(
-        user_id=order["customer_id"],
-        user_type="customer",
-        title="Order Out for Delivery",
-        message="Your order has been picked up by the rider and is on its way!",
-        notification_type="delivery",
-        order_id=order_id
-    )
-    
-    return {"message": "Order marked as picked up successfully", "success": True}
 
 
 @router.post("/rider/{rider_id}/deliver/{order_id}")

@@ -140,8 +140,8 @@ export default function AdminOrdersPage() {
               }`} style={{ animationDelay: `${index * 50}ms` }}>
                 <div className="absolute inset-0 bg-gradient-to-br from-[#C9A84C]/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative flex flex-wrap items-start justify-between gap-3 md:gap-4">
-                  <div>
-                    <p className={`font-mono text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>{order.id}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-mono text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>Order #{order.order_number || order.id?.slice(0, 8)}</p>
                     <p className={`mt-1 text-sm md:text-lg font-semibold group-hover:text-[#C9A84C] transition-colors ${
                       isLight ? 'text-gray-900' : 'text-white'
                     }`}>
@@ -153,6 +153,22 @@ export default function AdminOrdersPage() {
                     <p className={`mt-1 capitalize text-[10px] md:text-xs font-semibold ${
                       isLight ? 'text-gray-700' : 'text-[#C9A84C]'
                     }`}>{order.status?.replace(/_/g, ' ') || 'Unknown'}</p>
+                    {order.customer_name && (
+                      <p className={`mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-600' : 'text-[#888888]'}`}>
+                        Customer: {order.customer_name}
+                      </p>
+                    )}
+                    {order.customer?.phone_number && (
+                      <div className={`mt-1 flex items-center gap-2 text-[10px] md:text-xs ${isLight ? 'text-gray-600' : 'text-[#888888]'}`}>
+                        <span>Phone: {order.customer.phone_number}</span>
+                        <a
+                          href={`tel:${order.customer.phone_number}`}
+                          className="text-blue-500 hover:text-blue-600 underline"
+                        >
+                          Call
+                        </a>
+                      </div>
+                    )}
                     {order.deliveryRider && (
                       <p className={`mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>
                         Rider: {order.deliveryRider.name || 'Unknown'} · {order.deliveryRider.vehicle || 'Unknown'}

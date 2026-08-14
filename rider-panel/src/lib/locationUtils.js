@@ -152,9 +152,9 @@ export function getCurrentGPSLocation() {
         reject(new Error(errorMessage));
       },
       {
-        enableHighAccuracy: true,
+        enableHighAccuracy: false,
         timeout: 10000,
-        maximumAge: 0,
+        maximumAge: 60000,
       }
     );
   });

@@ -101,3 +101,29 @@ def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(securi
     finally:
         cursor.close()
         conn.close()
+
+
+def get_current_rider(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Require a valid JWT belonging to an active rider_credentials record."""
+    payload = verify_token(credentials.credentials)
+    rider_id = payload.get("sub")
+    if not rider_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid rider authentication credentials.")
+
+    from app.db.database import get_connection, is_postgres
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        placeholder = "%s" if is_postgres(conn) else "?"
+        cursor.execute(f"SELECT id, name, phone, status FROM rider_credentials WHERE id = {placeholder}", (rider_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rider account not found.")
+        rider = dict(row) if isinstance(row, dict) else dict(zip([column[0] for column in cursor.description], row))
+        if rider.get("status") not in ("available", "busy"):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rider account is not active.")
+        return rider
+    finally:
+        cursor.close()
+        conn.close()
+

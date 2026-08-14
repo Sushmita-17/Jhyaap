@@ -24,7 +24,7 @@ export default function Orders() {
     try {
       const token = localStorage.getItem('jhyaap_rider_token')
       const response = await fetch(
-        `${BACKEND_API_URL}/api/v1/orders/rider/${rider.id}?status=available,accepted,picked_up,out_for_delivery,delivered,cancelled`,
+        `${BACKEND_API_URL}/api/v1/orders/rider/${rider.id}?status=pending,available,accepted,out_for_delivery,picked_up,delivered,cancelled`,
         { headers: token ? { Authorization: 'Bearer ' + token } : {} }
       )
       if (response.ok) {

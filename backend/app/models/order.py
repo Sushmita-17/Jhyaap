@@ -35,6 +35,7 @@ class OrderUpdate(BaseModel):
 
 class OrderResponse(BaseModel):
     id: str
+    order_number: Optional[int] = None
     customer_id: str
     rider_id: Optional[str] = None
     status: str

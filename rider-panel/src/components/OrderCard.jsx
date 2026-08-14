@@ -37,7 +37,7 @@ export default function OrderCard({ order }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-bold tracking-tight text-gray-100">Order #{String(order.id).slice(0, 8)}</span>
+            <span className="font-bold tracking-tight text-gray-100">Order #{order.order_number || String(order.id).slice(0, 8)}</span>
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold capitalize ${statusColors[status] || 'rider-status rider-status-pending'}`}>
               {status?.replace(/_/g, ' ')}
             </span>
