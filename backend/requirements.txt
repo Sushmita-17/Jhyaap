@@ -2,7 +2,7 @@ fastapi
 uvicorn[standard]
 asyncpg
 psycopg2-binary
-pydantic
+pydantic[email]
 pydantic-settings
 python-dotenv
 supabase
@@ -13,3 +13,4 @@ arq
 httpx
 slowapi
 bcrypt
+email-validator
