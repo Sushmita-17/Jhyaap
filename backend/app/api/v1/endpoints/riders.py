@@ -37,13 +37,23 @@ def get_riders(request: Request, status: Optional[str] = None):
 @limiter.limit(get_rate_limit("admin"))
 def get_rider(request: Request, rider_id: str, current_admin: dict = Depends(get_current_admin)):
     """Get a specific rider by ID. Admin-only. Rate limited to 50 requests per minute."""
-    rider = fetch_rider_by_id(rider_id)
-    if not rider:
+    try:
+        rider = fetch_rider_by_id(rider_id)
+        if not rider:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Rider with ID '{rider_id}' not found."
+            )
+        # Remove password hash before returning
+        rider.pop("password_hash", None)
+        return rider
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Rider with ID '{rider_id}' not found."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch rider: {str(e)}"
         )
-    return rider
 
 
 @router.post("", response_model=RiderResponse)

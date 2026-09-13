@@ -101,6 +101,10 @@ export function getBackendRiders() {
   return request('/api/v1/riders');
 }
 
+export function getBackendRider(id) {
+  return request('/api/v1/riders/' + encodeURIComponent(id));
+}
+
 export function getBackendCoupons() {
   return request('/api/v1/coupons');
 }
