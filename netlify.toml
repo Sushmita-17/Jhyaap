@@ -1,0 +1,20 @@
+[build]
+  command = "cd nightowl && npm install && npm run build && cd ../admin && npm install && npm run build && cd ../rider-panel && npm install && npm run build && cd .. && node scripts/merge-builds.js"
+  publish = "dist"
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/rider/*"
+  to = "/rider/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
