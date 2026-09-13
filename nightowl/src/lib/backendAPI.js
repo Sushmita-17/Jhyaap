@@ -10,6 +10,10 @@ async function request(path, options = {}) {
   return body;
 }
 
+export async function getDeliveryFees() {
+  return request('/api/v1/delivery-fees');
+}
+
 export async function uploadPaymentScreenshot(file) {
   const formData = new FormData();
   formData.append('file', file);

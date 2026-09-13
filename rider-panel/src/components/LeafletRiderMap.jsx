@@ -12,11 +12,11 @@ import {
 const KATHMANDU_STORE = { lat: 27.7074359, lng: 85.2853747, name: 'Jhyaap Station Hub' };
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://127.0.0.1:8001';
 
-const SIM_STEP_MS = 3500;       // simulated GPS point every 3.5s (slow, realistic delivery)
-const GPS_PUSH_MS = 2000;       // throttle backend pushes to 2s
+const SIM_STEP_MS = 2000;       // simulated GPS point every 2s (smoother tracking)
+const GPS_PUSH_MS = 1500;       // throttle backend pushes to 1.5s (more frequent updates)
 const GPS_FALLBACK_MS = 3000;   // if no hardware fix within 3s, run demo sim
 const NEAR_CUSTOMER_M = 120;    // treat as "near customer" within 120m
-const ANIMATION_DURATION = 3200; // slow, smooth glide along the route
+const ANIMATION_DURATION = 1500; // faster, smoother glide along the route (Google Maps-like)
 
 // ---------------------------------------------------------------
 // Utilities
@@ -423,9 +423,6 @@ const [routeData, setRouteData] = useState(null);
         setIsMapCenteredOnRider(true);
         setIsLocating(false);
         
-        // Force route recalculation from new GPS location
-        routeFetchedFromGpsRef.current = false;
-        
         // Center map immediately with smooth animation using coordinates directly
         if (mapInstanceRef.current) {
           mapInstanceRef.current.flyTo([latitude, longitude], 17, {
@@ -441,7 +438,7 @@ const [routeData, setRouteData] = useState(null);
           // Don't reset hasGpsFix - let simulation run with GPS active
         }
         
-        // Start watching position for live updates if not already watching
+        // Start watching position for live GPS tracking (like Google Maps)
         if (gpsWatchIdRef.current === null) {
           const watchId = navigator.geolocation.watchPosition(
             (watchPosition) => {
@@ -451,20 +448,36 @@ const [routeData, setRouteData] = useState(null);
               if (!Number.isFinite(watchLat) || !Number.isFinite(watchLng)) return;
               
               const newPos = { lat: watchLat, lng: watchLng };
+              
+              // Update rider position in real-time
               setRiderPosition(newPos);
+              gpsOriginRef.current = newPos;
+              
+              // Update heading if available
               if (Number.isFinite(watchPosition.coords.heading)) {
                 setHeading(watchPosition.coords.heading);
                 lastRiderHeadingRef.current = watchPosition.coords.heading;
               }
+              
+              // Calculate distance to destination
               const distToDest = calculateDistance(newPos, destPoint);
               if (distToDest <= NEAR_CUSTOMER_M) setNearCustomer(true);
-              if (distToDest <= 35) setArrived(true);
-              pushLocation(newPos, distToDest <= 35 ? 'arrived' : 'driving');
+              if (distToDest <= 35) {
+                setArrived(true);
+                setIsSimulating(false);
+                onStatusUpdate?.('delivered');
+                pushLocation(newPos, 'arrived');
+              } else {
+                pushLocation(newPos, nearCustomer ? 'near_customer' : 'driving');
+              }
+              
+              // Stop simulation when live GPS is active
+              setIsSimulating(false);
             },
             (watchError) => {
               // Silently ignore GPS watch errors
             },
-            { enableHighAccuracy: false, maximumAge: 10000, timeout: 15000 }
+            { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
           );
           gpsWatchIdRef.current = watchId;
         }

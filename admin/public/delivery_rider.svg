@@ -1,0 +1,409 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <clipPath id="clip-wheel">
+      <path d="M-18,-30 C-18,-38 18,-38 18,-30 C18,-22 -18,-22 -18,-30"/>
+    </clipPath>
+  </defs>
+  <g id="illustration" transform="translate(200,200)">
+
+    <!-- ========== RIDER GROUP ========== -->
+    <g id="rider-group">
+
+      <!-- Head - organic Bézier shape -->
+      <path id="rider-head" fill="#F5CFA0" stroke="#000000" stroke-width="1.5"
+        d="M-24,-38 C-18,-48 -8,-52 0,-52 C8,-52 16,-48 22,-38 C26,-30 24,-16 20,-6
+           C16,0 4,2 -4,0 C-12,0 -16,8 -14,16 C-12,24 -8,30 -4,35 C-2,38 0,40 -2,38
+           C-4,36 -6,32 -8,28 C-10,24 -12,18 -10,12 C-8,6 -4,2 -2,0
+           C-4,-2 -6,-4 -8,-6 C-10,-8 -10,-10 -8,-12 C-6,-14 -2,-12 0,-10
+           C2,-8 4,-6 2,-4 C0,-2 -2,-2 -4,-4 C-6,-6 -6,-10 -8,-12 C0,-10 2,-8 2,-6"/>
+
+      <!-- Ear -->
+      <path id="rider-ear" fill="#F5CFA0" stroke="#000000" stroke-width="1.2"
+        d="M-20,-36 L-25,-44 L-18,-44 C-16,-42 -16,-38 -18,-38"/>
+
+      <!-- Eye -->
+      <path id="rider-eye" fill="#000000" stroke="#000000" stroke-width="0.8"
+        d="M-10,-42 C-9,-45 -7,-45 -6,-42 C-5,-40 -7,-39 -8,-42 C-9,-44 -9,-45 -9,-42"/>
+
+      <!-- Nose -->
+      <path id="rider-nose" fill="#F5CFA0" stroke="#000000" stroke-width="0.8"
+        d="M-4,-36 L-2,-40 L-1,-40 C0,-38 2,-36 2,-34 C1,-32 -1,-34 -2,-36"/>
+
+      <!-- Smile -->
+      <path id="rider-smile" fill="#FFFFFF" stroke="#000000" stroke-width="0.8"
+        d="M-6,6 C-4,9 -1,9 2,6 C4,3 5,4 4,7 C3,9 2,10 0,9"/>
+
+      <!-- Neck -->
+      <path id="rider-neck" fill="#F5CFA0" stroke="#000000" stroke-width="1.2"
+        d="M-13,14 C-8,6 -2,0 2,0 C6,0 10,6 13,14 C10,11 6,9 2,9 C-2,9 -6,11 -10,14"/>
+
+      <!-- Undershirt - dark undershirt visible at collar -->
+      <path id="rider-undershirt" fill="#3A5A3A" stroke="#000000" stroke-width="1.2"
+        d="M-15,16 C-11,13 -11,16 -13,19 C-15,22 -19,21 -19,19 C-19,17 -17,14 -13,13"/>
+
+      <!-- Jacket body - organic shape -->
+      <path id="rider-jacket" fill="#2F4F2F" stroke="#000000" stroke-width="1.5"
+        d="M-18,14 C-20,18 -20,28 -15,34 C-10,38 -5,38 -2,36 C0,34 -3,30 -5,26
+           C-7,22 -10,18 -14,16 C-16,15 -18,14 -18,14"/>
+
+      <!-- Collar -->
+      <path id="rider-collar" fill="#2F4F2F" stroke="#000000" stroke-width="1.2"
+        d="M-10,10 C-8,14 -4,17 -2,16 C0,15 4,14 8,12"/>
+
+      <!-- Jacket buttons -->
+      <circle id="rider-btn1" cx="-9" cy="20" r="1.5" fill="#000000" stroke="#000000" stroke-width="0.5"/>
+      <circle id="rider-btn2" cx="-5" cy="24" r="1.5" fill="#000000" stroke="#000000" stroke-width="0.5"/>
+
+      <!-- Jacket sleeve left -->
+      <path id="rider-sleeve-left" fill="#2F4F2F" stroke="#000000" stroke-width="1.2"
+        d="M-18,14 C-22,16 -26,20 -28,26 C-28,30 -26,34 -22,35 C-18,36 -15,32 -14,28
+           C-13,24 -14,20 -16,18 C-18,16 -18,14 -18,14"/>
+
+      <!-- Jacket sleeve right -->
+      <path id="rider-sleeve-right" fill="#2F4F2F" stroke="#000000" stroke-width="1.2"
+        d="M18,14 C22,16 26,20 28,26 C28,30 26,34 22,35 C18,36 15,32 14,28
+           C13,24 14,20 16,18 C18,16 18,14 18,14"/>
+
+      <!-- Jacket front detail -->
+      <path id="rider-jacket-front" fill="#2F4F2F" stroke="#000000" stroke-width="1"
+        d="M-10,18 C-12,22 -12,26 -8,28 C-4,30 -1,28 0,26 C1,24 4,20 8,18"/>
+
+      <!-- Jacket pocket left -->
+      <path id="rider-pocket-left" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M-14,24 C-12,26 -10,26 -10,24 C-10,22 -12,22 -14,24"/>
+
+      <!-- Jacket pocket right -->
+      <path id="rider-pocket-right" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M14,24 C12,26 10,26 10,24 C10,22 12,22 14,24"/>
+
+      <!-- Jacket cuff left -->
+      <path id="rider-cuff-left" fill="#2F4F2F" stroke="#000000" stroke-width="1"
+        d="M-14,28 C-16,30 -16,34 -14,36 C-12,38 -10,36 -10,32 C-10,28 -12,26 -14,28"/>
+
+      <!-- Jacket cuff right -->
+      <path id="rider-cuff-right" fill="#2F4F2F" stroke="#000000" stroke-width="1"
+        d="M14,28 C16,30 16,34 14,36 C12,38 10,36 10,32 C10,28 12,26 14,28"/>
+
+      <!-- Sleeve detail left -->
+      <path id="rider-sleeve-left-detail" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M-22,18 C-24,16 -24,14 -20,12 C-16,10 -14,12 -14,16"/>
+
+      <!-- Sleeve detail right -->
+      <path id="rider-sleeve-right-detail" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M22,18 C24,16 24,14 20,12 C16,10 14,12 14,16"/>
+
+      <!-- Left arm -->
+      <path id="rider-left-arm" fill="#F5CFA0" stroke="#000000" stroke-width="1.2"
+        d="M-14,18 C-22,18 -30,14 -32,8 C-34,4 -30,0 -24,1 C-20,2 -18,6 -18,10"/>
+
+      <!-- Right arm -->
+      <path id="rider-right-arm" fill="#F5CFA0" stroke="#000000" stroke-width="1.2"
+        d="M14,18 C22,18 30,14 32,8 C34,4 30,0 24,1 C20,2 18,6 18,10"/>
+
+      <!-- Left hand -->
+      <path id="rider-hand-left" fill="#F5CFA0" stroke="#000000" stroke-width="1"
+        d="M-20,3 C-22,0 -20,-3 -16,-5 C-12,-7 -8,-5 -6,-2 C-5,1 -6,5 -5,8 C-4,10 -3,10 -4,8"/>
+
+      <!-- Right hand -->
+      <path id="rider-hand-right" fill="#F5CFA0" stroke="#000000" stroke-width="1"
+        d="M20,3 C18,0 20,-3 24,-5 C28,-7 32,-5 34,-2 C35,1 34,5 33,8 C32,10 31,10 30,8"/>
+
+      <!-- Hair -->
+      <path id="rider-hair" fill="#4A3728" stroke="#000000" stroke-width="0.8"
+        d="M-18,-6 C-24,0 -26,10 -24,22 C-22,30 -16,35 -8,34 C-2,32 2,24 4,14
+           C6,8 6,4 2,2 C0,0 -4,2 -6,6 C-8,10 -6,14 -4,18"/>
+
+      <!-- Hair front -->
+      <path id="rider-hair-front" fill="#4A3728" stroke="#000000" stroke-width="0.8"
+        d="M-16,-12 C-12,-16 -4,-18 0,-15 C4,-12 8,-10 12,-8 C14,-6 12,-2 10,0
+           C8,2 6,4 4,6 C2,8 0,8 -2,6 C-4,4 -6,2 -8,0"/>
+
+      <!-- Helmet body -->
+      <path id="rider-helmet" fill="#98FF98" stroke="#FFFFFF" stroke-width="1.5"
+        d="M-20,-28 C-14,-34 -8,-38 -3,-38 C0,-38 3,-35 5,-32 C8,-28 8,-24 6,-20
+           C4,-16 0,-16 -4,-18 C-8,-20 -12,-22 -16,-24 C-20,-26 -22,-28 -20,-28"/>
+
+      <!-- Helmet dome -->
+      <path id="rider-helmet-dome" fill="#98FF98" stroke="#FFFFFF" stroke-width="1"
+        d="M-14,-36 C-8,-40 0,-42 6,-38 C10,-34 12,-28 12,-22 C12,-16 8,-12 4,-10
+           C0,-8 -4,-10 -6,-14 C-8,-18 -10,-20 -12,-22"/>
+
+      <!-- Helmet visor -->
+      <path id="rider-visor" fill="#3A5A3A" stroke="#000000" stroke-width="0.8"
+        d="M-10,-36 C-4,-36 2,-38 6,-38 C10,-38 12,-35 10,-30 C8,-26 4,-26 0,-26
+           C-4,-26 -6,-28 -8,-30"/>
+
+      <!-- Helmet rivet -->
+      <circle id="rider-rivet" cx="0" cy="-30" r="1.5" fill="#000000"/>
+
+      <!-- Helmet chin strap -->
+      <path id="rider-chin-strap" fill="#000000" stroke="#000000" stroke-width="0.8"
+        d="M-12,-24 C-14,-24 -14,-22 -10,-22 C-6,-22 -6,-24 -4,-24"/>
+      <path id="rider-chin-strap-right" fill="#000000" stroke="#000000" stroke-width="0.8"
+        d="M12,-24 C14,-24 14,-22 10,-22 C6,-22 6,-24 4,-24"/>
+
+      <!-- Helmet band -->
+      <path id="rider-helmet-band" fill="#333333" stroke="#000000" stroke-width="0.8"
+        d="M-16,-28 C-18,-26 -20,-22 -18,-18 C-16,-14 -12,-12 -10,-14"/>
+
+      <!-- Collar rib -->
+      <path id="rider-collar-rib" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M-8,10 C-8,12 -4,14 0,14 C4,14 8,12 8,10"/>
+
+      <!-- Lapels -->
+      <path id="rider-lapel-left" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M-10,12 C-8,14 -5,16 -3,16 C-2,16 -1,14 0,12"/>
+      <path id="rider-lapel-right" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M10,12 C8,14 5,16 3,16 C2,16 1,14 0,12"/>
+
+      <!-- Undershirt collar detail -->
+      <path id="rider-undershirt-visible" fill="#3A5A3A" stroke="#000000" stroke-width="0.8"
+        d="M-8,10 C-8,12 -4,14 -2,14 C0,14 2,12 4,10"/>
+
+    </g>
+
+    <!-- ========== SCOOTER GROUP ========== -->
+    <g id="scooter-group">
+
+      <!-- Main scooter body -->
+      <path id="scooter-body" fill="#2F4F2F" stroke="#000000" stroke-width="2"
+        d="M-35,-5 C-70,-15 -70,15 -35,15 C-15,15 15,15 35,15 C55,15 60,-15 50,-20
+           C40,-25 25,-25 15,-22 C10,-18 5,-18 0,-15 C-5,-12 -15,-12 -25,-10
+           C-35,-10 -38,-12 -35,-5"/>
+
+      <!-- Body top edge detail -->
+      <path id="scooter-body-top" fill="#2F4F2F" stroke="#000000" stroke-width="1"
+        d="M-30,-10 C-45,-15 -55,-10 -55,-2 C-55,3 -50,8 -42,8 C-35,8 -25,5 -15,5
+           C-5,5 0,3 0,0 C0,2 -5,5 -10,8 C-15,10 -20,10 -25,8 C-30,6 -32,4 -30,-10"/>
+
+      <!-- Body bottom edge -->
+      <path id="scooter-body-bottom" fill="#2F4F2F" stroke="#000000" stroke-width="1"
+        d="M-35,5 C-40,10 -40,18 -35,22 C-30,25 -20,24 -10,22 C0,20 5,16 10,14
+           C15,12 15,10 10,10 C5,10 0,12 -5,14 C-10,16 -15,16 -20,14 C-25,12 -30,10 -35,5"/>
+
+      <!-- Body front detail -->
+      <path id="scooter-body-front" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M-25,0 C-32,5 -35,10 -33,15 C-30,18 -25,18 -20,15 C-15,12 -12,8 -10,5"/>
+
+      <!-- Body side panels -->
+      <path id="scooter-side-left" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M-45,-5 C-50,-2 -52,5 -48,10 C-44,14 -40,12 -38,8 C-36,4 -35,0 -35,-2"/>
+      <path id="scooter-side-right" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M45,-5 C50,-2 52,5 48,10 C44,14 40,12 38,8 C36,4 35,0 35,-2"/>
+
+      <!-- Front shield -->
+      <path id="scooter-front-shield" fill="#98FF98" stroke="#000000" stroke-width="1.5"
+        d="M-35,-15 C-50,-25 -55,-10 -52,-5 C-48,0 -38,-2 -28,-5
+           C-20,-8 -15,-10 -12,-10 C-8,-10 -5,-12 -5,-15 C-5,-18 -3,-20 -4,-22
+           C-5,-24 -8,-23 -10,-20 C-12,-16 -12,-14 -10,-11 C-8,-8 -5,-6 -3,-5"/>
+
+      <!-- Shield detail -->
+      <path id="scooter-shield-top" fill="#98FF98" stroke="#000000" stroke-width="0.8"
+        d="M-35,-15 C-42,-16 -48,-12 -48,-8 C-48,-4 -42,-2 -38,-3"/>
+      <path id="scooter-shield-bottom" fill="#98FF98" stroke="#000000" stroke-width="0.8"
+        d="M-35,-22 C-38,-24 -42,-22 -40,-18 C-38,-14 -35,-12 -35,-15"/>
+
+      <!-- Side panels -->
+      <path id="scooter-side-panel-left" fill="#8B4513" stroke="#000000" stroke-width="1"
+        d="M-42,-3 C-48,-2 -50,5 -48,10 C-46,14 -42,12 -40,8"/>
+      <path id="scooter-side-panel-right" fill="#8B4513" stroke="#000000" stroke-width="1"
+        d="M42,-3 C48,-2 50,5 48,10 C46,14 42,12 40,8"/>
+
+      <!-- Mudguard -->
+      <path id="scooter-mudguard" fill="#98FF98" stroke="#000000" stroke-width="1.2"
+        d="M-25,-25 C-32,-32 -38,-35 -38,-30 C-38,-25 -32,-20 -25,-15
+           C-18,-10 -8,-8 0,-8 C10,-8 20,-10 28,-15 C35,-20 35,-28 30,-30
+           C25,-32 18,-30 12,-25 C8,-20 5,-15 3,-10"/>
+
+      <!-- Mudguard curves -->
+      <path id="scooter-mudguard-front" fill="#98FF98" stroke="#000000" stroke-width="0.8"
+        d="M-40,-25 C-42,-30 -38,-35 -32,-35 C-26,-35 -22,-30 -20,-25"/>
+      <path id="scooter-mudguard-rear" fill="#98FF98" stroke="#000000" stroke-width="0.8"
+        d="M40,-25 C38,-30 42,-35 48,-35 C54,-35 58,-30 58,-25"/>
+
+      <!-- Floorboard -->
+      <path id="scooter-floorboard" fill="#8B4513" stroke="#000000" stroke-width="1.2"
+        d="M-35,10 C-45,15 -50,20 -50,25 C-50,30 -45,32 -35,30 C-25,28 -15,26 -5,26
+           C5,26 15,28 25,30 C35,32 40,28 45,25 C50,20 45,15 35,10"/>
+
+      <!-- Floorboard detail -->
+      <path id="scooter-floorboard-detail" fill="none" stroke="#5C3317" stroke-width="0.5"
+        d="M-30,15 C-35,18 -40,20 -38,25 C-35,28 -25,30 -15,28"/>
+
+      <!-- Seat -->
+      <path id="scooter-seat" fill="#2F4F2F" stroke="#000000" stroke-width="1.5"
+        d="M-10,25 C-15,22 -22,20 -28,18 C-34,16 -36,10 -30,8 C-24,6 -18,8 -12,10"/>
+
+      <!-- Seat cushion -->
+      <path id="scooter-seat-cushion" fill="#2F4F2F" stroke="#000000" stroke-width="0.8"
+        d="M-10,25 C-15,22 -22,20 -28,18 C-34,16 -36,10 -30,8 C-24,6 -18,8 -12,10"/>
+
+      <!-- Rear rack -->
+      <path id="scooter-rack" fill="#8B4513" stroke="#000000" stroke-width="1.2"
+        d="M-20,15 L-22,8 L-18,5 L-12,5 L-10,10 L-5,12 L0,10 L5,8 L12,5 L18,8 L20,12 L18,15"/>
+
+      <!-- Suspension -->
+      <path id="scooter-suspension-left" fill="none" stroke="#808080" stroke-width="1.5"
+        d="M-40,15 C-45,10 -48,0 -45,-10 C-42,-20 -38,-25 -35,-20"/>
+      <path id="scooter-suspension-right" fill="none" stroke="#808080" stroke-width="1.5"
+        d="M40,15 C45,10 48,0 45,-10 C42,-20 38,-25 35,-20"/>
+
+      <!-- Exhaust -->
+      <path id="scooter-exhaust" fill="#000000" stroke="#000000" stroke-width="1.2"
+        d="M45,15 C50,15 55,20 55,25 C55,30 50,32 45,30"/>
+
+      <!-- Exhaust tip -->
+      <path id="scooter-exhaust-tip" fill="#000000" stroke="#000000" stroke-width="0.8"
+        d="M45,30 C47,32 50,32 52,30 C54,28 52,25 48,25 C44,25 42,28 42,30"/>
+
+      <!-- Engine cover -->
+      <path id="scooter-engine-cover" fill="#2F4F2F" stroke="#000000" stroke-width="1.5"
+        d="M-25,5 C-30,0 -35,-5 -35,-10 C-35,-15 -30,-20 -20,-18 C-10,-16 -5,-10 -5,-5
+           C-5,0 -10,5 -15,5 C-20,5 -25,5 -25,5"/>
+
+      <!-- Engine detail -->
+      <path id="scooter-engine-detail" fill="none" stroke="#333333" stroke-width="0.5"
+        d="M-25,8 C-22,10 -18,12 -15,10"/>
+
+      <!-- Footrest -->
+      <path id="scooter-footrest" fill="#8B4513" stroke="#000000" stroke-width="1.2"
+        d="M-30,30 C-35,35 -38,40 -35,45 C-30,48 -25,45 -22,40"/>
+
+      <!-- Handlebars -->
+      <path id="scooter-handlebar-left" fill="none" stroke="#000000" stroke-width="1.5"
+        d="M-30,10 C-28,15 -25,20 -20,22 C-15,24 -10,22 -8,18"/>
+      <path id="scooter-handlebar-right" fill="none" stroke="#000000" stroke-width="1.5"
+        d="M30,10 C28,15 25,20 20,22 C15,24 10,22 8,18"/>
+
+      <!-- Grips -->
+      <path id="scooter-grip-left" fill="none" stroke="#000000" stroke-width="0.8"
+        d="M-30,10 C-28,14 -26,18 -23,20"/>
+      <path id="scooter-grip-right" fill="none" stroke="#000000" stroke-width="0.8"
+        d="M30,10 C28,14 26,18 23,20"/>
+
+      <!-- Brake levers -->
+      <path id="scooter-brake-left" fill="none" stroke="#000000" stroke-width="1"
+        d="M-28,13 C-30,16 -30,20 -28,22 C-26,24 -23,22 -22,18"/>
+      <path id="scooter-brake-right" fill="none" stroke="#000000" stroke-width="1"
+        d="M28,13 C26,16 26,20 28,22 C30,24 33,22 32,18"/>
+
+      <!-- Mirror -->
+      <path id="scooter-mirror" fill="#FFFFFF" stroke="#000000" stroke-width="0.8"
+        d="M-55,5 C-58,5 -60,8 -58,12 C-55,16 -50,18 -45,15 C-40,12 -40,8 -43,5"/>
+
+      <!-- Headlight -->
+      <path id="scooter-headlight" fill="#FFFFFF" stroke="#000000" stroke-width="0.8"
+        d="M-20,8 C-22,12 -25,16 -22,20 C-18,24 -14,22 -12,18"/>
+
+      <!-- Rear light -->
+      <path id="scooter-rear-light" fill="#FF0000" stroke="#000000" stroke-width="0.8"
+        d="M50,12 C53,15 55,18 53,20 C50,18 48,15 50,12"/>
+
+      <!-- Wheel covers -->
+      <path id="front-wheel-cover" fill="#1a1a1a" stroke="#000000" stroke-width="1.5"
+        d="M-12,-30 C-12,-38 12,-38 12,-30 C12,-22 -12,-22 -12,-30"/>
+      <path id="rear-wheel-cover" fill="#1a1a1a" stroke="#000000" stroke-width="1.5"
+        d="M18,-30 C18,-38 22,-38 22,-30 C22,-22 18,-22 18,-30"/>
+
+      <!-- Wheels -->
+      <g id="front-wheel">
+        <path id="front-wheel-rim" fill="#000000" stroke="#000000" stroke-width="1.5"
+          d="M-18,-30 C-18,-38 18,-38 18,-30 C18,-22 -18,-22 -18,-30"/>
+        <path id="front-tire" fill="#1a1a1a" stroke="#000000" stroke-width="1.5"
+          d="M-20,-30 C-20,-38 20,-38 20,-30 C20,-22 -20,-22 -20,-30"/>
+        <path id="front-spoke1" fill="none" stroke="#333333" stroke-width="0.8"
+          d="M-18,-30 L-8,-42 C-10,-38 -8,-30 -5,-30"/>
+        <path id="front-spoke2" fill="none" stroke="#333333" stroke-width="0.8"
+          d="M-18,-30 L-8,-42 C-10,-38 -8,-30 -5,-30"/>
+        <path id="front-spoke3" fill="none" stroke="#333333" stroke-width="0.8"
+          d="M18,-30 L8,-42 C10,-38 8,-30 5,-30"/>
+        <path id="front-spoke4" fill="none" stroke="#333333" stroke-width="0.8"
+          d="M18,-30 L8,-42 C10,-38 8,-30 5,-30"/>
+        <circle id="front-hub" cx="0" cy="-30" r="3" fill="#1a1a1a"/>
+        <circle id="front-hub-center" cx="0" cy="-30" r="1.5" fill="#FFFFFF"/>
+        <path id="front-brake-disc" fill="#333333" stroke="#000000" stroke-width="0.5"
+          d="M-12,-30 C-12,-36 12,-36 12,-30 C12,-24 -12,-24 -12,-30"/>
+        <path id="front-brake-caliper" fill="none" stroke="#000000" stroke-width="0.5"
+          d="M-10,-30 L-10,-38 L-2,-38 L-2,-30"/>
+        <path id="front-tread" fill="none" stroke="#555555" stroke-width="0.3"
+          d="M-18,-30 L-12,-30 M-14,-30 L-8,-30 M-10,-30 L-5,-30"/>
+      </g>
+      <g id="rear-wheel">
+        <path id="rear-wheel-rim" fill="#000000" stroke="#000000" stroke-width="1.5"
+          d="M-18,-30 C-18,-38 18,-38 18,-30 C18,-22 -18,-22 -18,-30"/>
+        <path id="rear-tire" fill="#1a1a1a" stroke="#000000" stroke-width="1.5"
+          d="M-20,-30 C-20,-38 20,-38 20,-30 C20,-22 -20,-22 -20,-30"/>
+        <path id="rear-spoke1" fill="none" stroke="#333333" stroke-width="0.8"
+          d="M-18,-30 L-8,-42 C-10,-38 -8,-30 -5,-30"/>
+        <path id="rear-spoke2" fill="none" stroke="#333333" stroke-width="0.8"
+          d="M-18,-30 L-8,-42 C-10,-38 -8,-30 -5,-30"/>
+        <path id="rear-spoke3" fill="none" stroke="#333333" stroke-width="0.8"
+          d="M18,-30 L8,-42 C10,-38 8,-30 5,-30"/>
+        <path id="rear-spoke4" fill="none" stroke="#333333" stroke-width="0.8"
+          d="M18,-30 L8,-42 C10,-38 8,-30 5,-30"/>
+        <circle id="rear-hub" cx="0" cy="-30" r="3" fill="#1a1a1a"/>
+        <circle id="rear-hub-center" cx="0" cy="-30" r="1.5" fill="#FFFFFF"/>
+        <path id="rear-brake-disc" fill="#333333" stroke="#000000" stroke-width="0.5"
+          d="M-12,-30 C-12,-36 12,-36 12,-30 C12,-24 -12,-24 -12,-30"/>
+        <path id="rear-brake-caliper" fill="none" stroke="#000000" stroke-width="0.5"
+          d="M-10,-30 L-10,-38 L-2,-38 L-2,-30"/>
+        <path id="rear-tread" fill="none" stroke="#555555" stroke-width="0.3"
+          d="M-18,-30 L-12,-30 M-14,-30 L-8,-30 M-10,-30 L-5,-30"/>
+      </g>
+    </g>
+
+    <!-- ========== DELIVERY BOX ========== -->
+    <g id="delivery-box-group">
+      <path id="delivery-box-body" fill="#98FF98" stroke="#000000" stroke-width="1.5"
+        d="M-25,10 C-35,15 -38,25 -38,30 C-38,38 -30,42 -20,42
+           C-10,42 0,40 0,35 C0,30 5,25 10,25 C15,25 20,20 25,18 C25,15 20,10 15,10
+           C10,10 5,12 0,15 C-5,18 -10,15 -15,10 Z"/>
+      <path id="delivery-box-lid" fill="#98FF98" stroke="#000000" stroke-width="1.5"
+        d="M-25,10 C-25,5 -22,0 -15,0 C-10,0 -5,3 0,5 C5,7 10,5 15,5
+           C20,5 25,8 25,15 C25,20 20,25 15,25 C10,25 5,22 0,20 C-5,18 -10,15 -15,10 Z"/>
+      <path id="delivery-box-thickness" fill="none" stroke="#000000" stroke-width="1.5"
+        d="M-25,35 C-28,35 -30,38 -30,40 C-30,42 -28,45 -25,45 C-22,45 -20,42 -20,40"/>
+      <path id="delivery-box-front-edge" fill="none" stroke="#000000" stroke-width="0.8"
+        d="M-30,45 C-28,48 -20,50 -15,48 C-10,46 -5,45 0,45"/>
+      <path id="delivery-box-side-edge" fill="none" stroke="#000000" stroke-width="0.8"
+        d="M-30,40 C-28,45 -20,48 -15,48 C-10,48 -5,46 0,45"/>
+      <path id="delivery-box-bracket-left" fill="none" stroke="#000000" stroke-width="1.5"
+        d="M-20,35 L-25,42 L-10,40"/>
+      <path id="delivery-box-bracket-right" fill="none" stroke="#000000" stroke-width="1.5"
+        d="M20,35 L25,42 L10,40"/>
+      <path id="delivery-box-strap-left" fill="none" stroke="#000000" stroke-width="1"
+        d="M-18,25 C-15,25 -10,26 -5,25 C0,24 5,24 8,23"/>
+      <path id="delivery-box-strap-right" fill="none" stroke="#000000" stroke-width="1"
+        d="M18,25 C15,25 10,26 5,25 C0,24 -5,24 -8,23"/>
+      <path id="delivery-box-strap-front" fill="none" stroke="#000000" stroke-width="0.5"
+        d="M-15,30 L-15,38 C-10,40 10,40 15,38"/>
+      <path id="delivery-box-strap-back" fill="none" stroke="#000000" stroke-width="0.5"
+        d="M-15,30 L-15,38 C-10,38 10,38 15,38"/>
+      <path id="delivery-box-center" fill="none" stroke="#333333" stroke-width="0.5"
+        d="M-15,33 L15,33"/>
+      <path id="delivery-box-detail-1" fill="none" stroke="#333333" stroke-width="0.5"
+        d="M-15,28 L15,28"/>
+      <path id="delivery-box-detail-2" fill="none" stroke="#333333" stroke-width="0.5"
+        d="M-15,38 L15,38"/>
+      <circle id="delivery-box-rivet" cx="-10" cy="30" r="2" fill="#000000"/>
+      <circle id="delivery-box-rivet2" cx="10" cy="30" r="2" fill="#000000"/>
+      <path id="delivery-box-bottom" fill="none" stroke="#000000" stroke-width="1.5"
+        d="M-15,45 C-12,45 -10,45 -10,42 C-10,38 -5,35 0,35 C5,35 10,38 10,42 C10,45 12,45 15,45"/>
+    </g>
+
+    <!-- ========== ADDITIONAL DETAILS ========== -->
+    <g id="additional-details">
+      <path id="scooter-scratch-left" fill="none" stroke="#333333" stroke-width="0.5"
+        d="M-30,5 C-32,10 -34,15 -32,20"/>
+      <path id="scooter-scratch-right" fill="none" stroke="#333333" stroke-width="0.5"
+        d="M30,5 C32,10 34,15 32,20"/>
+      <circle id="scooter-rivet-front" cx="-50" cy="-15" r="1.5" fill="#000000"/>
+      <circle id="scooter-rivet-rear" cx="50" cy="-15" r="1.5" fill="#000000"/>
+      <path id="scooter-mirror-arm" fill="none" stroke="#000000" stroke-width="0.8"
+        d="M-55,5 L-50,8 L-48,10"/>
+      <path id="scooter-mirror-detail" fill="none" stroke="#000000" stroke-width="0.5"
+        d="M-50,5 L-48,8 L-48,10"/>
+    </g>
+
+  </g>
+</svg>

@@ -185,13 +185,13 @@ export default function Navbar() {
           <div className="flex-1 flex items-center justify-start border-r border-black/15 h-full px-[22px]">
             <a href={`tel:${STORE_INFO.phoneTel}`} className="flex items-center gap-2 underline px-2">
               <Phone size={12} className="stroke-[2.5]" />
-              Order by Phone: {STORE_INFO.phone}
+              {STORE_INFO.phone}
             </a>
           </div>
           <div className="flex-1 flex items-center justify-center border-r border-black/15 h-full px-[18px]">
             <span className="flex items-center gap-2 px-2">
               <Clock size={12} className="stroke-[2.5]" />
-              Delivery Hours: 6:00 PM to 2:00 AM (NST)
+              Delivery Hours: 10:00 PM to 4:00 AM (NST)
             </span>
           </div>
           <div className="flex-1 flex items-center justify-end h-full px-[18px]">
@@ -208,7 +208,7 @@ export default function Navbar() {
             <Phone size={11} /> {STORE_INFO.phone}
           </span>
           <span className="text-[10px] opacity-90">
-            6 PM - 2 AM - Cash or Card
+            10 PM - 4 AM - Cash or Card
           </span>
         </div>
       </div>

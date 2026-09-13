@@ -61,12 +61,20 @@ export async function getChatbotReply(message, context) {
     return `Namaste ${greeting}! 👋 I'm your Jhyaap Station assistant.\n\nI can help with:\n• Store location & Google Maps\n• Live order tracking\n• Delivery areas & timing\n• Loyalty points & promo codes\n• Instagram & Facebook\n• Product recommendations\n\nWhat do you need?`;
   }
 
-  if (matchAny(text, ['location', 'address', 'where are you', 'store', 'map', 'google map', 'find you', 'directions', 'kaha', 'kaha cha', 'kaha ho'])) {
+  if (matchAny(text, ['location', 'address', 'where are you', 'store', 'map', 'google map', 'find you', 'directions', 'kaha', 'kaha cha', 'kaha ho', 'jhyaap station', 'about store', 'store info', 'shop location', 'liquor store'])) {
     return storeLocationReply();
   }
 
   if (matchAny(text, ['instagram', 'insta', 'facebook', 'social', 'follow'])) {
-    return `Follow **${STORE_INFO.name}**:\n\n• Instagram: ${STORE_INFO.instagram}\n• Facebook: ${STORE_INFO.facebook}\n\nStore map:\n${STORE_INFO.googleMapsUrl}`;
+    return {
+      type: 'social',
+      text: `Follow **${STORE_INFO.name}** on social media:\n\n• Instagram: ${STORE_INFO.instagram}\n• Facebook: ${STORE_INFO.facebook}\n\n📍 Store location: ${STORE_INFO.googleMapsUrl}`,
+      social: {
+        instagram: STORE_INFO.instagram,
+        facebook: STORE_INFO.facebook,
+        whatsapp: STORE_INFO.whatsapp
+      }
+    };
   }
 
   if (matchAny(text, ['track', 'order status', 'where is my order', 'delivery status', 'live track', 'gps'])) {
@@ -97,12 +105,30 @@ export async function getChatbotReply(message, context) {
     return `**Promo codes** at checkout:\n\n• **JHYAAP20** — 20% off (min Rs 500)\n• **FIRST100** — Rs 100 off\n• **DELIVERY50** — 50% off delivery (min Rs 1000)\n\nPlus auto 10% off orders above Rs 5,000.`;
   }
 
-  if (matchAny(text, ['deliver', 'area', 'zone', 'kathmandu', 'bhaktapur', 'where do you deliver'])) {
-    return `We deliver across Kathmandu, Lalitpur & Bhaktapur including:\n${getAllAreaNames().slice(0, 12).map((a) => `• ${a}`).join('\n')}\n• …and ${getAllAreaNames().length - 12}+ more areas on our live map.\n\nNight delivery typically **30–90 min** by zone. Free delivery on orders above Rs 3,000.`;
+  if (matchAny(text, ['deliver', 'area', 'zone', 'kathmandu', 'bhaktapur', 'where do you deliver', 'delivery area', 'service area'])) {
+    return {
+      type: 'delivery',
+      text: `We deliver across Kathmandu, Lalitpur & Bhaktapur Valley including:\n${getAllAreaNames().slice(0, 12).map((a) => `• ${a}`).join('\n')}\n• …and ${getAllAreaNames().length - 12}+ more areas on our live map.\n\n🕐 **Delivery Hours:** 10:00 PM to 4:00 AM (NST)\n⏱️ **Delivery Time:** 30–90 min by zone\n🎁 **Free Delivery:** Orders above Rs 3,000\n\nCheck your area on the map during checkout!`,
+      delivery: {
+        cities: STORE_INFO.deliveryCities,
+        totalAreas: getAllAreaNames().length,
+        hours: '10:00 PM to 4:00 AM',
+        freeDeliveryThreshold: 3000
+      }
+    };
   }
 
-  if (matchAny(text, ['hour', 'open', 'close', 'time', 'night'])) {
-    return `**${STORE_INFO.name}** runs late-night delivery across Kathmandu Valley.\n\nShop: ${STORE_INFO.address}\nMap: ${STORE_INFO.googleMapsUrl}\n\nOrders auto-process — no need to call in.`;
+  if (matchAny(text, ['hour', 'open', 'close', 'time', 'night', 'timing', 'when'])) {
+    return {
+      type: 'hours',
+      text: `**${STORE_INFO.name}** - Night Delivery Hours\n\n🕙 **Delivery Hours:** 10:00 PM to 4:00 AM (NST)\n📍 **Location:** ${STORE_INFO.address}\n🚚 **Service Area:** Kathmandu, Lalitpur & Bhaktapur Valley\n\n💡 **How It Works:**\n• Place your order online during delivery hours\n• Orders auto-process - no need to call\n• Live GPS tracking when rider heads out\n• Cash, eSewa, or Khalti payment options\n\n📞 Need help? Call ${STORE_INFO.phone}`,
+      hours: {
+        deliveryStart: '10:00 PM',
+        deliveryEnd: '4:00 AM',
+        location: STORE_INFO.address,
+        googleMapsUrl: STORE_INFO.googleMapsUrl
+      }
+    };
   }
 
   if (matchAny(text, ['payment', 'pay', 'cod', 'esewa', 'khalti'])) {
@@ -140,8 +166,18 @@ export async function getChatbotReply(message, context) {
     return `Prices vary by brand. Popular range: Rs 1,500–9,000. Search products or ask "recommend whisky".`;
   }
 
-  if (matchAny(text, ['contact', 'phone', 'call', 'whatsapp', 'human', 'agent'])) {
-    return `**Contact ${STORE_INFO.name}**\n\nPhone/WhatsApp: ${STORE_INFO.phone}\nEmail: ${STORE_INFO.email}\nLocation: ${STORE_INFO.googleMapsUrl}\nInstagram: ${STORE_INFO.instagram}`;
+  if (matchAny(text, ['contact', 'phone', 'call', 'whatsapp', 'human', 'agent', 'support', 'help'])) {
+    return {
+      type: 'contact',
+      text: `**Contact ${STORE_INFO.name}**\n\n📞 **Phone:** ${STORE_INFO.phone}\n📞 **Secondary:** ${STORE_INFO.phone2}\n📧 **Email:** ${STORE_INFO.email}\n💬 **WhatsApp:** ${STORE_INFO.whatsapp}\n\n📍 **Location:** ${STORE_INFO.googleMapsUrl}\n\nFor quick support, WhatsApp us directly!`,
+      contact: {
+        phone: STORE_INFO.phone,
+        phone2: STORE_INFO.phone2,
+        email: STORE_INFO.email,
+        whatsapp: STORE_INFO.whatsapp,
+        googleMapsUrl: STORE_INFO.googleMapsUrl
+      }
+    };
   }
 
   if (matchAny(text, ['admin', 'staff'])) {

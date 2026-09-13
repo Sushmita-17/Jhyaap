@@ -39,6 +39,7 @@ const links = [
   { to: adminPath('trending'), label: 'Trending', icon: Flame },
   { to: adminPath('flash-sale'), label: 'Flash Sale', icon: Zap },
   { to: adminPath('delivery'), label: 'Delivery', icon: Truck },
+  { to: adminPath('delivery-fees'), label: 'Delivery Fees', icon: TrendingUp },
   { to: adminPath('riders'), label: 'Riders', icon: Bike },
   { to: adminPath('categories'), label: 'Categories', icon: Tags },
   { to: adminPath('banners'), label: 'Banners', icon: Image },

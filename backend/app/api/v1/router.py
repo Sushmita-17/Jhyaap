@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, settings, products, riders, orders, earnings, customers, coupons, banners, categories, delivery, reports, notifications, tracking, websocket, chatbot, uploads, location
+from app.api.v1.endpoints import auth, settings, products, riders, orders, earnings, customers, coupons, banners, categories, delivery, reports, notifications, tracking, websocket, chatbot, uploads, location, delivery_fees
 
 api_router = APIRouter()
 api_router.include_router(auth.router)
@@ -21,3 +21,4 @@ api_router.include_router(websocket.router)
 api_router.include_router(chatbot.router)
 api_router.include_router(uploads.router)
 api_router.include_router(location.router)
+api_router.include_router(delivery_fees.router)

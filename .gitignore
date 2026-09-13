@@ -82,7 +82,6 @@ out
 
 # Gatsby files
 .cache/
-public
 
 # vuepress v2 temp and cache directories
 .temp

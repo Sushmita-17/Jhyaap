@@ -354,7 +354,7 @@ export default function HomePage() {
                       <CountdownTimer />
                       <span className="text-[10px] text-green-500 font-bold uppercase tracking-wider bg-green-500/10 px-2 py-0.5 rounded-full animate-pulse">Running</span>
                     </div>
-                    <span className={`text-[12px] font-medium ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>Resetting tonight at 2:00 AM NST</span>
+                    <span className={`text-[12px] font-medium ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>Resetting tonight at 4:00 AM NST</span>
                   </div>
                 </div>
 

@@ -1,6 +1,8 @@
-﻿/** Kathmandu, Lalitpur & Bhaktapur delivery areas — shared by map, checkout & backend seed */
-export const DELIVERY_AREAS = [
-  // Kathmandu — Zone A (core)
+﻿/** Kathmandu, Lalitpur & Bhaktapur delivery areas — now fetched from API */
+import { getDeliveryFees } from '@/lib/backendAPI';
+
+// Fallback data for when API is unavailable
+const FALLBACK_DELIVERY_AREAS = [
   { name: 'Thamel', city: 'Kathmandu', lat: 27.7154, lng: 85.3123, zone: 'A', deliveryFee: 80, etaMinutes: 35 },
   { name: 'New Baneshwor', city: 'Kathmandu', lat: 27.6889, lng: 85.3375, zone: 'A', deliveryFee: 80, etaMinutes: 35 },
   { name: 'Putalisadak', city: 'Kathmandu', lat: 27.705, lng: 85.319, zone: 'A', deliveryFee: 80, etaMinutes: 35 },
@@ -129,21 +131,76 @@ export const DELIVERY_AREAS = [
   { name: 'Nagarikot', city: 'Bhaktapur', lat: 27.655, lng: 85.41, zone: 'D', deliveryFee: 150, etaMinutes: 90 },
 ];
 
-const areaByName = new Map(DELIVERY_AREAS.map((a) => [a.name, a]));
+// Cache for delivery areas
+let cachedDeliveryAreas = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Convert API response to delivery areas format
+function convertApiToDeliveryAreas(apiFees) {
+  return apiFees.fees.map(fee => ({
+    name: fee.area_name,
+    city: fee.city,
+    lat: fee.lat,
+    lng: fee.lng,
+    zone: fee.zone,
+    deliveryFee: fee.delivery_fee,
+    etaMinutes: fee.eta_minutes
+  }));
+}
+
+// Fetch delivery areas from API with fallback
+export async function fetchDeliveryAreas() {
+  const now = Date.now();
+  
+  // Return cached data if still valid
+  if (cachedDeliveryAreas && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
+    return cachedDeliveryAreas;
+  }
+  
+  try {
+    const apiData = await getDeliveryFees();
+    const areas = convertApiToDeliveryAreas(apiData);
+    cachedDeliveryAreas = areas;
+    cacheTimestamp = now;
+    return areas;
+  } catch (error) {
+    console.warn('Failed to fetch delivery fees from API, using fallback:', error);
+    return FALLBACK_DELIVERY_AREAS;
+  }
+}
+
+// Synchronous function for backward compatibility (uses cached data)
+export function getDeliveryAreas() {
+  if (cachedDeliveryAreas) {
+    return cachedDeliveryAreas;
+  }
+  return FALLBACK_DELIVERY_AREAS;
+}
+
+// Legacy functions for backward compatibility
+const areaByName = new Map(FALLBACK_DELIVERY_AREAS.map((a) => [a.name, a]));
 
 export function getDeliveryArea(name) {
-  return areaByName.get(name);
+  const areas = getDeliveryAreas();
+  const areaMap = new Map(areas.map((a) => [a.name, a]));
+  return areaMap.get(name);
 }
 
 export function getAreasByCity(city) {
-  return DELIVERY_AREAS.filter((a) => a.city === city);
+  const areas = getDeliveryAreas();
+  return areas.filter((a) => a.city === city);
 }
 
 export function getAllAreaNames() {
-  return DELIVERY_AREAS.map((a) => a.name);
+  const areas = getDeliveryAreas();
+  return areas.map((a) => a.name);
 }
 
 export const DELIVERY_FEE_BY_AREA = Object.fromEntries(
-  DELIVERY_AREAS.map((a) => [a.name, a.deliveryFee])
+  FALLBACK_DELIVERY_AREAS.map((a) => [a.name, a.deliveryFee])
 );
+
+// Export for initialization
+export const DELIVERY_AREAS = FALLBACK_DELIVERY_AREAS;
 

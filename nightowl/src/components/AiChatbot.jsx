@@ -61,7 +61,9 @@ export default function AiChatbot() {
     const botMsg = {
       id: `a_${Date.now()}`,
       role: 'assistant',
-      content: reply,
+      content: typeof reply === 'object' ? reply.text : reply,
+      type: typeof reply === 'object' ? reply.type : 'text',
+      data: typeof reply === 'object' ? reply : null,
       createdAt: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, botMsg]);
@@ -117,16 +119,170 @@ export default function AiChatbot() {
                 key={msg.id}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div
-                  className={`max-w-[85%] rounded-xl px-2.5 py-2 text-[11px] leading-relaxed whitespace-pre-wrap ${
-                    msg.role === 'user'
-                      ? 'bg-gold-primary text-black font-medium'
-                      : isLight 
-                        ? 'border border-gray-200 bg-white text-gray-700 shadow-sm' 
-                        : 'border border-white/5 bg-night-800 text-night-200 shadow-sm'
-                  }`}
-                >
-                  {msg.content.replace(/\*\*(.*?)\*\*/g, '$1')}
+                <div className={`max-w-[85%] flex flex-col gap-1 ${
+                  msg.role === 'user' ? 'items-end' : 'items-start'
+                }`}>
+                  <div
+                    className={`rounded-xl px-2.5 py-2 text-[11px] leading-relaxed whitespace-pre-wrap ${
+                      msg.role === 'user'
+                        ? 'bg-gold-primary text-black font-medium'
+                        : isLight 
+                          ? 'border border-gray-200 bg-white text-gray-700 shadow-sm' 
+                          : 'border border-white/5 bg-night-800 text-night-200 shadow-sm'
+                    }`}
+                  >
+                    {typeof msg.content === 'string' ? msg.content.replace(/\*\*(.*?)\*\*/g, '$1') : msg.content}
+                  </div>
+                  {msg.type === 'location' && msg.data?.location && (
+                    <div className={`w-full rounded-lg overflow-hidden border ${
+                      isLight ? 'border-gray-200' : 'border-white/10'
+                    }`}>
+                      <iframe
+                        src={msg.data.location.mapsEmbedUrl}
+                        width="100%"
+                        height="150"
+                        style={{ border: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Jhyaap Station Location"
+                      />
+                      <a
+                        href={msg.data.location.googleMapsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`block w-full py-1.5 text-center text-[10px] font-medium transition-colors ${
+                          isLight 
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                            : 'bg-white/5 text-night-300 hover:bg-white/10'
+                        }`}
+                      >
+                        Open in Google Maps →
+                      </a>
+                    </div>
+                  )}
+                  {msg.type === 'social' && msg.data?.social && (
+                    <div className={`flex gap-1.5 ${
+                      isLight ? 'text-gray-600' : 'text-night-400'
+                    }`}>
+                      <a
+                        href={msg.data.social.instagram}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1 text-[10px] hover:text-[#E1306C]"
+                      >
+                        <span className="font-semibold">Instagram</span>
+                      </a>
+                      <a
+                        href={msg.data.social.facebook}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1 text-[10px] hover:text-[#1877F2]"
+                      >
+                        <span className="font-semibold">Facebook</span>
+                      </a>
+                      <a
+                        href={msg.data.social.whatsapp}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1 text-[10px] hover:text-green-500"
+                      >
+                        <span className="font-semibold">WhatsApp</span>
+                      </a>
+                    </div>
+                  )}
+                  {msg.type === 'contact' && msg.data?.contact && (
+                    <div className={`flex flex-col gap-1 w-full ${
+                      isLight ? 'text-gray-600' : 'text-night-400'
+                    }`}>
+                      <a
+                        href={`tel:${msg.data.contact.phone}`}
+                        className={`flex items-center gap-1.5 text-[10px] py-1 px-2 rounded hover:bg-gray-100 dark:hover:bg-white/5 ${
+                          isLight ? 'hover:text-gray-900' : 'hover:text-white'
+                        }`}
+                      >
+                        <span className="font-semibold">📞 Call</span>
+                        <span>{msg.data.contact.phone}</span>
+                      </a>
+                      <a
+                        href={`tel:${msg.data.contact.phone2}`}
+                        className={`flex items-center gap-1.5 text-[10px] py-1 px-2 rounded hover:bg-gray-100 dark:hover:bg-white/5 ${
+                          isLight ? 'hover:text-gray-900' : 'hover:text-white'
+                        }`}
+                      >
+                        <span className="font-semibold">📞 Call (Alt)</span>
+                        <span>{msg.data.contact.phone2}</span>
+                      </a>
+                      <a
+                        href={msg.data.contact.whatsapp}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1.5 text-[10px] py-1 px-2 rounded hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600"
+                      >
+                        <span className="font-semibold">💬 WhatsApp</span>
+                      </a>
+                      <a
+                        href={msg.data.contact.googleMapsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1.5 text-[10px] py-1 px-2 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                      >
+                        <span className="font-semibold">📍 Google Maps</span>
+                      </a>
+                    </div>
+                  )}
+                  {msg.type === 'delivery' && msg.data?.delivery && (
+                    <div className={`flex flex-col gap-1 w-full text-[10px] ${
+                      isLight ? 'text-gray-600' : 'text-night-400'
+                    }`}>
+                      <div className={`py-1 px-2 rounded ${
+                        isLight ? 'bg-gray-100' : 'bg-white/5'
+                      }`}>
+                        <span className="font-semibold">🚚 Service Areas:</span>
+                        <span className="ml-1">{msg.data.delivery.cities.join(', ')}</span>
+                      </div>
+                      <div className={`py-1 px-2 rounded ${
+                        isLight ? 'bg-gray-100' : 'bg-white/5'
+                      }`}>
+                        <span className="font-semibold">📍 Total Areas:</span>
+                        <span className="ml-1">{msg.data.delivery.totalAreas}+ locations</span>
+                      </div>
+                      <div className={`py-1 px-2 rounded ${
+                        isLight ? 'bg-gray-100' : 'bg-white/5'
+                      }`}>
+                        <span className="font-semibold">🕐 Hours:</span>
+                        <span className="ml-1">{msg.data.delivery.hours}</span>
+                      </div>
+                      <div className={`py-1 px-2 rounded ${
+                        isLight ? 'bg-gray-100' : 'bg-white/5'
+                      }`}>
+                        <span className="font-semibold">🎁 Free Delivery:</span>
+                        <span className="ml-1">Above Rs {msg.data.delivery.freeDeliveryThreshold.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  )}
+                  {msg.type === 'hours' && msg.data?.hours && (
+                    <div className={`flex flex-col gap-1 w-full text-[10px] ${
+                      isLight ? 'text-gray-600' : 'text-night-400'
+                    }`}>
+                      <div className={`py-1 px-2 rounded ${
+                        isLight ? 'bg-gray-100' : 'bg-white/5'
+                      }`}>
+                        <span className="font-semibold">🕙 Delivery:</span>
+                        <span className="ml-1">{msg.data.hours.deliveryStart} - {msg.data.hours.deliveryEnd}</span>
+                      </div>
+                      <a
+                        href={msg.data.hours.googleMapsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`flex items-center gap-1.5 py-1 px-2 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 ${
+                          isLight ? 'hover:text-gray-900' : 'hover:text-white'
+                        }`}
+                      >
+                        <span className="font-semibold">📍 Location</span>
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -176,8 +332,8 @@ export default function AiChatbot() {
                 placeholder="Ask anything..."
                 className={`input-field flex-1 py-1 text-[11px] ${
                   isLight 
-                    ? 'bg-white border-gray-200' 
-                    : 'bg-night-800 border-white/10'
+                    ? 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400' 
+                    : 'bg-night-800 border-white/10 text-white placeholder:text-night-400'
                 }`}
               />
               <button

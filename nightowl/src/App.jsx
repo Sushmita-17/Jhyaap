@@ -18,6 +18,7 @@ import ContactPage from './pages/ContactPage';
 import ReviewsPage from './pages/ReviewsPage';
 import { useAppStore } from './store/appStore';
 import AiChatbot from './components/AiChatbot';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import BottomNav from './components/BottomNav';
 import { useGlobalRiderTracking } from './hooks/useGlobalRiderTracking';
 import { useThemeStore } from './store/themeStore';
@@ -65,6 +66,7 @@ function StoreShell({ children }) {
     <>
       <Navbar />
       <AiChatbot />
+      <PWAInstallPrompt />
       <BottomNav />
       <main className="flex-1 w-full pb-[80px] md:pb-0">{children}</main>
       <Footer />

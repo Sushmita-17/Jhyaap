@@ -1,0 +1,29 @@
+{
+  "packageId": "com.jhyaapstation.app",
+  "host": "jhyaapstation.com",
+  "name": "Jhyaap Station",
+  "launcherName": "Jhyaap Station",
+  "display": "standalone",
+  "themeColor": "#F5A623",
+  "navigationColor": "#1C1410",
+  "backgroundColor": "#1C1410",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://jhyaapstation.com/logo-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "splashScreenBackgroundColor": "#1C1410",
+  "splashScreenIconUrl": "https://jhyaapstation.com/logo-512.png",
+  "signingKey": {
+    "path": "/path/to/keystore.jks",
+    "alias": "jhyaapstation"
+  },
+  "features": {
+    "locationEnabled": true,
+    "shareEnabled": true
+  },
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://jhyaapstation.com/manifest.json",
+  "fallbackType": "customtabs",
+  "versionCode": 1,
+  "versionName": "1.0.0"
+}

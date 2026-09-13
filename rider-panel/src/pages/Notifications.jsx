@@ -33,6 +33,10 @@ export default function Notifications() {
         if (response.ok) {
           const data = await response.json()
           setNotifications(Array.isArray(data) ? data : data.notifications || [])
+        } else if (response.status === 404) {
+          // Notifications endpoint not implemented - silently ignore
+          console.log('Notifications endpoint not available')
+          setNotifications([])
         }
       } catch (err) {
         console.error('Error fetching notifications:', err)

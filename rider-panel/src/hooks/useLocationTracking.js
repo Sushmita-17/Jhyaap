@@ -57,7 +57,7 @@ export function useLocationTracking(enabled = true) {
 
     setIsTracking(true)
 
-    // Watch position with high accuracy for mobile
+    // Watch position with high accuracy for mobile (Google Maps-like tracking)
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         sendLocationToBackend(position)
@@ -67,20 +67,20 @@ export function useLocationTracking(enabled = true) {
         console.error('Geolocation error:', err)
       },
       {
-        enableHighAccuracy: false,
-        timeout: 15000,
-        maximumAge: 60000
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 5000
       }
     )
 
-    // Also send periodic updates every 10 seconds (backup)
+    // Also send periodic updates every 3 seconds (backup for smoother tracking)
     intervalRef.current = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         (position) => sendLocationToBackend(position),
         (err) => console.error('Periodic location error:', err),
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
       )
-    }, 10000)
+    }, 3000)
   }
 
   const stopTracking = () => {

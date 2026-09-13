@@ -17,6 +17,7 @@ import AdminTrendingPage from './pages/admin/AdminTrendingPage';
 import AdminFlashSalePage from './pages/admin/AdminFlashSalePage';
 import AdminCouponsPage from './pages/admin/AdminCouponsPage';
 import AdminDeliveryPage from './pages/admin/AdminDeliveryPage';
+import AdminDeliveryFeesPage from './pages/admin/AdminDeliveryFeesPage';
 import AdminInventoryPage from './pages/admin/AdminInventoryPage';
 import AdminRevenuePage from './pages/admin/AdminRevenuePage';
 import AdminRidersPage from './pages/admin/AdminRidersPage';
@@ -53,6 +54,7 @@ function App() {
               <Route path="flash-sale" element={<AdminFlashSalePage />} />
               <Route path="inventory" element={<AdminInventoryPage />} />
               <Route path="delivery" element={<AdminDeliveryPage />} />
+              <Route path="delivery-fees" element={<AdminDeliveryFeesPage />} />
               <Route path="riders" element={<AdminRidersPage />} />
               <Route path="revenue" element={<AdminRevenuePage />} />
               <Route path="categories" element={<AdminCategoriesPage />} />
