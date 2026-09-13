@@ -209,7 +209,7 @@ export default function CheckoutPage() {
 
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    const order = createOrder(
+    const order = await createOrder(
       items,
       selectedAddress,
       paymentMethod,

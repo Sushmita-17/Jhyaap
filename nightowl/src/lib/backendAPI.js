@@ -35,7 +35,7 @@ export function createBackendOrder(order) {
     method: 'POST',
     body: JSON.stringify({
       customer_id: order.userId,
-      client_order_id: order.id,
+      client_order_id: null, // Let backend generate sequential order number
       items: order.items.map((item) => ({
         product_id: item.product?.id || item.id,
         name: item.product?.name || item.name,

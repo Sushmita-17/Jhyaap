@@ -105,7 +105,7 @@ export default function OrderTrackingPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to account
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Order {order.id}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Order No {order.orderNumber || order.id?.slice(0, 8)}</h1>
           <p className="mt-1 text-sm text-gray-600">Placed on {new Date(order.createdAt).toLocaleString()}</p>
         </div>
       </div>

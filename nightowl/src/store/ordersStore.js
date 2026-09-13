@@ -76,7 +76,7 @@ export const useOrdersStore = create((set, get) => ({
   selectedOrderId: null,
   hydrateOrders: (orders) => set({ orders }),
 
-  createOrder: (items, address, paymentMethod, discount, userId, pointsRedeemed = 0, notes, couponCode, paymentScreenshot = null) => {
+  createOrder: async (items, address, paymentMethod, discount, userId, pointsRedeemed = 0, notes, couponCode, paymentScreenshot = null) => {
     const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
     const providedLat = Number(address.lat ?? address.latitude);
     const providedLng = Number(address.lng ?? address.longitude);
@@ -85,8 +85,10 @@ export const useOrdersStore = create((set, get) => ({
       : getAreaCoordinates(address.area);
     const rider = createRiderAtStore();
 
+    const tempId = generateOrderId();
     const newOrder = {
-      id: generateOrderId(),
+      id: tempId,
+      orderNumber: null, // Will be set from backend
       items,
       subtotal,
       discount,
@@ -116,27 +118,52 @@ export const useOrdersStore = create((set, get) => ({
     };
 
     if (pointsRedeemed > 0) {
-      useLoyaltyStore.getState().redeemPoints(userId, pointsRedeemed, newOrder.id);
+      useLoyaltyStore.getState().redeemPoints(userId, pointsRedeemed, tempId);
     }
 
+    // Save locally first
     set((state) => {
       const updated = [...state.orders, newOrder];
       saveOrdersToStorage(updated);
       return { orders: updated };
     });
 
-    createBackendOrder(newOrder).catch((error) => {
-      console.warn('Backend order sync failed; local order retained:', error.message);
-    });
-    // Add notification for new order
-    useNotificationStore.getState().addNotification({
-      type: 'order',
-      title: 'New Order Received',
-      message: `Order ${newOrder.id} placed for Rs ${newOrder.total.toLocaleString()}`,
-      actionUrl: `/admin/orders`,
-    });
+    try {
+      const backendOrder = await createBackendOrder(newOrder);
+      // Update with backend order number
+      const updatedOrder = {
+        ...newOrder,
+        id: backendOrder.id,
+        orderNumber: backendOrder.order_number,
+      };
 
-    return newOrder;
+      // Replace temp order with backend order
+      set((state) => {
+        const updated = state.orders.map(o => o.id === tempId ? updatedOrder : o);
+        saveOrdersToStorage(updated);
+        return { orders: updated };
+      });
+
+      // Add notification for new order
+      useNotificationStore.getState().addNotification({
+        type: 'order',
+        title: 'New Order Received',
+        message: `Order No ${backendOrder.order_number} placed for Rs ${newOrder.total.toLocaleString()}`,
+        actionUrl: `/admin/orders`,
+      });
+
+      return updatedOrder;
+    } catch (error) {
+      console.warn('Backend order sync failed; local order retained:', error.message);
+      // Add notification for new order with temp ID
+      useNotificationStore.getState().addNotification({
+        type: 'order',
+        title: 'New Order Received',
+        message: `Order ${tempId} placed for Rs ${newOrder.total.toLocaleString()}`,
+        actionUrl: `/admin/orders`,
+      });
+      return newOrder;
+    }
   },
 
   updateOrderStatus: (orderId, status, userId) => {
