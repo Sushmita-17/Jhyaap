@@ -36,6 +36,8 @@ export default function AdminOrdersPage() {
           updatedAt: order.updated_at,
           userId: order.customer_id,
           deliveryRider: order.deliveryRider || null,
+          customer_name: order.customer_name || 'Unknown',
+          customer_phone: order.customer_phone || null,
           address: {
             label: 'Delivery address',
             area: order.delivery_address || 'Kathmandu',
@@ -141,14 +143,14 @@ export default function AdminOrdersPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-[#C9A84C]/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative flex flex-wrap items-start justify-between gap-3 md:gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className={`font-mono text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>Order #{order.order_number || order.id?.slice(0, 8)}</p>
+                    <p className={`font-mono text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>Order No {order.order_number || 'N/A'}</p>
                     <p className={`mt-1 text-sm md:text-lg font-semibold group-hover:text-[#C9A84C] transition-colors ${
                       isLight ? 'text-gray-900' : 'text-white'
                     }`}>
                       Rs {order.total?.toLocaleString() || 'N/A'}
                     </p>
                     <p className={`text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#666666]'}`}>
-                      {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'Unknown Date'} · {order.paymentMethod?.toUpperCase() || 'N/A'}
+                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'Unknown Date'} · {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Unknown Time'}
                     </p>
                     <p className={`mt-1 capitalize text-[10px] md:text-xs font-semibold ${
                       isLight ? 'text-gray-700' : 'text-[#C9A84C]'
@@ -158,17 +160,20 @@ export default function AdminOrdersPage() {
                         Customer: {order.customer_name}
                       </p>
                     )}
-                    {order.customer?.phone_number && (
+                    {order.customer_phone && (
                       <div className={`mt-1 flex items-center gap-2 text-[10px] md:text-xs ${isLight ? 'text-gray-600' : 'text-[#888888]'}`}>
-                        <span>Phone: {order.customer.phone_number}</span>
+                        <span>Phone: {order.customer_phone}</span>
                         <a
-                          href={`tel:${order.customer.phone_number}`}
+                          href={`tel:${order.customer_phone}`}
                           className="text-blue-500 hover:text-blue-600 underline"
                         >
                           Call
                         </a>
                       </div>
                     )}
+                    <p className={`mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>
+                      Address: {order.delivery_address || 'N/A'}
+                    </p>
                     {order.deliveryRider && (
                       <p className={`mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>
                         Rider: {order.deliveryRider.name || 'Unknown'} · {order.deliveryRider.vehicle || 'Unknown'}

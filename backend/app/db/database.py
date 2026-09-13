@@ -113,6 +113,7 @@ def init_db():
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS orders (
                 id VARCHAR PRIMARY KEY,
+                order_number INTEGER,
                 customer_id VARCHAR,
                 rider_id VARCHAR,
                 status VARCHAR(50) NOT NULL,
@@ -123,6 +124,11 @@ def init_db():
                 total DOUBLE PRECISION NOT NULL,
                 delivery_address TEXT NOT NULL,
                 delivery_notes TEXT,
+                payment_method VARCHAR(20) DEFAULT 'cod',
+                payment_status VARCHAR(20) DEFAULT 'pending',
+                coupon_code VARCHAR(20),
+                discount_amount DOUBLE PRECISION DEFAULT 0,
+                payment_screenshot TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (rider_id) REFERENCES rider_credentials(id)
@@ -346,6 +352,7 @@ def init_db():
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS orders (
                 id TEXT PRIMARY KEY,
+                order_number INTEGER,
                 customer_id TEXT,
                 rider_id TEXT,
                 status TEXT NOT NULL,
@@ -356,6 +363,11 @@ def init_db():
                 total REAL NOT NULL,
                 delivery_address TEXT NOT NULL,
                 delivery_notes TEXT,
+                payment_method TEXT DEFAULT 'cod',
+                payment_status TEXT DEFAULT 'pending',
+                coupon_code TEXT,
+                discount_amount REAL DEFAULT 0,
+                payment_screenshot TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (rider_id) REFERENCES rider_credentials(id)
@@ -1160,16 +1172,20 @@ def fetch_orders_by_rider(rider_id: str, status: Optional[str] = None) -> List[D
         conn.close()
 
 def fetch_all_orders(status: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Fetch all orders for the admin dashboard."""
+    """Fetch all orders for the admin dashboard with customer details."""
     conn = get_connection()
     cursor = get_cursor(conn)
     try:
-        sql = "SELECT * FROM orders"
+        sql = """
+            SELECT o.*, c.name as customer_name, c.phone_number as customer_phone
+            FROM orders o
+            LEFT JOIN customers c ON o.customer_id = c.id
+        """
         params = []
         if status:
-            sql += " WHERE status = ?"
+            sql += " WHERE o.status = ?"
             params.append(status)
-        sql += " ORDER BY created_at DESC"
+        sql += " ORDER BY o.created_at DESC"
         if is_postgres(conn):
             sql = sql.replace("?", "%s")
         cursor.execute(sql, tuple(params))
@@ -1234,9 +1250,11 @@ def save_order(order: Dict[str, Any]) -> Dict[str, Any]:
             cursor.execute("""
             INSERT INTO orders (
                 id, order_number, customer_id, rider_id, status, items, subtotal, delivery_fee,
-                tax, total, delivery_address, delivery_notes
+                tax, total, delivery_address, delivery_notes, payment_method, payment_status,
+                coupon_code, discount_amount, payment_screenshot
             ) VALUES (%(id)s, %(order_number)s, %(customer_id)s, %(rider_id)s, %(status)s, %(items)s,
-                      %(subtotal)s, %(delivery_fee)s, %(tax)s, %(total)s, %(delivery_address)s, %(delivery_notes)s)
+                      %(subtotal)s, %(delivery_fee)s, %(tax)s, %(total)s, %(delivery_address)s, %(delivery_notes)s,
+                      %(payment_method)s, %(payment_status)s, %(coupon_code)s, %(discount_amount)s, %(payment_screenshot)s)
             ON CONFLICT (id) DO UPDATE SET
                 status = EXCLUDED.status,
                 rider_id = EXCLUDED.rider_id,
@@ -1252,12 +1270,15 @@ def save_order(order: Dict[str, Any]) -> Dict[str, Any]:
             cursor.execute("""
             INSERT OR REPLACE INTO orders (
                 id, order_number, customer_id, rider_id, status, items, subtotal, delivery_fee,
-                tax, total, delivery_address, delivery_notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                tax, total, delivery_address, delivery_notes, payment_method, payment_status,
+                coupon_code, discount_amount, payment_screenshot
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 order["id"], order["order_number"], order["customer_id"], order["rider_id"], order["status"],
                 items_json, order["subtotal"], order["delivery_fee"], order["tax"],
-                order["total"], order["delivery_address"], order["delivery_notes"]
+                order["total"], order["delivery_address"], order["delivery_notes"],
+                order.get("payment_method", "cod"), order.get("payment_status", "pending"),
+                order.get("coupon_code"), order.get("discount_amount", 0), order.get("payment_screenshot")
             ))
         conn.commit()
         return order
