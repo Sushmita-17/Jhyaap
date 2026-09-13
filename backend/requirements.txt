@@ -3,6 +3,7 @@ uvicorn[standard]
 asyncpg
 psycopg2-binary
 pydantic
+pydantic[email]
 pydantic-settings
 python-dotenv
 supabase
@@ -14,3 +15,4 @@ httpx
 slowapi
 bcrypt
 
+email-validator
