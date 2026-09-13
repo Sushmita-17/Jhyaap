@@ -101,7 +101,7 @@ export default function AdminLogin() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="admin@jhyaap.com"
+                placeholder="Enter your email"
                 className={`w-full pl-10 pr-4 py-3 rounded-lg border outline-none focus:border-[#C9A84C]/50 ${
                   isLight 
                     ? 'bg-white border-gray-300 text-gray-900 focus:bg-gray-50' 

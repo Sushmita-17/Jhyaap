@@ -393,9 +393,6 @@ export default function CartPage() {
                       }`}>Total Due</span>
                       <span className="text-[#C9A84C] text-[17px] md:text-[19px] font-mono leading-none tracking-tighter">Rs {total.toLocaleString()}</span>
                     </div>
-                    <p className={`text-right text-[8px] md:text-[9px] italic font-medium uppercase tracking-[0.05em] ${
-                      isLight ? 'text-gray-400' : 'text-[#A89070]/40'
-                    }`}>All taxes included</p>
                   </div>
 
                   <button

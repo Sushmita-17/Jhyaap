@@ -110,19 +110,22 @@ export const useCartStore = create((set, get) => ({
     return Math.floor(get().pointsToRedeem / POINTS_TO_RUPEE);
   },
 
-  getDeliveryFee: () => {
-    const subtotal = get().getTotalPrice();
-    return subtotal > 3000 ? 0 : 150;
+  getDeliveryFee: (distanceKm = 0) => {
+    // Distance-based delivery: 100 NPR base + 30 NPR/km after 3km
+    if (distanceKm <= 3) {
+      return 100;
+    }
+    return 100 + Math.ceil(distanceKm - 3) * 30;
   },
 
-  getFinalTotal: () => {
+  getFinalTotal: (distanceKm = 0) => {
     return Math.max(
       0,
       get().getTotalPrice() -
         get().getDiscount() -
         get().getCouponDiscount() -
         get().getPointsDiscount() +
-        get().getDeliveryFee()
+        get().getDeliveryFee(distanceKm)
     );
   },
   getItemQuantity: (productId) => {

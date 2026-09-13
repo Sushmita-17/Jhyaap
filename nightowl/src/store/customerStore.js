@@ -28,7 +28,10 @@ export const useCustomerStore = create((set, get) => ({
     const newAddress = {
       ...address,
       id: generateAddressId(),
-      deliveryFee: DELIVERY_FEE_BY_AREA[address.area] || 150,
+      label: 'Delivery Location',
+      area: '',
+      street: address.fullAddress || '',
+      deliveryFee: 100, // Base fee, will be calculated based on distance
       // Ensure coordinates and address are preserved
       lat: address.lat || null,
       lng: address.lng || null,

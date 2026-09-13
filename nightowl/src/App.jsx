@@ -69,7 +69,6 @@ function StoreShell({ children }) {
       <PWAInstallPrompt />
       <BottomNav />
       <main className="flex-1 w-full pb-[80px] md:pb-0">{children}</main>
-      <Footer />
     </>
   );
 }

@@ -14,8 +14,11 @@ import {
   POINTS_PER_100_RS,
 } from '@/store/loyaltyStore';
 import { uploadPaymentScreenshot } from '@/lib/backendAPI';
-import { parseCoordinatesFromUrl, getCurrentGPSLocation, generateOSMUrl } from '@/lib/locationUtils';
+import { parseCoordinatesFromUrl, getCurrentGPSLocation, generateOSMUrl, calculateDistance } from '@/lib/locationUtils';
 import LocationMapModal from '@/components/LocationMapModal';
+
+// Store location coordinates (Kathmandu center)
+const STORE_LOCATION = { lat: 27.7172, lng: 85.3240 };
 
 const paymentMethods = [
   { id: 'cod', label: 'Cash on Delivery', detail: 'Pay when your order arrives' },
@@ -82,7 +85,7 @@ export default function CheckoutPage() {
 
   const handleAddAddress = (e) => {
     e.preventDefault();
-    if (newAddress.label && newAddress.area && newAddress.street) {
+    if (newAddress.lat && newAddress.lng) {
       const saved = addAddress({
         ...newAddress,
         ...parseCoordinatesFromUrl(newAddress.locationUrl),
@@ -91,6 +94,8 @@ export default function CheckoutPage() {
       setSelectedAddressId(saved.id);
       setNewAddress({ label: '', area: '', street: '', landmark: '', locationUrl: '', lat: null, lng: null });
       setShowAddForm(false);
+    } else {
+      alert('Please select a location using GPS or Map');
     }
   };
 
@@ -237,8 +242,14 @@ export default function CheckoutPage() {
   const discount = getDiscount();
   const couponDiscount = getCouponDiscount();
   const pointsDiscount = getPointsDiscount();
-  const deliveryFee = getDeliveryFee();
-  const total = getFinalTotal();
+  
+  // Calculate distance and delivery fee based on selected address
+  const distanceKm = selectedAddress && selectedAddress.lat && selectedAddress.lng
+    ? calculateDistance(STORE_LOCATION.lat, STORE_LOCATION.lng, selectedAddress.lat, selectedAddress.lng)
+    : 0;
+  const deliveryFee = getDeliveryFee(distanceKm);
+  const total = getFinalTotal(distanceKm);
+  
   const loyaltyBalance = user ? getPoints(user.id) : 0;
   const maxPoints = user ? maxRedeemablePoints(user.id, subtotal) : 0;
   const estimatedEarn = Math.floor(total / 100) * POINTS_PER_100_RS;
@@ -312,14 +323,25 @@ export default function CheckoutPage() {
                     <p className={`mt-0.5 md:mt-1 text-xs md:text-sm ${
                       isLight ? 'text-gray-600' : 'text-[#888888]'
                     }`}>
-                      {addr.street}, {addr.area}
+                      {addr.street || addr.fullAddress || 'Location selected'}
                     </p>
                     {addr.landmark && <p className={`text-[10px] md:text-[11px] mt-0.5 italic ${
                       isLight ? 'text-gray-500' : 'text-[#555555]'
                     }`}>{addr.landmark}</p>}
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <span className="text-[10px] md:text-[11px] font-mono font-bold text-[#C9A84C]">Rs {addr.deliveryFee}</span>
+                    {addr.lat && addr.lng ? (() => {
+                      const addrDistance = calculateDistance(STORE_LOCATION.lat, STORE_LOCATION.lng, addr.lat, addr.lng);
+                      const addrDeliveryFee = addrDistance <= 3 ? 100 : 100 + Math.ceil(addrDistance - 3) * 30;
+                      return (
+                        <>
+                          <span className="text-[9px] md:text-[10px] font-mono text-gray-500">{addrDistance.toFixed(1)} km</span>
+                          <span className="text-[10px] md:text-[11px] font-mono font-bold text-[#C9A84C]">Rs {addrDeliveryFee}</span>
+                        </>
+                      );
+                    })() : (
+                      <span className="text-[10px] md:text-[11px] font-mono font-bold text-[#C9A84C]">Rs 100</span>
+                    )}
                     {(addr.lat && addr.lng || addr.locationUrl) && (
                       <button
                         type="button"
@@ -358,52 +380,8 @@ export default function CheckoutPage() {
               }`}>
                 <h3 className={`text-[11px] md:text-[12px] font-black uppercase tracking-widest mb-3 md:mb-4 ${
                   isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
-                }`}>New Address</h3>
+                }`}>Select Delivery Location</h3>
                 <form onSubmit={handleAddAddress} className="space-y-3 md:space-y-4">
-                  <div className="grid grid-cols-1 gap-3 md:gap-4 sm:grid-cols-2">
-                    <input
-                      type="text"
-                      placeholder="Label (e.g. Home)"
-                      value={newAddress.label}
-                      onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })}
-                      className={`border rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:outline-none focus:border-[#C9A84C] transition-colors ${
-                        isLight 
-                          ? 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400' 
-                          : 'bg-black/30 border-white/10 text-white placeholder:text-gray-500'
-                      }`}
-                    />
-                    <select
-                      value={newAddress.area}
-                      onChange={(e) => setNewAddress({ ...newAddress, area: e.target.value })}
-                      className={`border rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:outline-none focus:border-[#C9A84C] transition-colors ${
-                        isLight 
-                          ? 'bg-white border-gray-200 text-gray-900' 
-                          : 'bg-[#16110F] border-white/10 text-white'
-                      }`}
-                    >
-                      <option value="" className={isLight ? 'bg-white text-gray-900' : 'bg-[#16110F] text-white'}>Select Area</option>
-                      {['Kathmandu', 'Lalitpur', 'Bhaktapur'].map((city) => (
-                        <optgroup key={city} label={city} className={isLight ? 'bg-gray-100 text-gray-900 font-bold' : 'bg-[#16110F] text-[#C9A84C] font-bold'}>
-                          {DELIVERY_AREAS.filter((a) => a.city === city).map((area, areaIndex) => (
-                            <option key={`${city}-${area.name}-${areaIndex}`} value={area.name} className={isLight ? 'bg-white text-gray-900' : 'bg-[#16110F] text-white'}>
-                              {area.name} (Rs {area.deliveryFee})
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Street Address / Room No"
-                    value={newAddress.street}
-                    onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
-                    className={`w-full border rounded-xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:outline-none focus:border-[#C9A84C] transition-colors ${
-                      isLight 
-                        ? 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400' 
-                        : 'bg-black/30 border-white/10 text-white placeholder:text-gray-500'
-                    }`}
-                  />
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <input
                       type="url"
@@ -735,11 +713,18 @@ export default function CheckoutPage() {
                 
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className={isLight ? 'text-gray-600' : 'text-[#888888]'}>Delivery Fee</span>
-                  <span className={`font-mono font-bold ${
-                    isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
-                  }`}>
-                    {deliveryFee === 0 ? <span className="text-green-500 uppercase tracking-tighter text-[10px] md:text-[11px]">Free</span> : `Rs ${deliveryFee.toLocaleString()}`}
-                  </span>
+                  <div className="text-right">
+                    {distanceKm > 0 && (
+                      <span className={`text-[9px] md:text-[10px] font-mono ${isLight ? 'text-gray-500' : 'text-[#666666]'}`}>
+                        {distanceKm.toFixed(1)} km
+                      </span>
+                    )}
+                    <span className={`font-mono font-bold block ${
+                      isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
+                    }`}>
+                      {deliveryFee === 0 ? <span className="text-green-500 uppercase tracking-tighter text-[10px] md:text-[11px]">Free</span> : `Rs ${deliveryFee.toLocaleString()}`}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Grand Total */}
