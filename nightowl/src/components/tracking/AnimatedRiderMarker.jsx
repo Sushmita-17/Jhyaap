@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
-// Reuse shared admin tracking helpers for consistent marker + animation
+// Reuse shared tracking helpers for consistent marker + animation
 import {
   createAnimatedRiderMarker as adminCreateAnimatedRiderMarker,
   animateRiderMarker as adminAnimateRiderMarker,
   createRiderLeafletIcon as adminCreateRiderIcon,
   setMarkerBearing as adminSetMarkerBearing,
-} from '../../../../admin/src/lib/riderTracking';
+} from '@/lib/riderTracking';
 
 /**
  * AnimatedRiderMarker - Production-ready animated rider marker for customer panel (nightowl)
