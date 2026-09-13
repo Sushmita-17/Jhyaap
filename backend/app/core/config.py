@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     #   "sparrow" -> calls the real Sparrow SMS API (trial or paid credits)
     OTP_MODE: str = "mock"
 
+    # TEST_OTP_CODE: If set, this constant code will be used for all OTPs (for testing)
+    TEST_OTP_CODE: str = ""
+
     # --- Sparrow SMS ---
     SPARROW_SMS_TOKEN: str = ""
     SPARROW_SMS_FROM: str = ""

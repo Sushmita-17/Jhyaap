@@ -42,6 +42,9 @@ def _mock_mode() -> bool:
 
 
 def generate_otp_code() -> str:
+    # Use constant OTP for testing if TEST_OTP_CODE is set
+    if settings.TEST_OTP_CODE:
+        return settings.TEST_OTP_CODE
     return "".join(random.choices(string.digits, k=settings.OTP_LENGTH))
 
 
