@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "build:all": "npm run build:nightowl && npm run build:admin && npm run build:rider && node scripts/merge-builds.js",
+    "build:nightowl": "npm install --prefix nightowl && npm run build --prefix nightowl",
+    "build:admin": "npm install --prefix admin && npm run build --prefix admin",
+    "build:rider": "npm install --prefix rider-panel && npm run build --prefix rider-panel"
+  },
   "dependencies": {
     "tailwindcss": "^4.3.3"
   }
