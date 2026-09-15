@@ -52,6 +52,7 @@ class OrderResponse(BaseModel):
     coupon_code: Optional[str] = None
     discount_amount: float = 0.0
     payment_screenshot: Optional[str] = None
+    customer_phone: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
