@@ -508,6 +508,7 @@ def create_customer_order(request: Request, payload: OrderCreate):
         "coupon_code": payload.coupon_code,
         "discount_amount": discount_amount,
         "payment_screenshot": payload.payment_screenshot,
+        "customer_phone": payload.customer_phone,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     }

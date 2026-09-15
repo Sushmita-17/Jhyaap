@@ -218,7 +218,8 @@ export default function CheckoutPage() {
       pointsToRedeem,
       notes,
       couponCode,
-      screenshotUrl
+      screenshotUrl,
+      user.phone
     );
 
     clearCart();

@@ -19,6 +19,7 @@ class OrderCreate(BaseModel):
     coupon_code: Optional[str] = None
     payment_method: str = "cod"  # cod, online, split
     payment_screenshot: Optional[str] = None  # URL or path to payment screenshot
+    customer_phone: Optional[str] = None  # Customer phone number
 
 
 class PaymentConfirmation(BaseModel):

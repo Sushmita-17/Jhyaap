@@ -76,7 +76,7 @@ export const useOrdersStore = create((set, get) => ({
   selectedOrderId: null,
   hydrateOrders: (orders) => set({ orders }),
 
-  createOrder: async (items, address, paymentMethod, discount, userId, pointsRedeemed = 0, notes, couponCode, paymentScreenshot = null) => {
+  createOrder: async (items, address, paymentMethod, discount, userId, pointsRedeemed = 0, notes, couponCode, paymentScreenshot = null, customerPhone = null) => {
     const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
     const providedLat = Number(address.lat ?? address.latitude);
     const providedLng = Number(address.lng ?? address.longitude);
@@ -104,6 +104,7 @@ export const useOrdersStore = create((set, get) => ({
       couponCode,
       notes,
       userId,
+      customerPhone,
       createdAt: new Date().toISOString(),
       statusUpdatedAt: new Date().toISOString(),
       eta: generateETA(),

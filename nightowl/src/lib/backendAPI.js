@@ -47,6 +47,7 @@ export function createBackendOrder(order) {
       payment_method: order.paymentMethod || 'cod',
       coupon_code: order.couponCode || null,
       payment_screenshot: order.paymentScreenshot || null,
+      customer_phone: order.customerPhone || null, // Include customer phone number
     }),
   });
 }

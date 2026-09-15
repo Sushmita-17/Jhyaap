@@ -129,6 +129,7 @@ def init_db():
                 coupon_code VARCHAR(20),
                 discount_amount DOUBLE PRECISION DEFAULT 0,
                 payment_screenshot TEXT,
+                customer_phone VARCHAR(20),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (rider_id) REFERENCES rider_credentials(id)
@@ -368,6 +369,7 @@ def init_db():
                 coupon_code TEXT,
                 discount_amount REAL DEFAULT 0,
                 payment_screenshot TEXT,
+                customer_phone TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (rider_id) REFERENCES rider_credentials(id)
@@ -1251,10 +1253,10 @@ def save_order(order: Dict[str, Any]) -> Dict[str, Any]:
             INSERT INTO orders (
                 id, order_number, customer_id, rider_id, status, items, subtotal, delivery_fee,
                 tax, total, delivery_address, delivery_notes, payment_method, payment_status,
-                coupon_code, discount_amount, payment_screenshot
+                coupon_code, discount_amount, payment_screenshot, customer_phone
             ) VALUES (%(id)s, %(order_number)s, %(customer_id)s, %(rider_id)s, %(status)s, %(items)s,
                       %(subtotal)s, %(delivery_fee)s, %(tax)s, %(total)s, %(delivery_address)s, %(delivery_notes)s,
-                      %(payment_method)s, %(payment_status)s, %(coupon_code)s, %(discount_amount)s, %(payment_screenshot)s)
+                      %(payment_method)s, %(payment_status)s, %(coupon_code)s, %(discount_amount)s, %(payment_screenshot)s, %(customer_phone)s)
             ON CONFLICT (id) DO UPDATE SET
                 status = EXCLUDED.status,
                 rider_id = EXCLUDED.rider_id,
@@ -1271,14 +1273,14 @@ def save_order(order: Dict[str, Any]) -> Dict[str, Any]:
             INSERT OR REPLACE INTO orders (
                 id, order_number, customer_id, rider_id, status, items, subtotal, delivery_fee,
                 tax, total, delivery_address, delivery_notes, payment_method, payment_status,
-                coupon_code, discount_amount, payment_screenshot
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                coupon_code, discount_amount, payment_screenshot, customer_phone
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 order["id"], order["order_number"], order["customer_id"], order["rider_id"], order["status"],
                 items_json, order["subtotal"], order["delivery_fee"], order["tax"],
                 order["total"], order["delivery_address"], order["delivery_notes"],
                 order.get("payment_method", "cod"), order.get("payment_status", "pending"),
-                order.get("coupon_code"), order.get("discount_amount", 0), order.get("payment_screenshot")
+                order.get("coupon_code"), order.get("discount_amount", 0), order.get("payment_screenshot"), order.get("customer_phone")
             ))
         conn.commit()
         return order
