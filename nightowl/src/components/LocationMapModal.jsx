@@ -60,8 +60,8 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
   const currentLocationMarkerRef = useRef(null);
-  const [currentLat, setCurrentLat] = useState(initialLat || 27.7172); // Default: Kathmandu
-  const [currentLng, setCurrentLng] = useState(initialLng || 85.3240);
+  const [currentLat, setCurrentLat] = useState(initialLat || 27.7074359); // Default: Jhyaap Station
+  const [currentLng, setCurrentLng] = useState(initialLng || 85.2853747);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
   const [address, setAddress] = useState('');
@@ -111,6 +111,8 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
       let bestAccuracy = Infinity;
       let bestPosition = null;
 
+      console.log('Requesting GPS location...');
+
       // Use watchPosition for better accuracy
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
@@ -118,15 +120,19 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
           const lng = position.coords.longitude;
           const acc = position.coords.accuracy;
 
+          console.log('GPS Position received:', { lat, lng, accuracy: acc });
+
           // Check if this is a GPS location (accuracy < 1000m)
           if (acc < 1000) {
             hasGPSLocation = true;
+            console.log('GPS location detected');
           }
 
           // Keep the best position
           if (acc < bestAccuracy) {
             bestAccuracy = acc;
             bestPosition = { lat, lng, acc };
+            console.log('Best position updated:', bestPosition);
           }
 
           setCurrentLat(lat);
@@ -157,26 +163,17 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
 
           // Stop watching after getting a good location (accuracy < 50m)
           if (acc && acc < 50) {
+            console.log('Good accuracy achieved, stopping watch');
             navigator.geolocation.clearWatch(watchIdRef.current);
             watchIdRef.current = null;
             setLoadingLocation(false);
+            reverseGeocode(lat, lng);
           }
         },
         (error) => {
+          console.error('Geolocation error:', error);
+          setLocationError(getGeolocationErrorMessage(error.code));
           setLoadingLocation(false);
-          let errorMessage = 'Unable to retrieve your location';
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = 'Location permission denied. Please allow location access.';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Location information is unavailable.';
-              break;
-            case error.TIMEOUT:
-              errorMessage = 'Location request timed out. Please try again.';
-              break;
-          }
-          setLocationError(errorMessage);
         },
         {
           enableHighAccuracy: true,
@@ -192,6 +189,8 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
           watchIdRef.current = null;
           setLoadingLocation(false);
 
+          console.log('GPS watch timeout. hasGPSLocation:', hasGPSLocation, 'bestPosition:', bestPosition);
+
           // Check if we got GPS location
           if (!hasGPSLocation && bestPosition) {
             setLocationError('Could not get GPS location. Using approximate location. Please disable VPN and try again.');
@@ -199,6 +198,7 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
         }
       }, 15000);
     } catch (error) {
+      console.error('GPS error:', error);
       setLocationError(error.message || 'Unable to get your location');
       setLoadingLocation(false);
     }
