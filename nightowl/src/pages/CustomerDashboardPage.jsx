@@ -101,6 +101,9 @@ export default function CustomerDashboardPage() {
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(user?.name || '');
 
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [newPhone, setNewPhone] = useState(user?.phone || '');
+
   const [editingEmail, setEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState(user?.email || '');
 
@@ -236,6 +239,13 @@ export default function CustomerDashboardPage() {
     if (newName.trim()) {
       updateProfile({ name: newName.trim() });
       setEditingName(false);
+    }
+  };
+
+  const handleSavePhone = () => {
+    if (newPhone.trim()) {
+      updateProfile({ phone: newPhone.trim() });
+      setEditingPhone(false);
     }
   };
 
@@ -515,15 +525,56 @@ export default function CustomerDashboardPage() {
 
                   <div className={`rounded-xl p-3 md:p-4 transition-colors ${isLight ? 'bg-gray-50' : 'bg-[#0A0A0A]/50'}`}>
                     <p className={`mb-1 text-[10px] md:text-xs font-semibold ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>Phone</p>
-                    <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
-                      <p className={`flex items-center gap-1.5 md:gap-2 font-medium text-sm md:text-base ${isLight ? 'text-gray-900' : 'text-white'}`}>
-                        <Phone className="h-3.5 w-3.5 md:h-4 md:w-4 text-[#C9A84C]" />
-                        +977 {user.phone}
-                      </p>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#4ADE80]/10 px-1.5 md:px-2 py-0.5 text-[9px] md:text-xs font-semibold text-[#4ADE80]">
-                        <Check className="h-3 w-3 md:h-3.5 md:w-3.5" /> Verified
-                      </span>
-                    </div>
+                    {editingPhone ? (
+                      <div className="flex gap-2">
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className={`text-sm md:text-base font-medium ${isLight ? 'text-gray-900' : 'text-white'}`}>+977</span>
+                          <input
+                            value={newPhone}
+                            onChange={(e) => setNewPhone(e.target.value)}
+                            className="input-field flex-1"
+                            autoFocus
+                            placeholder="98XXXXXXXX"
+                          />
+                        </div>
+                        <button
+                          onClick={handleSavePhone}
+                          className="rounded-xl bg-[#F5A623] px-3 py-2 text-night-950 font-bold hover:bg-[#F5A623]/90 transition-colors"
+                          aria-label="Save phone"
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingPhone(false);
+                            setNewPhone(user.phone);
+                          }}
+                          className={`rounded-xl border px-3 py-2 transition-colors ${isLight ? 'border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200' : 'border-white/10 bg-white/5 text-white hover:bg-white/10'}`}
+                          aria-label="Cancel phone edit"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
+                          <p className={`flex items-center gap-1.5 md:gap-2 font-medium text-sm md:text-base ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                            <Phone className="h-3.5 w-3.5 md:h-4 md:w-4 text-[#C9A84C]" />
+                            +977 {user.phone}
+                          </p>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#4ADE80]/10 px-1.5 md:px-2 py-0.5 text-[9px] md:text-xs font-semibold text-[#4ADE80]">
+                            <Check className="h-3 w-3 md:h-3.5 md:w-3.5" /> Verified
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setEditingPhone(true)}
+                          className={`rounded-lg p-2 transition-colors hover:text-[#F5A623] ${isLight ? 'text-gray-400 hover:bg-gray-100' : 'text-night-300 hover:bg-white/5'}`}
+                          aria-label="Edit phone"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className={`rounded-xl p-3 md:p-4 transition-colors ${isLight ? 'bg-gray-50' : 'bg-[#0A0A0A]/50'}`}>
@@ -701,8 +752,8 @@ export default function CustomerDashboardPage() {
                     >
                       <div className="flex items-center justify-between gap-2 md:gap-3">
                         <div>
-                          <p className={`font-semibold text-sm md:text-base ${isLight ? 'text-gray-900' : 'text-white'}`}>{order.id}</p>
-                          <p className={`mt-0.5 md:mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>{new Date(order.createdAt).toLocaleDateString()}</p>
+                          <p className={`font-semibold text-sm md:text-base ${isLight ? 'text-gray-900' : 'text-white'}`}>Order No {order.orderNumber || 'Syncing...'}</p>
+                          <p className={`mt-0.5 md:mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                         </div>
                         <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-[#888888]" />
                       </div>
