@@ -13,7 +13,7 @@ const normalizePhone = (value) => {
   const digits = trimmed.replace(/\D/g, '');
   const localNumber = digits.startsWith('977') ? digits.slice(3) : digits;
   if (!/^9\d{9}$/.test(localNumber)) {
-    throw new Error('Enter a valid Nepal mobile number, for example +977 98XXXXXXXX.');
+    throw new Error('Phone number must be 10 digits starting with 9 (e.g., 98XXXXXXXX).');
   }
   return `+977${localNumber}`;
 };
