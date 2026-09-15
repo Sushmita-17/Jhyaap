@@ -623,7 +623,10 @@ export default function Navbar() {
             }`}>
               {isAuthenticated && user ? (
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage('profile')}
+                    className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+                  >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                       isLight ? 'bg-gray-200 text-gray-700' : 'bg-white/10 text-white'
                     }`}>
@@ -634,7 +637,7 @@ export default function Navbar() {
                     }`}>
                       {user.name || 'User'}
                     </span>
-                  </div>
+                  </button>
                   <button
                     onClick={logout}
                     className={`p-2 rounded-lg transition-colors ${
