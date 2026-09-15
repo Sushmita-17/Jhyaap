@@ -67,7 +67,9 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
   const [address, setAddress] = useState('');
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [accuracy, setAccuracy] = useState(null);
   const hasRequestedLocation = useRef(false);
+  const watchIdRef = useRef(null);
   const isInitializedRef = useRef(false);
 
   // Reverse geocoding using Nominatim (OSM)
@@ -98,34 +100,85 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
     setLocationError(null);
 
     try {
-      const location = await getCurrentGPSLocation();
-      setCurrentLat(location.lat);
-      setCurrentLng(location.lng);
-
-      if (mapInstanceRef.current) {
-        // Smooth fly to location
-        mapInstanceRef.current.flyTo([location.lat, location.lng], 16, {
-          duration: 1.5,
-        });
-        
-        if (markerRef.current) {
-          markerRef.current.setLatLng([location.lat, location.lng]);
-        }
-
-        // Add current location marker
-        if (currentLocationMarkerRef.current) {
-          currentLocationMarkerRef.current.remove();
-        }
-        currentLocationMarkerRef.current = L.marker([location.lat, location.lng], {
-          icon: currentLocationIcon,
-          interactive: false,
-        }).addTo(mapInstanceRef.current);
+      // Clear any existing watch
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
       }
 
-      reverseGeocode(location.lat, location.lng);
+      // Use watchPosition for better accuracy
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const acc = position.coords.accuracy;
+
+          setCurrentLat(lat);
+          setCurrentLng(lng);
+          setAccuracy(acc);
+
+          if (mapInstanceRef.current) {
+            // Smooth fly to location
+            mapInstanceRef.current.flyTo([lat, lng], 18, {
+              duration: 1.5,
+            });
+
+            if (markerRef.current) {
+              markerRef.current.setLatLng([lat, lng]);
+            }
+
+            // Add current location marker
+            if (currentLocationMarkerRef.current) {
+              currentLocationMarkerRef.current.remove();
+            }
+            currentLocationMarkerRef.current = L.marker([lat, lng], {
+              icon: currentLocationIcon,
+              interactive: false,
+            }).addTo(mapInstanceRef.current);
+          }
+
+          reverseGeocode(lat, lng);
+
+          // Stop watching after getting a good location (accuracy < 50m)
+          if (acc && acc < 50) {
+            navigator.geolocation.clearWatch(watchIdRef.current);
+            watchIdRef.current = null;
+            setLoadingLocation(false);
+          }
+        },
+        (error) => {
+          setLoadingLocation(false);
+          let errorMessage = 'Unable to retrieve your location';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location permission denied. Please allow location access.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information is unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out. Please try again.';
+              break;
+          }
+          setLocationError(errorMessage);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 30000,
+          maximumAge: 0,
+        }
+      );
+
+      // Fallback: stop watching after 10 seconds if no good location
+      setTimeout(() => {
+        if (watchIdRef.current !== null) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
+          setLoadingLocation(false);
+        }
+      }, 10000);
     } catch (error) {
       setLocationError(error.message || 'Unable to get your location');
-    } finally {
       setLoadingLocation(false);
     }
   }, [reverseGeocode]);
@@ -144,6 +197,11 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
         mapInstanceRef.current = null;
         markerRef.current = null;
         currentLocationMarkerRef.current = null;
+      }
+      // Clear GPS watch
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
       }
       isInitializedRef.current = false;
       hasRequestedLocation.current = false;
@@ -376,6 +434,14 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
               <span>Longitude:</span>
               <span className="text-[#C9A84C]">{currentLng.toFixed(6)}</span>
             </div>
+            {accuracy !== null && (
+              <div className="flex justify-between mt-1">
+                <span>Accuracy:</span>
+                <span className={accuracy < 50 ? 'text-green-500' : 'text-yellow-500'}>
+                  {accuracy < 10 ? '<10m' : `~${Math.round(accuracy)}m`}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

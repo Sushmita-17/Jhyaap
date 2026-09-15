@@ -129,11 +129,13 @@ export function getCurrentGPSLocation() {
       return;
     }
 
+    // First try with high accuracy and longer timeout
     navigator.geolocation.getCurrentPosition(
       (position) => {
         resolve({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
         });
       },
       (error) => {
@@ -146,15 +148,15 @@ export function getCurrentGPSLocation() {
             errorMessage = 'Location information is unavailable.';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Location request timed out.';
+            errorMessage = 'Location request timed out. Please try again.';
             break;
         }
         reject(new Error(errorMessage));
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+        timeout: 20000, // Increased timeout for better accuracy
+        maximumAge: 0, // Force fresh location
       }
     );
   });
