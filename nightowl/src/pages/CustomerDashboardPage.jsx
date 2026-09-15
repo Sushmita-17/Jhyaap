@@ -742,28 +742,46 @@ export default function CustomerDashboardPage() {
                     )}
                   </div>
                   {orders.map((order) => (
-                    <button
+                    <div
                       key={order.id}
-                      onClick={() => {
-                        selectOrder(order.id);
-                        setPage('order-tracking');
-                      }}
                       className={`w-full rounded-2xl border p-3 md:p-4 text-left transition-colors ${isLight ? 'bg-white border-gray-200 hover:border-[#C9A84C]' : 'bg-[#0A0A0A] border-white/5 hover:border-[#C9A84C]/40'}`}
                     >
-                      <div className="flex items-center justify-between gap-2 md:gap-3">
-                        <div>
-                          <p className={`font-semibold text-sm md:text-base ${isLight ? 'text-gray-900' : 'text-white'}`}>Order No {order.orderNumber || 'Syncing...'}</p>
-                          <p className={`mt-0.5 md:mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      <button
+                        onClick={() => {
+                          selectOrder(order.id);
+                          setPage('order-tracking');
+                        }}
+                        className="w-full text-left"
+                      >
+                        <div className="flex items-center justify-between gap-2 md:gap-3">
+                          <div>
+                            <p className={`font-semibold text-sm md:text-base ${isLight ? 'text-gray-900' : 'text-white'}`}>Order No {order.orderNumber || 'Syncing...'}</p>
+                            <p className={`mt-0.5 md:mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-[#888888]" />
                         </div>
-                        <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-[#888888]" />
-                      </div>
-                      <div className="mt-2 md:mt-3 flex flex-wrap items-center justify-between gap-1.5 md:gap-2 text-xs md:text-sm">
-                        <span className="rounded-full bg-[#C9A84C]/10 px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-xs font-semibold capitalize text-[#C9A84C]">
-                          {order.status.replace('_', ' ')}
-                        </span>
-                        <span className={`font-semibold ${isLight ? 'text-gray-900' : 'text-white'}`}>NPR {order.total.toLocaleString()}</span>
-                      </div>
-                    </button>
+                        <div className="mt-2 md:mt-3 flex flex-wrap items-center justify-between gap-1.5 md:gap-2 text-xs md:text-sm">
+                          <span className="rounded-full bg-[#C9A84C]/10 px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-xs font-semibold capitalize text-[#C9A84C]">
+                            {order.status.replace('_', ' ')}
+                          </span>
+                          <span className={`font-semibold ${isLight ? 'text-gray-900' : 'text-white'}`}>NPR {order.total.toLocaleString()}</span>
+                        </div>
+                      </button>
+                      {(order.status === 'placed' || order.status === 'confirmed') && (
+                        <button
+                          onClick={() => {
+                            if (confirm('Are you sure you want to cancel this order?')) {
+                              // Cancel order logic
+                              const { updateOrderStatus } = useOrdersStore.getState();
+                              updateOrderStatus(order.id, 'cancelled');
+                            }
+                          }}
+                          className={`mt-2 w-full rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${isLight ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'}`}
+                        >
+                          Cancel Order
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </>
               )}
