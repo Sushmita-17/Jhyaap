@@ -17,8 +17,8 @@ import { uploadPaymentScreenshot } from '@/lib/backendAPI';
 import { parseCoordinatesFromUrl, getCurrentGPSLocation, generateOSMUrl, calculateDistance } from '@/lib/locationUtils';
 import LocationMapModal from '@/components/LocationMapModal';
 
-// Store location coordinates (Kathmandu center)
-const STORE_LOCATION = { lat: 27.7172, lng: 85.3240 };
+// Store location coordinates (Jhyaap Station)
+const STORE_LOCATION = { lat: 27.7074359, lng: 85.2853747 };
 
 const paymentMethods = [
   { id: 'cod', label: 'Cash on Delivery', detail: 'Pay when your order arrives' },
@@ -252,6 +252,13 @@ export default function CheckoutPage() {
   const effectiveDistance = distanceKm > 0 ? distanceKm : 3;
   const deliveryFee = getDeliveryFee(effectiveDistance);
   const total = getFinalTotal(effectiveDistance);
+
+  // Log for debugging
+  console.log('Store Location:', STORE_LOCATION);
+  console.log('Selected Address:', selectedAddress);
+  console.log('Distance:', distanceKm.toFixed(2), 'km');
+  console.log('Effective Distance:', effectiveDistance.toFixed(2), 'km');
+  console.log('Delivery Fee: Rs', deliveryFee);
   
   const loyaltyBalance = user ? getPoints(user.id) : 0;
   const maxPoints = user ? maxRedeemablePoints(user.id, subtotal) : 0;
