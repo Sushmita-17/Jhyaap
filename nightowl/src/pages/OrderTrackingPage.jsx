@@ -141,7 +141,7 @@ export default function OrderTrackingPage() {
             <h2 className="text-sm font-semibold text-gray-900">Customer details</h2>
             <div className="mt-4 space-y-2 text-sm">
               <p className="text-gray-700"><span className="font-semibold">Name:</span> {user?.name || 'N/A'}</p>
-              <p className="text-gray-700"><span className="font-semibold">Phone:</span> {user?.phone_number || 'N/A'}</p>
+              <p className="text-gray-700"><span className="font-semibold">Phone:</span> {user?.phone || order.customerPhone || 'N/A'}</p>
               <p className="text-gray-700"><span className="font-semibold">Address:</span> {order.address?.label || 'N/A'}</p>
               {order.address?.street && <p className="text-gray-700"><span className="font-semibold">Street:</span> {order.address.street}</p>}
               {order.address?.area && <p className="text-gray-700"><span className="font-semibold">Area:</span> {order.address.area}</p>}
