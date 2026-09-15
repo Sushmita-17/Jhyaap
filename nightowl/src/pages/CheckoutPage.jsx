@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CreditCard, MapPin, Plus, ShieldCheck, Sparkles, Navigation, Map } from 'lucide-react';
+import { ArrowLeft, CreditCard, MapPin, Plus, ShieldCheck, Sparkles, Navigation, Map, Trash2 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useCustomerStore } from '@/store/customerStore';
 import { useOrdersStore } from '@/store/ordersStore';
@@ -55,7 +55,7 @@ export default function CheckoutPage() {
     pointsToRedeem,
     setPointsToRedeem,
   } = useCartStore();
-  const { addresses, addAddress } = useCustomerStore();
+  const { addresses, addAddress, deleteAddress } = useCustomerStore();
   const { createOrder } = useOrdersStore();
   const { user } = useAuthStore();
   const { setPage } = useAppStore();
@@ -342,21 +342,41 @@ export default function CheckoutPage() {
                     })() : (
                       <span className="text-[10px] md:text-[11px] font-mono font-bold text-[#C9A84C]">Rs 100</span>
                     )}
-                    {(addr.lat && addr.lng || addr.locationUrl) && (
+                    <div className="flex items-center gap-2">
+                      {(addr.lat && addr.lng || addr.locationUrl) && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewAddressOnMap(addr);
+                          }}
+                          className={`text-[9px] md:text-[10px] font-semibold flex items-center gap-1 transition-colors ${
+                            isLight ? 'text-blue-600 hover:text-blue-700' : 'text-blue-400 hover:text-blue-300'
+                          }`}
+                        >
+                          <Map className="h-3 w-3" />
+                          View Map
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleViewAddressOnMap(addr);
+                          if (window.confirm('Are you sure you want to remove this address?')) {
+                            deleteAddress(addr.id);
+                            if (selectedAddressId === addr.id) {
+                              setSelectedAddressId(null);
+                            }
+                          }
                         }}
                         className={`text-[9px] md:text-[10px] font-semibold flex items-center gap-1 transition-colors ${
-                          isLight ? 'text-blue-600 hover:text-blue-700' : 'text-blue-400 hover:text-blue-300'
+                          isLight ? 'text-red-600 hover:text-red-700' : 'text-red-400 hover:text-red-300'
                         }`}
                       >
-                        <Map className="h-3 w-3" />
-                        View Map
+                        <Trash2 className="h-3 w-3" />
+                        Remove
                       </button>
-                    )}
+                    </div>
                   </div>
                 </label>
               ))}
