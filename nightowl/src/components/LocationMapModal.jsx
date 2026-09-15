@@ -106,12 +106,28 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
         watchIdRef.current = null;
       }
 
+      // Check if we're getting GPS or IP-based location
+      let hasGPSLocation = false;
+      let bestAccuracy = Infinity;
+      let bestPosition = null;
+
       // Use watchPosition for better accuracy
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           const acc = position.coords.accuracy;
+
+          // Check if this is a GPS location (accuracy < 1000m)
+          if (acc < 1000) {
+            hasGPSLocation = true;
+          }
+
+          // Keep the best position
+          if (acc < bestAccuracy) {
+            bestAccuracy = acc;
+            bestPosition = { lat, lng, acc };
+          }
 
           setCurrentLat(lat);
           setCurrentLng(lng);
@@ -169,14 +185,19 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
         }
       );
 
-      // Fallback: stop watching after 10 seconds if no good location
+      // Fallback: stop watching after 15 seconds
       setTimeout(() => {
         if (watchIdRef.current !== null) {
           navigator.geolocation.clearWatch(watchIdRef.current);
           watchIdRef.current = null;
           setLoadingLocation(false);
+
+          // Check if we got GPS location
+          if (!hasGPSLocation && bestPosition) {
+            setLocationError('Could not get GPS location. Using approximate location. Please disable VPN and try again.');
+          }
         }
-      }, 10000);
+      }, 15000);
     } catch (error) {
       setLocationError(error.message || 'Unable to get your location');
       setLoadingLocation(false);
