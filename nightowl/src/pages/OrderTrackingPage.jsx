@@ -1,6 +1,7 @@
 import { ArrowLeft, CheckCircle, Clock, MapPin, Package, Phone as PhoneIcon, Sparkles, Truck } from 'lucide-react';
 import { useOrdersStore } from '@/store/ordersStore';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import LiveOrderTrackingPanel from '@/components/tracking/LiveOrderTrackingPanel';
 import FloatingNotification from '@/components/FloatingNotification';
 import { requestNotificationPermission, showBrowserNotification } from '@/lib/notificationUtils';
@@ -10,6 +11,7 @@ export default function OrderTrackingPage() {
   const selectedOrderId = useOrdersStore((s) => s.selectedOrderId);
   const orders = useOrdersStore((s) => s.orders);
   const { setPage } = useAppStore();
+  const { user } = useAuthStore();
   const [showNotification, setShowNotification] = useState(false);
   const [notificationData, setNotificationData] = useState({ title: '', message: '', type: 'info' });
 
