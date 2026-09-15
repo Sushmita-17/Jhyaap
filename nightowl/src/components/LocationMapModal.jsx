@@ -106,12 +106,7 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
         watchIdRef.current = null;
       }
 
-      // Check if we're getting GPS or IP-based location
-      let hasGPSLocation = false;
-      let bestAccuracy = Infinity;
-      let bestPosition = null;
-
-      console.log('Requesting GPS location...');
+      console.log('Requesting location from browser geolocation...');
 
       // Use watchPosition for better accuracy
       watchIdRef.current = navigator.geolocation.watchPosition(
@@ -120,20 +115,7 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
           const lng = position.coords.longitude;
           const acc = position.coords.accuracy;
 
-          console.log('GPS Position received:', { lat, lng, accuracy: acc });
-
-          // Check if this is a GPS location (accuracy < 1000m)
-          if (acc < 1000) {
-            hasGPSLocation = true;
-            console.log('GPS location detected');
-          }
-
-          // Keep the best position
-          if (acc < bestAccuracy) {
-            bestAccuracy = acc;
-            bestPosition = { lat, lng, acc };
-            console.log('Best position updated:', bestPosition);
-          }
+          console.log('Location received:', { lat, lng, accuracy: acc });
 
           setCurrentLat(lat);
           setCurrentLng(lng);
@@ -145,30 +127,37 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
               duration: 1.5,
             });
 
+            // Update marker
             if (markerRef.current) {
               markerRef.current.setLatLng([lat, lng]);
+            } else {
+              markerRef.current = L.marker([lat, lng], { icon: customIcon, draggable: true }).addTo(mapInstanceRef.current);
+              markerRef.current.on('dragend', (e) => {
+                const { lat, lng } = e.target.getLatLng();
+                setCurrentLat(lat);
+                setCurrentLng(lng);
+                reverseGeocode(lat, lng);
+              });
             }
 
             // Add current location marker
             if (currentLocationMarkerRef.current) {
-              currentLocationMarkerRef.current.remove();
+              currentLocationMarkerRef.current.setLatLng([lat, lng]);
+            } else {
+              currentLocationMarkerRef.current = L.marker([lat, lng], {
+                icon: currentLocationIcon,
+                interactive: false,
+              }).addTo(mapInstanceRef.current);
             }
-            currentLocationMarkerRef.current = L.marker([lat, lng], {
-              icon: currentLocationIcon,
-              interactive: false,
-            }).addTo(mapInstanceRef.current);
           }
 
           reverseGeocode(lat, lng);
 
-          // Stop watching after getting a good location (accuracy < 50m)
-          if (acc && acc < 50) {
-            console.log('Good accuracy achieved, stopping watch');
-            navigator.geolocation.clearWatch(watchIdRef.current);
-            watchIdRef.current = null;
-            setLoadingLocation(false);
-            reverseGeocode(lat, lng);
-          }
+          // Stop watching after getting location (accept any accuracy)
+          console.log('Location received, stopping watch');
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
+          setLoadingLocation(false);
         },
         (error) => {
           console.error('Geolocation error:', error);
@@ -188,19 +177,11 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
           navigator.geolocation.clearWatch(watchIdRef.current);
           watchIdRef.current = null;
           setLoadingLocation(false);
-
-          console.log('GPS watch timeout. hasGPSLocation:', hasGPSLocation, 'bestPosition:', bestPosition);
-
-          // Use IP-based location if GPS not available
-          if (!hasGPSLocation && bestPosition) {
-            // Don't show error - just use the approximate location
-            console.log('Using approximate IP-based location');
-            reverseGeocode(bestPosition.lat, bestPosition.lng);
-          }
+          console.log('Location watch timeout');
         }
       }, 15000);
     } catch (error) {
-      console.error('GPS error:', error);
+      console.error('Location error:', error);
       setLocationError(error.message || 'Unable to get your location');
       setLoadingLocation(false);
     }

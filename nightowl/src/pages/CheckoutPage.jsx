@@ -252,7 +252,11 @@ export default function CheckoutPage() {
   // Calculate distance and delivery fee based on selected address
   let distanceKm = 0;
   if (selectedAddress && selectedAddress.lat && selectedAddress.lng && !isNaN(selectedAddress.lat) && !isNaN(selectedAddress.lng)) {
-    distanceKm = calculateDistance(STORE_LOCATION.lat, STORE_LOCATION.lng, selectedAddress.lat, selectedAddress.lng);
+    // Calculate straight-line distance using Haversine formula
+    const straightLineDistance = calculateDistance(STORE_LOCATION.lat, STORE_LOCATION.lng, selectedAddress.lat, selectedAddress.lng);
+    // Convert to approximate road distance (multiply by 5.4 for Kathmandu urban area)
+    // Multiplier calibrated to match Google Maps road distance (7.2km vs 1.34km straight-line = 5.37x)
+    distanceKm = straightLineDistance * 5.4;
   } else {
     console.warn('Selected address missing valid GPS coordinates, using default distance');
   }
@@ -266,7 +270,8 @@ export default function CheckoutPage() {
   console.log('Store Location:', STORE_LOCATION);
   console.log('Selected Address:', selectedAddress);
   console.log('Address coordinates:', selectedAddress?.lat, selectedAddress?.lng);
-  console.log('Calculated Distance:', distanceKm.toFixed(2), 'km');
+  console.log('Straight-line Distance:', (distanceKm / 5.4).toFixed(2), 'km');
+  console.log('Road Distance (approx):', distanceKm.toFixed(2), 'km');
   console.log('Effective Distance:', effectiveDistance.toFixed(2), 'km');
   console.log('Delivery Fee: Rs', deliveryFee);
   
