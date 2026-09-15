@@ -531,11 +531,14 @@ def create_customer_order(request: Request, payload: OrderCreate):
         if len(saved_order.get("items", [])) > 3:
             items_summary += f" +{len(saved_order['items']) - 3} more"
         
+        # Format order time
+        order_time = datetime.fromisoformat(saved_order["created_at"]).strftime("%H:%M")
+        
         create_notification(
             user_id="admin",
             user_type="admin",
             title="New Order Received",
-            message=f"Order No {saved_order.get('order_number', 'N/A')} - Rs {saved_order['total']} | {customer_name} | {customer_phone} | {items_summary}",
+            message=f"Order No {saved_order.get('order_number', 'N/A')} - Rs {saved_order['total']} | {customer_name} | {customer_phone} | {items_summary} | {order_time}",
             notification_type="order_created",
             order_id=saved_order["id"]
         )
