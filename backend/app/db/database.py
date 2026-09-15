@@ -1264,7 +1264,7 @@ def save_order(order: Dict[str, Any]) -> Dict[str, Any]:
             # Auto-assign order_number if not provided
             if "order_number" not in order or order["order_number"] is None:
                 cursor.execute("SELECT MAX(order_number) FROM orders")
-                max_num = cursor.fetchone()[0] or 99
+                max_num = cursor.fetchone()[0] or 0
                 order["order_number"] = max_num + 1
 
             cursor.execute("""

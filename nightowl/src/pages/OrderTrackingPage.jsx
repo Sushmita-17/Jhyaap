@@ -106,7 +106,7 @@ export default function OrderTrackingPage() {
             Back to account
           </button>
           <h1 className="text-2xl font-bold text-gray-900">Order No {order.orderNumber || order.id?.slice(0, 8)}</h1>
-          <p className="mt-1 text-sm text-gray-600">Placed on {new Date(order.createdAt).toLocaleString()}</p>
+          <p className="mt-1 text-sm text-gray-600">Placed on {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
         </div>
       </div>
 
@@ -133,6 +133,17 @@ export default function OrderTrackingPage() {
                 {order.status === 'preparing' && 'Items packed! Waiting for rider to manually pick up order.'}
               </p>
             )}
+          </div>
+
+          <div className="panel p-5">
+            <h2 className="text-sm font-semibold text-gray-900">Customer details</h2>
+            <div className="mt-4 space-y-2 text-sm">
+              <p className="text-gray-700"><span className="font-semibold">Name:</span> {user?.name || 'N/A'}</p>
+              <p className="text-gray-700"><span className="font-semibold">Phone:</span> {user?.phone_number || 'N/A'}</p>
+              <p className="text-gray-700"><span className="font-semibold">Address:</span> {order.address?.label || 'N/A'}</p>
+              {order.address?.street && <p className="text-gray-700"><span className="font-semibold">Street:</span> {order.address.street}</p>}
+              {order.address?.area && <p className="text-gray-700"><span className="font-semibold">Area:</span> {order.address.area}</p>}
+            </div>
           </div>
 
           <LiveOrderTrackingPanel order={order} viewer="customer" />
@@ -196,13 +207,14 @@ export default function OrderTrackingPage() {
           <div className="panel p-5">
             <h2 className="text-sm font-semibold text-gray-900">Order items</h2>
             <div className="mt-4 space-y-3">
-              {order.items.map((item) => (
-                <div key={item.product.id} className="flex justify-between gap-3 text-sm">
-                  <span className="text-gray-700">
-                    {item.product.name} × {item.quantity}
-                  </span>
-                  <span className="font-medium text-gray-900">
-                    Rs {(item.product.price * item.quantity).toLocaleString()}
+              {order.items.map((item, index) => (
+                <div key={item.product?.id || index} className="flex justify-between gap-3 text-sm border-b border-gray-100 pb-2 last:border-0">
+                  <div className="flex-1">
+                    <p className="text-gray-900 font-medium">{item.product?.name || item.name || 'Unknown Product'}</p>
+                    <p className="text-xs text-gray-500">Qty: {item.quantity} × Rs {item.product?.price || item.price}</p>
+                  </div>
+                  <span className="font-semibold text-gray-900">
+                    Rs {((item.product?.price || item.price) * item.quantity).toLocaleString()}
                   </span>
                 </div>
               ))}

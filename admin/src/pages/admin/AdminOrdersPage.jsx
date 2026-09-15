@@ -174,6 +174,19 @@ export default function AdminOrdersPage() {
                     <p className={`mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>
                       Address: {order.delivery_address || 'N/A'}
                     </p>
+                    {order.items && order.items.length > 0 && (
+                      <div className={`mt-2 text-[10px] md:text-xs ${isLight ? 'text-gray-600' : 'text-[#888888]'}`}>
+                        <p className="font-semibold mb-1">Items:</p>
+                        {order.items.slice(0, 3).map((item, idx) => (
+                          <p key={idx} className="truncate">
+                            {item.name || item.product?.name} × {item.quantity}
+                          </p>
+                        ))}
+                        {order.items.length > 3 && (
+                          <p className="text-gray-400">+{order.items.length - 3} more</p>
+                        )}
+                      </div>
+                    )}
                     {order.deliveryRider && (
                       <p className={`mt-1 text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>
                         Rider: {order.deliveryRider.name || 'Unknown'} · {order.deliveryRider.vehicle || 'Unknown'}
