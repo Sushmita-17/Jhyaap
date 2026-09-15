@@ -14,6 +14,8 @@ import {
   X,
   Bell,
   Star,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useAuth } from '@/contexts/AuthContext';
@@ -114,6 +116,9 @@ export default function CustomerDashboardPage() {
   const [pwError, setPwError] = useState(null);
   const [pwSuccess, setPwSuccess] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -368,32 +373,59 @@ export default function CustomerDashboardPage() {
 
                     <div>
                       <p className={`mb-1.5 md:mb-2 text-[10px] md:text-xs font-semibold ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>Current password</p>
-                      <input
-                        type="password"
-                        value={pwCurrent}
-                        onChange={(e) => setPwCurrent(e.target.value)}
-                        className={`w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A84C] transition-colors ${isLight ? 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white' : 'bg-black/50 border-white/10 text-white placeholder-gray-500 focus:bg-black/70'}`}
-                        autoFocus
-                      />
+                      <div className="relative">
+                        <input
+                          type={showCurrentPassword ? 'text' : 'password'}
+                          value={pwCurrent}
+                          onChange={(e) => setPwCurrent(e.target.value)}
+                          className={`w-full rounded-xl border px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A84C] transition-colors ${isLight ? 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white' : 'bg-black/50 border-white/10 text-white placeholder-gray-500 focus:bg-black/70'}`}
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          className={`absolute right-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-gray-500 hover:text-gray-700' : 'text-gray-500 hover:text-gray-300'}`}
+                        >
+                          {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <p className={`mb-1.5 md:mb-2 text-[10px] md:text-xs font-semibold ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>New password</p>
-                      <input
-                        type="password"
-                        value={pwNew}
-                        onChange={(e) => setPwNew(e.target.value)}
-                        placeholder="At least 8 characters"
-                        className={`w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A84C] transition-colors ${isLight ? 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white' : 'bg-black/50 border-white/10 text-white placeholder-gray-500 focus:bg-black/70'}`}
-                      />
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? 'text' : 'password'}
+                          value={pwNew}
+                          onChange={(e) => setPwNew(e.target.value)}
+                          placeholder="At least 8 characters"
+                          className={`w-full rounded-xl border px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A84C] transition-colors ${isLight ? 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white' : 'bg-black/50 border-white/10 text-white placeholder-gray-500 focus:bg-black/70'}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className={`absolute right-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-gray-500 hover:text-gray-700' : 'text-gray-500 hover:text-gray-300'}`}
+                        >
+                          {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <p className={`mb-1.5 md:mb-2 text-[10px] md:text-xs font-semibold ${isLight ? 'text-gray-500' : 'text-[#888888]'}`}>Confirm new password</p>
-                      <input
-                        type="password"
-                        value={pwConfirm}
-                        onChange={(e) => setPwConfirm(e.target.value)}
-                        className={`w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A84C] transition-colors ${isLight ? 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white' : 'bg-black/50 border-white/10 text-white placeholder-gray-500 focus:bg-black/70'}`}
-                      />
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          value={pwConfirm}
+                          onChange={(e) => setPwConfirm(e.target.value)}
+                          className={`w-full rounded-xl border px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A84C] transition-colors ${isLight ? 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white' : 'bg-black/50 border-white/10 text-white placeholder-gray-500 focus:bg-black/70'}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className={`absolute right-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-gray-500 hover:text-gray-700' : 'text-gray-500 hover:text-gray-300'}`}
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex gap-2">
