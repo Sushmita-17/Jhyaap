@@ -77,6 +77,13 @@ export default function CheckoutPage() {
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
+  // Check if selected address has valid GPS coordinates
+  const hasValidCoordinates = selectedAddress && 
+    selectedAddress.lat && 
+    selectedAddress.lng && 
+    !isNaN(selectedAddress.lat) && 
+    !isNaN(selectedAddress.lng);
+
   useEffect(() => {
     if (!selectedAddressId && addresses[0]) {
       setSelectedAddressId(addresses[0].id);
@@ -85,18 +92,23 @@ export default function CheckoutPage() {
 
   const handleAddAddress = (e) => {
     e.preventDefault();
-    if (newAddress.lat && newAddress.lng) {
-      const saved = addAddress({
-        ...newAddress,
-        ...parseCoordinatesFromUrl(newAddress.locationUrl),
-        isDefault: addresses.length === 0,
-      });
-      setSelectedAddressId(saved.id);
-      setNewAddress({ label: '', area: '', street: '', landmark: '', locationUrl: '', lat: null, lng: null });
-      setShowAddForm(false);
-    } else {
-      alert('Please select a location using GPS or Map');
+    // Strict validation: must have GPS coordinates
+    if (!newAddress.lat || !newAddress.lng) {
+      alert('Please select a location using GPS or Map to ensure accurate delivery fee calculation');
+      return;
     }
+    if (isNaN(newAddress.lat) || isNaN(newAddress.lng)) {
+      alert('Invalid coordinates. Please select a location again using GPS or Map');
+      return;
+    }
+    const saved = addAddress({
+      ...newAddress,
+      ...parseCoordinatesFromUrl(newAddress.locationUrl),
+      isDefault: addresses.length === 0,
+    });
+    setSelectedAddressId(saved.id);
+    setNewAddress({ label: '', area: '', street: '', landmark: '', locationUrl: '', lat: null, lng: null });
+    setShowAddForm(false);
   };
 
   const handleGPSLocation = async () => {
@@ -245,10 +257,14 @@ export default function CheckoutPage() {
   const pointsDiscount = getPointsDiscount();
   
   // Calculate distance and delivery fee based on selected address
-  const distanceKm = selectedAddress && selectedAddress.lat && selectedAddress.lng
-    ? calculateDistance(STORE_LOCATION.lat, STORE_LOCATION.lng, selectedAddress.lat, selectedAddress.lng)
-    : 0;
-  // If no GPS coordinates, default to 3km distance (Rs 100 delivery fee)
+  let distanceKm = 0;
+  if (selectedAddress && selectedAddress.lat && selectedAddress.lng && !isNaN(selectedAddress.lat) && !isNaN(selectedAddress.lng)) {
+    distanceKm = calculateDistance(STORE_LOCATION.lat, STORE_LOCATION.lng, selectedAddress.lat, selectedAddress.lng);
+  } else {
+    console.warn('Selected address missing valid GPS coordinates, using default distance');
+  }
+  
+  // If no valid GPS coordinates, default to 3km distance (Rs 100 delivery fee)
   const effectiveDistance = distanceKm > 0 ? distanceKm : 3;
   const deliveryFee = getDeliveryFee(effectiveDistance);
   const total = getFinalTotal(effectiveDistance);
@@ -256,7 +272,8 @@ export default function CheckoutPage() {
   // Log for debugging
   console.log('Store Location:', STORE_LOCATION);
   console.log('Selected Address:', selectedAddress);
-  console.log('Distance:', distanceKm.toFixed(2), 'km');
+  console.log('Address coordinates:', selectedAddress?.lat, selectedAddress?.lng);
+  console.log('Calculated Distance:', distanceKm.toFixed(2), 'km');
   console.log('Effective Distance:', effectiveDistance.toFixed(2), 'km');
   console.log('Delivery Fee: Rs', deliveryFee);
   
@@ -391,6 +408,14 @@ export default function CheckoutPage() {
                 </label>
               ))}
             </div>
+
+            {!hasValidCoordinates && selectedAddress && (
+              <div className={`mb-3 rounded-xl border px-3 py-2 text-xs font-medium ${
+                isLight ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+              }`}>
+                ⚠️ This address is missing GPS coordinates. Delivery fee may not be accurate. Please edit this address and select location using GPS or Map.
+              </div>
+            )}
 
             {!showAddForm ? (
               <button
