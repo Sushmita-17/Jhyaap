@@ -23,8 +23,8 @@ export default function LoginPage() {
   const isLight = theme === 'light';
   const setBackendSession = useAuthStore((state) => state.setBackendSession);
   const [mode, setMode] = useState('signin');
-  const [phone, setPhone] = useState('');
-  const [confirmPhone, setConfirmPhone] = useState('');
+  const [phone, setPhone] = useState('+977 ');
+  const [confirmPhone, setConfirmPhone] = useState('+977 ');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
