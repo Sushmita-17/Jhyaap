@@ -521,11 +521,21 @@ def create_customer_order(request: Request, payload: OrderCreate):
             save_coupon(coupon)
         
         # Create notification for admin about new order
+        from app.db.database import fetch_customer_by_id
+        customer = fetch_customer_by_id(payload.customer_id)
+        customer_name = customer.get("name", "Unknown") if customer else "Unknown"
+        customer_phone = customer.get("phone_number", "N/A") if customer else "N/A"
+        
+        # Format items for notification
+        items_summary = ", ".join([f"{item['name']} x{item['quantity']}" for item in saved_order.get("items", [])[:3]])
+        if len(saved_order.get("items", [])) > 3:
+            items_summary += f" +{len(saved_order['items']) - 3} more"
+        
         create_notification(
             user_id="admin",
             user_type="admin",
             title="New Order Received",
-            message=f"New order #{saved_order['id']} from customer {payload.customer_id}",
+            message=f"Order No {saved_order.get('order_number', 'N/A')} - Rs {saved_order['total']} | {customer_name} | {customer_phone} | {items_summary}",
             notification_type="order_created",
             order_id=saved_order["id"]
         )
