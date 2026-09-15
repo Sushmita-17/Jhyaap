@@ -92,15 +92,8 @@ export default function CheckoutPage() {
 
   const handleAddAddress = (e) => {
     e.preventDefault();
-    // Strict validation: must have GPS coordinates
-    if (!newAddress.lat || !newAddress.lng) {
-      alert('Please select a location using GPS or Map to ensure accurate delivery fee calculation');
-      return;
-    }
-    if (isNaN(newAddress.lat) || isNaN(newAddress.lng)) {
-      alert('Invalid coordinates. Please select a location again using GPS or Map');
-      return;
-    }
+    // Allow saving with or without GPS coordinates
+    // If no GPS, will use approximate location for delivery fee
     const saved = addAddress({
       ...newAddress,
       ...parseCoordinatesFromUrl(newAddress.locationUrl),
@@ -411,9 +404,9 @@ export default function CheckoutPage() {
 
             {!hasValidCoordinates && selectedAddress && (
               <div className={`mb-3 rounded-xl border px-3 py-2 text-xs font-medium ${
-                isLight ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                isLight ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-blue-500/10 border-blue-500/30 text-blue-300'
               }`}>
-                ⚠️ This address is missing GPS coordinates. Delivery fee may not be accurate. Please edit this address and select location using GPS or Map.
+                ℹ️ Using approximate location for delivery fee. For accurate pricing, edit this address and select location using GPS or Map.
               </div>
             )}
 

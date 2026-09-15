@@ -191,9 +191,11 @@ function LocationMapModal({ isOpen, onClose, initialLat, initialLng, onLocationS
 
           console.log('GPS watch timeout. hasGPSLocation:', hasGPSLocation, 'bestPosition:', bestPosition);
 
-          // Check if we got GPS location
+          // Use IP-based location if GPS not available
           if (!hasGPSLocation && bestPosition) {
-            setLocationError('Could not get GPS location. Using approximate location. Please disable VPN and try again.');
+            // Don't show error - just use the approximate location
+            console.log('Using approximate IP-based location');
+            reverseGeocode(bestPosition.lat, bestPosition.lng);
           }
         }
       }, 15000);
