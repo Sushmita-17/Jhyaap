@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { loginCustomer, requestOtp, verifyOtp, completeCustomerProfile } from '@/lib/jhyaapAuthAPI';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -35,6 +36,9 @@ export default function LoginPage() {
   const [step, setStep] = useState('phone');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   const finish = (customer, token) => {
     setBackendSession(customer, token);
@@ -155,28 +159,46 @@ export default function LoginPage() {
 
             <div>
               <label className={`block text-xs font-medium mb-1 ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>Create Password</label>
-              <input
-                required
-                minLength={6}
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create password (min 6 characters)"
-                className={`w-full rounded-lg border p-3 ${isLight ? 'border-gray-300 bg-gray-50 text-gray-900 placeholder:text-gray-400' : 'border-white/10 bg-black/30 text-white placeholder:text-gray-400'}`}
-              />
+              <div className="relative">
+                <input
+                  required
+                  minLength={6}
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create password (min 6 characters)"
+                  className={`w-full rounded-lg border p-3 pr-10 ${isLight ? 'border-gray-300 bg-gray-50 text-gray-900 placeholder:text-gray-400' : 'border-white/10 bg-black/30 text-white placeholder:text-gray-400'}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-gray-500 hover:text-gray-700' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className={`block text-xs font-medium mb-1 ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>Confirm Password</label>
-              <input
-                required
-                minLength={6}
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm password"
-                className={`w-full rounded-lg border p-3 ${isLight ? 'border-gray-300 bg-gray-50 text-gray-900 placeholder:text-gray-400' : 'border-white/10 bg-black/30 text-white placeholder:text-gray-400'}`}
-              />
+              <div className="relative">
+                <input
+                  required
+                  minLength={6}
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm password"
+                  className={`w-full rounded-lg border p-3 pr-10 ${isLight ? 'border-gray-300 bg-gray-50 text-gray-900 placeholder:text-gray-400' : 'border-white/10 bg-black/30 text-white placeholder:text-gray-400'}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-gray-500 hover:text-gray-700' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -195,14 +217,23 @@ export default function LoginPage() {
             {mode === 'signin' && (
               <div>
                 <label className={`block text-xs font-medium mb-1 ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>Password</label>
-                <input
-                  required
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  className={`w-full rounded-lg border p-3 ${isLight ? 'border-gray-300 bg-gray-50 text-gray-900 placeholder:text-gray-400' : 'border-white/10 bg-black/30 text-white placeholder:text-gray-400'}`}
-                />
+                <div className="relative">
+                  <input
+                    required
+                    type={showLoginPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    className={`w-full rounded-lg border p-3 pr-10 ${isLight ? 'border-gray-300 bg-gray-50 text-gray-900 placeholder:text-gray-400' : 'border-white/10 bg-black/30 text-white placeholder:text-gray-400'}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-gray-500 hover:text-gray-700' : 'text-gray-500 hover:text-gray-300'}`}
+                  >
+                    {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
             )}
 
