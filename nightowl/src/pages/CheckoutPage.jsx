@@ -248,8 +248,10 @@ export default function CheckoutPage() {
   const distanceKm = selectedAddress && selectedAddress.lat && selectedAddress.lng
     ? calculateDistance(STORE_LOCATION.lat, STORE_LOCATION.lng, selectedAddress.lat, selectedAddress.lng)
     : 0;
-  const deliveryFee = getDeliveryFee(distanceKm);
-  const total = getFinalTotal(distanceKm);
+  // If no GPS coordinates, default to 3km distance (Rs 100 delivery fee)
+  const effectiveDistance = distanceKm > 0 ? distanceKm : 3;
+  const deliveryFee = getDeliveryFee(effectiveDistance);
+  const total = getFinalTotal(effectiveDistance);
   
   const loyaltyBalance = user ? getPoints(user.id) : 0;
   const maxPoints = user ? maxRedeemablePoints(user.id, subtotal) : 0;
@@ -735,15 +737,13 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className={isLight ? 'text-gray-600' : 'text-[#888888]'}>Delivery Fee</span>
                   <div className="text-right">
-                    {distanceKm > 0 && (
-                      <span className={`text-[9px] md:text-[10px] font-mono ${isLight ? 'text-gray-500' : 'text-[#666666]'}`}>
-                        {distanceKm.toFixed(1)} km
-                      </span>
-                    )}
+                    <span className={`text-[9px] md:text-[10px] font-mono ${isLight ? 'text-gray-500' : 'text-[#666666]'}`}>
+                      {effectiveDistance.toFixed(1)} km
+                    </span>
                     <span className={`font-mono font-bold block ${
                       isLight ? 'text-gray-900' : 'text-[#F5ECD7]'
                     }`}>
-                      {deliveryFee === 0 ? <span className="text-green-500 uppercase tracking-tighter text-[10px] md:text-[11px]">Free</span> : `Rs ${deliveryFee.toLocaleString()}`}
+                      Rs {deliveryFee.toLocaleString()}
                     </span>
                   </div>
                 </div>

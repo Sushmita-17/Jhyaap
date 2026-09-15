@@ -111,7 +111,8 @@ export const useCartStore = create((set, get) => ({
   },
 
   getDeliveryFee: (distanceKm = 0) => {
-    // Distance-based delivery: 100 NPR base + 30 NPR/km after 3km
+    // Distance-based delivery: Rs 100 for first 3km, then Rs 30 per additional km
+    // Example: 1km = 100, 2km = 100, 3km = 100, 4km = 130, 5km = 160
     if (distanceKm <= 3) {
       return 100;
     }
