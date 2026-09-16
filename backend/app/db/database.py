@@ -550,6 +550,7 @@ def init_db():
 
         migrate_customers_table(cursor, conn)
         migrate_rider_credentials_table(cursor, conn)
+        migrate_orders_table(cursor, conn)
         conn.commit()
         
         # Check if empty, then seed
@@ -616,6 +617,24 @@ def migrate_rider_credentials_table(cursor, conn):
         conn.commit()
     except Exception as e:
         print(f"Rider credentials table migration warning: {e}")
+
+def migrate_orders_table(cursor, conn):
+    """Ensure orders table has the order_number column."""
+    try:
+        if is_postgres(conn):
+            cursor.execute("""
+            ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number INTEGER;
+            CREATE SEQUENCE IF NOT EXISTS order_number_seq START 1;
+            """)
+        else:
+            cursor.execute("PRAGMA table_info(orders)")
+            rows = cursor.fetchall()
+            cols = [r[1] if not isinstance(r, dict) else r['name'] for r in rows]
+            if "order_number" not in cols:
+                cursor.execute("ALTER TABLE orders ADD COLUMN order_number INTEGER")
+        conn.commit()
+    except Exception as e:
+        print(f"Orders table migration warning: {e}")
 
 def seed_catalog(cursor, conn):
     """Seed catalog database table using cheers-catalog.json data."""

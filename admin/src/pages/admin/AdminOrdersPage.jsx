@@ -45,6 +45,7 @@ export default function AdminOrdersPage() {
           },
           items: order.items || [],
           destinationCoords: null,
+          order_number: order.order_number || null,
         }));
         hydrateOrders(normalized);
       })
