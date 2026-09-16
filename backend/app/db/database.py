@@ -1223,6 +1223,30 @@ def fetch_all_orders(status: Optional[str] = None) -> List[Dict[str, Any]]:
     finally:
         cursor.close()
         conn.close()
+def fetch_customer_by_id(customer_id: str) -> Optional[Dict[str, Any]]:
+    """Fetch customer by ID."""
+    conn = get_connection()
+    cursor = get_cursor(conn)
+    
+    sql = "SELECT * FROM customers WHERE id = ?"
+    if is_postgres(conn):
+        sql = sql.replace("?", "%s")
+        
+    try:
+        cursor.execute(sql, (customer_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            return None
+            
+        return dict(row)
+    except Exception as e:
+        print(f"Database fetch customer by id error: {e}")
+        return None
+    finally:
+        cursor.close()
+        conn.close()
+
 def fetch_order_by_id(order_id: str) -> Optional[Dict[str, Any]]:
     """Fetch order by ID."""
     conn = get_connection()
