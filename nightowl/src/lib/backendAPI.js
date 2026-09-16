@@ -38,7 +38,7 @@ export function createBackendOrder(order) {
       client_order_id: null, // Let backend generate sequential order number
       items: order.items.map((item) => ({
         product_id: item.product?.id || item.id,
-        name: item.product?.name || item.name,
+        name: item.product?.name || item.name || 'Unknown Product',
         quantity: item.quantity,
         price: Number(item.product?.price ?? item.price),
       })),
