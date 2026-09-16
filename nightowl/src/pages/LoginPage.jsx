@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { loginCustomer, requestOtp, verifyOtp, completeCustomerProfile } from '@/lib/jhyaapAuthAPI';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -110,6 +110,16 @@ export default function LoginPage() {
   return (
     <div className={`flex min-h-[70vh] items-center justify-center px-4 py-10 transition-colors duration-300 ${isLight ? 'bg-gray-50' : 'bg-[#0A0A0A]'}`}>
       <form onSubmit={submit} className={`w-full max-w-md rounded-2xl border p-6 shadow-2xl transition-colors duration-300 ${isLight ? 'border-gray-200 bg-white' : 'border-white/10 bg-[#141414]'}`}>
+        {mode === 'signup' && step === 'profile' && (
+          <button
+            type="button"
+            onClick={() => setStep('phone')}
+            className={`mb-4 flex items-center gap-2 text-sm transition-colors ${isLight ? 'text-gray-600 hover:text-gray-900' : 'text-gray-400 hover:text-white'}`}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+        )}
         <p className="text-xs font-semibold uppercase tracking-widest text-[#C9A84C]">Jhyaap Station</p>
         <h1 className={`mt-2 text-2xl font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>
           {mode === 'signin' ? 'Sign in' : step === 'profile' ? 'Complete profile' : 'Create account'}
