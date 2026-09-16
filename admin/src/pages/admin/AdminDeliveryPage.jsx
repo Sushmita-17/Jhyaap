@@ -29,9 +29,9 @@ export default function AdminDeliveryPageFixed() {
         setOrders(remoteOrders.map((order) => ({
           id: order.id,
           orderId: order.order_number || order.id,
-          customer: order.customer_id || 'Customer',
+          customer: order.customer_name || order.customer_id || 'Customer',
           address: order.delivery_address || '',
-          phone: '',
+          phone: order.customer_phone || '',
           riderId: order.rider_id,
           status: order.status,
           total: order.total || 0,
@@ -40,6 +40,7 @@ export default function AdminDeliveryPageFixed() {
           currentLocation: null,
           coordinates: null,
           customerNotified: false,
+          items: order.items || [],
         })));
       }
       if (Array.isArray(remoteRiders)) {
