@@ -285,16 +285,21 @@ export default function Navbar() {
                     <Bell size={20} />
                   </button>
                   <div className="flex items-center gap-2 ml-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      isLight ? 'bg-gray-200 text-gray-700' : 'bg-white/10 text-white'
-                    }`}>
-                      {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                    <span className={`text-sm font-medium hidden md:block ${
-                      isLight ? 'text-gray-700' : 'text-white'
-                    }`}>
-                      {user?.name || 'User'}
-                    </span>
+                    <button
+                      onClick={() => setPage('profile')}
+                      className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        isLight ? 'bg-gray-200 text-gray-700' : 'bg-white/10 text-white'
+                      }`}>
+                        {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <span className={`text-sm font-medium hidden md:block ${
+                        isLight ? 'text-gray-700' : 'text-white'
+                      }`}>
+                        {user?.name || 'User'}
+                      </span>
+                    </button>
                     <button
                       onClick={logout}
                       className={`p-2 rounded-lg transition-colors ${
