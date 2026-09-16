@@ -151,7 +151,14 @@ export default function AdminOrdersPage() {
                       Rs {order.total?.toLocaleString() || 'N/A'}
                     </p>
                     <p className={`text-[10px] md:text-xs ${isLight ? 'text-gray-500' : 'text-[#666666]'}`}>
-                      Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'Unknown Date'} at {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Unknown Time'}
+                      {order.createdAt ? new Date(order.createdAt).toLocaleString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      }) : 'Unknown Date/Time'}
                     </p>
                     <p className={`mt-1 capitalize text-[10px] md:text-xs font-semibold ${
                       isLight ? 'text-gray-700' : 'text-[#C9A84C]'
