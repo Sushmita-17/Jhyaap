@@ -1218,6 +1218,9 @@ def fetch_all_orders(status: Optional[str] = None) -> List[Dict[str, Any]]:
                 order["items"] = json.loads(order["items"]) if order.get("items") else []
             except Exception:
                 order["items"] = []
+            # Fallback for customer name if not found in join
+            if not order.get("customer_name") or order.get("customer_name") == "Customer":
+                order["customer_name"] = "Unknown Customer"
             orders.append(order)
         return orders
     finally:
