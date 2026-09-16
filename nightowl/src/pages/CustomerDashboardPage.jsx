@@ -128,12 +128,11 @@ export default function CustomerDashboardPage() {
   const [notifWhatsapp, setNotifWhatsapp] = useState(true);
   const [notifEmail, setNotifEmail] = useState(false);
 
-  useEffect(() => {
-    if (!user?.id) return undefined;
-    let active = true;
+  const fetchOrders = useCallback(() => {
+    if (!user?.id) return;
     getBackendCustomerOrders(user.id)
       .then((remoteOrders) => {
-        if (!active || !Array.isArray(remoteOrders)) return;
+        if (!Array.isArray(remoteOrders)) return;
         hydrateOrders(remoteOrders.map((order) => ({
           ...order,
           status: order.status === 'pending' ? 'placed' : order.status,
@@ -150,8 +149,22 @@ export default function CustomerDashboardPage() {
         })));
       })
       .catch(() => {});
-    return () => { active = false; };
   }, [user?.id, hydrateOrders]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  // Refresh orders when page becomes visible (e.g., after placing order)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchOrders();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [fetchOrders]);
   // Logged-out users go straight to the sign-in screen — no two-card chooser.
   useEffect(() => {
     if (!user) {
