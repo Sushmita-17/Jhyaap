@@ -619,7 +619,7 @@ def migrate_rider_credentials_table(cursor, conn):
         print(f"Rider credentials table migration warning: {e}")
 
 def migrate_orders_table(cursor, conn):
-    """Ensure orders table has the order_number column."""
+    """Ensure orders table has the order_number column and update existing orders."""
     try:
         if is_postgres(conn):
             cursor.execute("""
@@ -632,6 +632,23 @@ def migrate_orders_table(cursor, conn):
             cols = [r[1] if not isinstance(r, dict) else r['name'] for r in rows]
             if "order_number" not in cols:
                 cursor.execute("ALTER TABLE orders ADD COLUMN order_number INTEGER")
+        
+        # Update existing orders without order_number
+        cursor.execute("SELECT id FROM orders WHERE order_number IS NULL OR order_number = 0")
+        null_orders = cursor.fetchall()
+        
+        if null_orders:
+            # Get current max order number
+            cursor.execute("SELECT MAX(order_number) FROM orders")
+            max_num = cursor.fetchone()[0] or 0
+            
+            # Update each order with sequential number
+            for row in null_orders:
+                order_id = row[0] if not isinstance(row, dict) else row['id']
+                max_num += 1
+                cursor.execute("UPDATE orders SET order_number = ? WHERE id = ?", (max_num, order_id))
+                print(f"Migration: Updated order {order_id} to order_number {max_num}")
+        
         conn.commit()
     except Exception as e:
         print(f"Orders table migration warning: {e}")
