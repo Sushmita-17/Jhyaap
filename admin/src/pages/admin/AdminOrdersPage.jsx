@@ -1,8 +1,8 @@
-﻿import { useEffect } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useOrdersStore } from '@/store/ordersStore';
 // Type imports removed - these are JSDoc type definitions only, not actual exports
 import LiveOrderTrackingPanel from '@/components/tracking/LiveOrderTrackingPanel';
-import { Radio } from 'lucide-react';
+import { Radio, RefreshCw } from 'lucide-react';
 import AdminBackButton from '@/components/admin/AdminBackButton';
 import { useThemeStore } from '@/store/themeStore';
 import { getBackendOrders } from '@/lib/backendAPI';
@@ -23,12 +23,13 @@ export default function AdminOrdersPage() {
   const { theme } = useThemeStore();
   const isLight = theme === 'light';
   const hydrateOrders = useOrdersStore((s) => s.hydrateOrders);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    let active = true;
+  const fetchOrders = () => {
+    setRefreshing(true);
     getBackendOrders()
       .then((remoteOrders) => {
-        if (!active || !Array.isArray(remoteOrders)) return;
+        if (!Array.isArray(remoteOrders)) return;
         const normalized = remoteOrders.map((order) => ({
           ...order,
           status: order.status === 'pending' ? 'placed' : order.status,
@@ -49,9 +50,34 @@ export default function AdminOrdersPage() {
         }));
         hydrateOrders(normalized);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setRefreshing(false));
+  };
+
+  useEffect(() => {
+    let active = true;
+    fetchOrders();
     return () => { active = false; };
-  }, [hydrateOrders]);
+  }, []);
+
+  // Auto-refresh when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchOrders();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const sorted = [...orders].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -75,6 +101,14 @@ export default function AdminOrdersPage() {
           </p>
         </div>
         <div className="relative flex items-center gap-2 md:gap-4">
+          <button
+            onClick={fetchOrders}
+            disabled={refreshing}
+            className={`rounded-lg p-2 transition-colors ${isLight ? 'text-gray-600 hover:bg-gray-100' : 'text-gray-400 hover:bg-white/5'} ${refreshing ? 'animate-spin' : ''}`}
+            aria-label="Refresh orders"
+          >
+            <RefreshCw className="h-4 w-4 md:h-5 md:w-5" />
+          </button>
           <div className="text-right">
             <p className={`text-[10px] md:text-xs uppercase tracking-wider ${isLight ? 'text-gray-500' : 'text-[#666666]'}`}>Live Deliveries</p>
             <p className={`text-sm md:text-lg font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>{liveOrders.length}</p>
