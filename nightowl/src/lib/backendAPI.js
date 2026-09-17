@@ -85,6 +85,12 @@ export function changeCustomerPassword(customerId, currentPassword, newPassword,
   });
 }
 
+export function cancelOrder(orderId) {
+  return request('/api/v1/orders/' + encodeURIComponent(orderId) + '/status?status=cancelled', {
+    method: 'PATCH',
+  });
+}
+
 
 
 

@@ -25,7 +25,7 @@ import { useAppStore } from '@/store/appStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useLoyaltyStore, POINTS_TO_RUPEE, POINTS_PER_100_RS } from '@/store/loyaltyStore';
 import { requestOtp, verifyOtp } from '@/lib/jhyaapAuthAPI';
-import { getBackendCustomerOrders, getDeliveryRating, submitDeliveryRating, changeCustomerPassword, deleteCustomerAccount } from '@/lib/backendAPI';
+import { getBackendCustomerOrders, getDeliveryRating, submitDeliveryRating, changeCustomerPassword, deleteCustomerAccount, cancelOrder } from '@/lib/backendAPI';
 
 
 function DeliveryRatingForm({ order, user, isLight }) {
@@ -812,13 +812,18 @@ export default function CustomerDashboardPage() {
                           <span className={`font-semibold ${isLight ? 'text-gray-900' : 'text-white'}`}>NPR {order.total.toLocaleString()}</span>
                         </div>
                       </button>
-                      {(order.status === 'placed' || order.status === 'confirmed') && (
+                      {(order.status === 'placed' || order.status === 'confirmed' || order.status === 'pending') && (
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             if (confirm('Are you sure you want to cancel this order?')) {
-                              // Cancel order logic
-                              const { updateOrderStatus } = useOrdersStore.getState();
-                              updateOrderStatus(order.id, 'cancelled');
+                              try {
+                                await cancelOrder(order.id);
+                                // Refresh orders after cancellation
+                                fetchOrders();
+                              } catch (error) {
+                                console.error('Failed to cancel order:', error);
+                                alert('Failed to cancel order. Please try again.');
+                              }
                             }
                           }}
                           className={`mt-2 w-full rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${isLight ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'}`}
