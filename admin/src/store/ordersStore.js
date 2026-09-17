@@ -21,12 +21,8 @@ const generateETA = () => {
 };
 
 const loadOrdersFromStorage = () => {
-  try {
-    const stored = localStorage.getItem('jhyaap_orders');
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
+  // Admin should always fetch from backend, not use localStorage
+  return [];
 };
 
 const saveOrdersToStorage = (orders) => {
